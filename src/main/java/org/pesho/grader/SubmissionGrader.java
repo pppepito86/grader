@@ -56,8 +56,8 @@ public class SubmissionGrader {
 			boolean hasFailed = false;
 			
 			for (TestCase testCase: testGroup.getTestCases()) {
-				System.out.print("Test #"+ count++);
 				File inputFile = new File(testCase.getInput());
+				System.out.print("Test #"+ (count++) + " (" + inputFile.getName() + ")");
 				File outputFile = new File(testCase.getOutput());
 				File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
 				TestStep testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile);
@@ -67,7 +67,7 @@ public class SubmissionGrader {
 					hasFailed = true;
 					break;
 				}
-				
+//				System.out.println(checkerFile.getAbsolutePath());
 				CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
 				double checkerResult = checkerStep.execute();
 				if (checkerResult != 1) {

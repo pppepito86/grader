@@ -31,6 +31,7 @@ public abstract class TestStep implements BaseStep {
 			//System.out.println(" - sandbox " + sandboxDir.getAbsolutePath());
 			//System.out.println(" - copying " + binaryFile.getAbsolutePath());
 			FileUtils.copyFile(binaryFile, new File(sandboxDir, binaryFile.getName()));
+			new File(sandboxDir, binaryFile.getName()).setExecutable(true);
 			//System.out.println(" - copying " + inputFile.getAbsolutePath());
 			FileUtils.copyFile(inputFile, new File(sandboxDir, inputFile.getName()));
 		} catch (Exception e) {

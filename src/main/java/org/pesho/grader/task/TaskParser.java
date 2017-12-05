@@ -1,4 +1,5 @@
 package org.pesho.grader.task;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,101 +7,197 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class TaskParser {
-	
+
 	private final File taskDir;
 	private List<File> input = new ArrayList<>();
 	private List<File> output = new ArrayList<>();
+	private List<File> solutions = new ArrayList<>();
 	private File checker = new File("checker");
-	
+	private String prefix;
+
 	public TaskParser(File dir) {
+		prefix = new File(dir, ".").getAbsolutePath();
+		if (prefix.endsWith(".")) {
+			prefix = prefix.substring(0, prefix.length() - 1);
+		}
+		// System.out.println(prefix);
 		taskDir = dir.getAbsoluteFile();
 		parseTestsDir();
 	}
-	
+
 	public List<File> getInput() {
 		return input;
 	}
-	
+
 	public List<File> getOutput() {
 		return output;
 	}
-	
+
 	public File getChecker() {
 		return checker;
 	}
 	
+	public List<File> getSolutions() {
+		return solutions;
+	}
+
 	public int testsCount() {
 		return input.size();
 	}
-	
+
 	protected void parseTestsDir() {
-		findChecker();
+		solutions = listAllFiles().stream()
+				.filter(x -> x.getName().endsWith(".cpp") || x.getName().endsWith(".java"))
+				.collect(Collectors.toList());
 		
-		List<String> files = Arrays.stream(taskDir.listFiles())
-				.filter(x -> x.isFile())
-				.map(File::getName)
+		findChecker();
+//		System.out.println("checker:" + checker.getAbsolutePath());
+		
+		List<String> files = listAllFiles().stream().filter(x -> x.isFile()).map(File::getAbsolutePath)
 				.filter(x -> !x.endsWith(".cpp") && !x.endsWith(".java") && !x.endsWith(".jar"))
 				.collect(Collectors.toList());
-		for (int i = 0; i <= 20; i++) {
-			findTestCases(i, files);
+
+		int numberOfTests = countTests(files);
+		String best = findBestIn(files, numberOfTests);
+		// System.out.println("best " + best);
+
+		for (int i = 1; i <= numberOfTests; i++) {
+			findTestCases(i, files, best);
+		}
+	}
+
+	private int countTests(List<String> files) {
+		List<String> fileNames = files.stream().map(x -> x.substring(prefix.length())).collect(Collectors.toList());
+
+		int count = 0;
+		while (true) {
+			count++;
+			int testCase = count;
+
+			int max = fileNames.stream().map(x -> countNumberInString(testCase, x)).max(Integer::compare).get();
+			if (max == 0)
+				return count - 1;
+			List<String> candidates = fileNames.stream().filter(x -> countNumberInString(testCase, x) == max)
+					.collect(Collectors.toList());
+			int maxInCount = candidates.stream().map(x -> substringCount(x, "in")).max(Integer::compare).get();
+			if (candidates.size() < 2 || maxInCount == 0)
+				return count - 1;
+
 		}
 	}
 	
-	private void findChecker() {
-		List<String> filtered = 
-				Arrays.stream(taskDir.listFiles()).collect(Collectors.toList())
-				.stream()
-				.map(x -> x.getName())
-				.filter(x -> x.contains("checker"))
-				.filter(x -> x.endsWith(".jar") || x.endsWith(".sh") || !x.contains("."))
+
+	private List<String> findTestCaseCandidates(int testCase, List<String> allCandidates) {
+		int testCaseNumberMaxOccurrenceCount = allCandidates.stream().map(x -> countNumberInString(testCase, x)).max(Integer::compare).get();
+		if (testCaseNumberMaxOccurrenceCount == 0) return new ArrayList<String>();
+		List<String> testCaseCandidates = allCandidates.stream()
+				.filter(x -> countNumberInString(testCase, x) == testCaseNumberMaxOccurrenceCount)
 				.collect(Collectors.toList());
-		if (filtered.size() == 1) {
-			this.checker = new File(taskDir, filtered.get(0));
-		} else if (filtered.contains("checker")) {
-			this.checker = new File(taskDir, "checker");
-		} else if (filtered.contains("checker.sh")) {
-			this.checker = new File(taskDir, "checker.sh");
-		} else if (filtered.contains("checker.jar")) {
-			this.checker = new File(taskDir, "checker.jar");
+		return testCaseCandidates;
+	}
+	
+//	private List<String> calculateInCandidates(int testCase, List<String> allCandidates) {
+//		
+//	}
+
+	private String findBestIn(List<String> files, int maxCount) {
+		List<String> fileNames = files.stream().map(x -> x.replace(prefix, "")).collect(Collectors.toList());
+
+		for (int i = 1; i <= maxCount; i++) {
+			int testCase = i;
+			int max = fileNames.stream().map(x -> countNumberInString(testCase, x)).max(Integer::compare).get();
+			List<String> candidates = fileNames.stream().filter(x -> countNumberInString(testCase, x) == max)
+					.collect(Collectors.toList());
+			int maxInCount = candidates.stream().map(x -> substringCount(x, "in")).max(Integer::compare).get();
+			List<String> inCandidates = candidates.stream().filter(x -> substringCount(x, "in") == maxInCount)
+					.collect(Collectors.toList());
+			if (inCandidates.size() == 1)
+				return inCandidates.get(0);
+		}
+		return null;
+	}
+
+	private List<File> listAllFiles() {
+//		System.out.println("**************");
+//		System.out.println(taskDir.getAbsolutePath());
+		List<File> files = new ArrayList<>();
+		listAllFiles(taskDir, files);
+//		for (File file: files) System.out.println(file.getAbsolutePath());
+		return files;
+	}
+
+	private void listAllFiles(File dir, List<File> ans) {
+		if (dir.getName().startsWith("sandbox_") && (dir.getName().endsWith(".cpp") || dir.getName().endsWith(".java"))) return;
+		for (File file : dir.listFiles()) {
+			if (file.isDirectory())
+				listAllFiles(file, ans);
+			else
+				ans.add(file);
 		}
 	}
 
-	public void findTestCases(int testCaseNumber, List<String> fileNames) {
-		System.out.println(testCaseNumber);
-		int max = fileNames.stream().map(x -> countNumberInString(testCaseNumber, x)).max(Integer::compare).get();
-		if (max == 0) return;
-		List<String> candidates = fileNames.stream().filter(x -> countNumberInString(testCaseNumber, x) == max).collect(Collectors.toList());
+	private void findChecker() {
+		List<File> filtered = listAllFiles().stream().filter(x -> x.getAbsolutePath().contains("checker"))
+				.filter(x -> x.getName().endsWith(".jar") || x.getName().endsWith(".sh") || !x.getName().contains("."))
+				.collect(Collectors.toList());
+		if (filtered.size() == 1) {
+			this.checker = filtered.get(0);
+			return;
+		}
+		for (File file : filtered) {
+			if (file.getName().equals("checker")) {
+				this.checker = file; return;
+			} else if (file.getName().equals("checker.sh")) {
+				this.checker = file; return;
+			} else if (file.getName().equals("checker.jar")) {
+				this.checker = file; return;
+			}
+		}
+	}
 
-		System.out.println(candidates);
+	public void findTestCases(int testCaseNumber, List<String> fileNames, String best) {
+		// System.out.println(testCaseNumber);
+		int max = fileNames.stream().map(x -> countNumberInString(testCaseNumber, x)).max(Integer::compare).get();
+		List<String> candidates = fileNames.stream().filter(x -> countNumberInString(testCaseNumber, x) == max)
+				.collect(Collectors.toList());
+
+		// System.out.println(candidates);
 
 		int maxInCount = candidates.stream().map(x -> substringCount(x, "in")).max(Integer::compare).get();
-		
-		List<String> inCandidates = candidates.stream().filter(x -> substringCount(x, "in") == maxInCount).collect(Collectors.toList());
-
-		if (inCandidates.size() > 1) {
+		List<String> inCandidates = candidates.stream().filter(x -> substringCount(x, "in") == maxInCount)
+				.collect(Collectors.toList());
+		int minInDifference = inCandidates.stream().map(x -> LevenshteinDistance.computeLevenshteinDistance(x, best))
+				.min(Integer::compare).get();
+		List<String> lastInCandidates = inCandidates.stream()
+				.filter(x -> LevenshteinDistance.computeLevenshteinDistance(x, best) == minInDifference)
+				.collect(Collectors.toList());
+		if (lastInCandidates.size() > 1) {
 			throw new IllegalStateException("Cannot select input file from " + inCandidates);
 		}
-		
-		String inputFile = inCandidates.get(0);
+
+		String inputFile = lastInCandidates.get(0);
 		candidates.remove(inputFile);
 
-		int minDifference = candidates.stream().map(x -> LevenshteinDistance.computeLevenshteinDistance(x, inputFile)).min(Integer::compare).get();
-		List<String> outCandidates = candidates.stream().filter(x -> LevenshteinDistance.computeLevenshteinDistance(x, inputFile) == minDifference).collect(Collectors.toList());
+		int minDifference = candidates.stream().map(x -> LevenshteinDistance.computeLevenshteinDistance(x, inputFile))
+				.min(Integer::compare).get();
+		List<String> outCandidates = candidates.stream()
+				.filter(x -> LevenshteinDistance.computeLevenshteinDistance(x, inputFile) == minDifference)
+				.collect(Collectors.toList());
 
 		if (outCandidates.size() > 1) {
 			throw new IllegalStateException("Cannot select output file from " + inCandidates);
 		}
-		
+
 		String outputFile = outCandidates.get(0);
-		input.add(new File(taskDir, inputFile));
-		output.add(new File(taskDir, outputFile));
+		input.add(new File(inputFile));
+		output.add(new File(outputFile));
 	}
 
 	public int countNumberInString(int number, String fileName) {
 		String s = fileName + ".";
 		int count = 0;
 		int current = -1;
-		for (char c: s.toCharArray()) {
+		for (char c : s.toCharArray()) {
 			if (Character.isDigit(c)) {
 				if (current >= 0) {
 					current *= 10;

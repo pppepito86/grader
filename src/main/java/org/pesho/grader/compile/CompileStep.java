@@ -56,6 +56,7 @@ public abstract class CompileStep implements BaseStep {
 		try {
 			//System.out.println(new File(sandboxDir, getBinaryFileName()).getAbsolutePath());
 			FileUtils.copyFile(new File(sandboxDir, getBinaryFileName()), getBinaryFile());
+			getBinaryFile().setExecutable(true);
 			//System.out.println(" - copying " + getBinaryFile().getAbsolutePath());
 		} catch (Exception e) {
 			//System.out.println(" FAILED");
