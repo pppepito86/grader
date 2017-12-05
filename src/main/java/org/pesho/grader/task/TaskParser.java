@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class TaskParser {
 
@@ -36,7 +37,7 @@ public class TaskParser {
 	public File getChecker() {
 		return checker;
 	}
-	
+
 	public List<File> getSolutions() {
 		return solutions;
 	}
@@ -46,94 +47,79 @@ public class TaskParser {
 	}
 
 	protected void parseTestsDir() {
-		solutions = listAllFiles().stream()
-				.filter(x -> x.getName().endsWith(".cpp") || x.getName().endsWith(".java"))
+		solutions = listAllFiles().stream().filter(x -> x.getName().endsWith(".cpp") || x.getName().endsWith(".java"))
 				.collect(Collectors.toList());
-		
+
 		findChecker();
-//		System.out.println("checker:" + checker.getAbsolutePath());
-		
+
 		List<String> files = listAllFiles().stream().filter(x -> x.isFile()).map(File::getAbsolutePath)
 				.filter(x -> !x.endsWith(".cpp") && !x.endsWith(".java") && !x.endsWith(".jar"))
 				.collect(Collectors.toList());
 
 		int numberOfTests = countTests(files);
-		String best = findBestIn(files, numberOfTests);
-		// System.out.println("best " + best);
+		String bestInputCandidate = findBestInputCandidate(files, numberOfTests);
 
 		for (int i = 1; i <= numberOfTests; i++) {
-			findTestCases(i, files, best);
+			findTestCases(i, files, bestInputCandidate);
 		}
 	}
 
 	private int countTests(List<String> files) {
 		List<String> fileNames = files.stream().map(x -> x.substring(prefix.length())).collect(Collectors.toList());
 
-		int count = 0;
-		while (true) {
-			count++;
-			int testCase = count;
-
-			int max = fileNames.stream().map(x -> countNumberInString(testCase, x)).max(Integer::compare).get();
-			if (max == 0)
-				return count - 1;
-			List<String> candidates = fileNames.stream().filter(x -> countNumberInString(testCase, x) == max)
-					.collect(Collectors.toList());
-			int maxInCount = candidates.stream().map(x -> substringCount(x, "in")).max(Integer::compare).get();
-			if (candidates.size() < 2 || maxInCount == 0)
-				return count - 1;
-
+		for (int i = 1;; i++) {
+			List<String> testCaseCandidates = findTestCaseCandidates(i, fileNames);
+			List<String> inputTestCaseCandidates = findInputCandidates(testCaseCandidates);
+			if (testCaseCandidates.size() < 2 || inputTestCaseCandidates.size() < 1) {
+				return i - 1;
+			}
 		}
 	}
-	
 
 	private List<String> findTestCaseCandidates(int testCase, List<String> allCandidates) {
-		int testCaseNumberMaxOccurrenceCount = allCandidates.stream().map(x -> countNumberInString(testCase, x)).max(Integer::compare).get();
-		if (testCaseNumberMaxOccurrenceCount == 0) return new ArrayList<String>();
+		int testCaseNumberMaxOccurrenceCount = allCandidates.stream().map(x -> countNumberInString(testCase, x))
+				.max(Integer::compare).orElse(0);
+		if (testCaseNumberMaxOccurrenceCount == 0) {
+			return new ArrayList<String>();
+		}
 		List<String> testCaseCandidates = allCandidates.stream()
 				.filter(x -> countNumberInString(testCase, x) == testCaseNumberMaxOccurrenceCount)
 				.collect(Collectors.toList());
 		return testCaseCandidates;
 	}
-	
-//	private List<String> calculateInCandidates(int testCase, List<String> allCandidates) {
-//		
-//	}
 
-	private String findBestIn(List<String> files, int maxCount) {
+	private List<String> findInputCandidates(List<String> candidates) {
+		int inputMaxOccurrenceCount = candidates.stream().map(x -> countInSubstrings(x)).max(Integer::compare).orElse(0);
+		if (inputMaxOccurrenceCount == 0) return new ArrayList<>();
+		List<String> inputCandidates = candidates.stream().filter(x -> substringCount(x, "in") == inputMaxOccurrenceCount)
+				.collect(Collectors.toList());
+		return inputCandidates;
+	}
+
+	private String findBestInputCandidate(List<String> files, int testsCount) {
 		List<String> fileNames = files.stream().map(x -> x.replace(prefix, "")).collect(Collectors.toList());
 
-		for (int i = 1; i <= maxCount; i++) {
-			int testCase = i;
-			int max = fileNames.stream().map(x -> countNumberInString(testCase, x)).max(Integer::compare).get();
-			List<String> candidates = fileNames.stream().filter(x -> countNumberInString(testCase, x) == max)
-					.collect(Collectors.toList());
-			int maxInCount = candidates.stream().map(x -> substringCount(x, "in")).max(Integer::compare).get();
-			List<String> inCandidates = candidates.stream().filter(x -> substringCount(x, "in") == maxInCount)
-					.collect(Collectors.toList());
-			if (inCandidates.size() == 1)
-				return inCandidates.get(0);
+		for (int i = 1; i <= testsCount; i++) {
+			List<String> testCaseCandidates = findTestCaseCandidates(i, fileNames);
+			List<String> testCaseInputCandidates = findInputCandidates(testCaseCandidates);
+			if (testCaseInputCandidates.size() == 1) {
+				return testCaseInputCandidates.get(0);
+			}
 		}
 		return null;
 	}
 
 	private List<File> listAllFiles() {
-//		System.out.println("**************");
-//		System.out.println(taskDir.getAbsolutePath());
-		List<File> files = new ArrayList<>();
-		listAllFiles(taskDir, files);
-//		for (File file: files) System.out.println(file.getAbsolutePath());
-		return files;
+		List<File> allFiles = new ArrayList<>();
+		listAllFiles(taskDir, allFiles);
+		return allFiles;
 	}
 
-	private void listAllFiles(File dir, List<File> ans) {
-		if (dir.getName().startsWith("sandbox_") && (dir.getName().endsWith(".cpp") || dir.getName().endsWith(".java"))) return;
-		for (File file : dir.listFiles()) {
-			if (file.isDirectory())
-				listAllFiles(file, ans);
-			else
-				ans.add(file);
-		}
+	private void listAllFiles(File dir, List<File> allFiles) {
+		if (dir.getName().startsWith("sandbox_"))
+			return;
+		Arrays.stream(dir.listFiles()).filter(File::isFile).forEach(allFiles::add);
+		Arrays.stream(dir.listFiles()).filter(File::isDirectory).forEach(x -> listAllFiles(x, allFiles));
 	}
 
 	private void findChecker() {
@@ -146,51 +132,50 @@ public class TaskParser {
 		}
 		for (File file : filtered) {
 			if (file.getName().equals("checker")) {
-				this.checker = file; return;
+				this.checker = file;
+				return;
 			} else if (file.getName().equals("checker.sh")) {
-				this.checker = file; return;
+				this.checker = file;
+				return;
 			} else if (file.getName().equals("checker.jar")) {
-				this.checker = file; return;
+				this.checker = file;
+				return;
 			}
 		}
 	}
 
 	public void findTestCases(int testCaseNumber, List<String> fileNames, String best) {
-		// System.out.println(testCaseNumber);
-		int max = fileNames.stream().map(x -> countNumberInString(testCaseNumber, x)).max(Integer::compare).get();
-		List<String> candidates = fileNames.stream().filter(x -> countNumberInString(testCaseNumber, x) == max)
-				.collect(Collectors.toList());
-
-		// System.out.println(candidates);
-
-		int maxInCount = candidates.stream().map(x -> substringCount(x, "in")).max(Integer::compare).get();
-		List<String> inCandidates = candidates.stream().filter(x -> substringCount(x, "in") == maxInCount)
-				.collect(Collectors.toList());
-		int minInDifference = inCandidates.stream().map(x -> LevenshteinDistance.computeLevenshteinDistance(x, best))
-				.min(Integer::compare).get();
-		List<String> lastInCandidates = inCandidates.stream()
-				.filter(x -> LevenshteinDistance.computeLevenshteinDistance(x, best) == minInDifference)
-				.collect(Collectors.toList());
-		if (lastInCandidates.size() > 1) {
-			throw new IllegalStateException("Cannot select input file from " + inCandidates);
+		List<String> testCaseCandidates = findTestCaseCandidates(testCaseNumber, fileNames);
+		List<String> allInputCandidates = findInputCandidates(testCaseCandidates);
+		List<String> closestInputCandidates = allInputCandidates;
+		if (best != null) {
+			closestInputCandidates = findClosestCandidates(best, allInputCandidates);
+		}
+		if (closestInputCandidates.size() > 1) {
+			throw new IllegalStateException("Cannot select input file from " + closestInputCandidates);
 		}
 
-		String inputFile = lastInCandidates.get(0);
-		candidates.remove(inputFile);
+		String inputFile = closestInputCandidates.get(0);
+		testCaseCandidates.remove(inputFile);
 
-		int minDifference = candidates.stream().map(x -> LevenshteinDistance.computeLevenshteinDistance(x, inputFile))
-				.min(Integer::compare).get();
-		List<String> outCandidates = candidates.stream()
-				.filter(x -> LevenshteinDistance.computeLevenshteinDistance(x, inputFile) == minDifference)
-				.collect(Collectors.toList());
+		List<String> closestOutputCandidates = findClosestCandidates(inputFile, testCaseCandidates);
 
-		if (outCandidates.size() > 1) {
-			throw new IllegalStateException("Cannot select output file from " + inCandidates);
+		if (closestOutputCandidates.size() > 1) {
+			throw new IllegalStateException("Cannot select output file from " + closestOutputCandidates);
 		}
 
-		String outputFile = outCandidates.get(0);
+		String outputFile = closestOutputCandidates.get(0);
 		input.add(new File(inputFile));
 		output.add(new File(outputFile));
+	}
+
+	private List<String> findClosestCandidates(String targetValue, List<String> candidates) {
+		int minDifference = candidates.stream().map(x -> LevenshteinDistance.computeLevenshteinDistance(x, targetValue))
+				.min(Integer::compare).get();
+		List<String> closestCandidates = candidates.stream()
+				.filter(x -> LevenshteinDistance.computeLevenshteinDistance(x, targetValue) == minDifference)
+				.collect(Collectors.toList());
+		return closestCandidates;
 	}
 
 	public int countNumberInString(int number, String fileName) {
@@ -215,27 +200,32 @@ public class TaskParser {
 		return count;
 	}
 
+	public int countInSubstrings(String string) {
+		return substringCount(string.toLowerCase(), "in");
+	}
+
 	public int substringCount(String string, String substr) {
 		return (string.length() - string.replaceAll(substr, "").length()) / substr.length();
 	}
 
 	static class LevenshteinDistance {
-		private static int minimum(int a, int b, int c) {
+		
+		private static int min(int a, int b, int c) {
 			return Math.min(Math.min(a, b), c);
 		}
 
-		public static int computeLevenshteinDistance(CharSequence lhs, CharSequence rhs) {
+		public static int computeLevenshteinDistance(String lhs, String rhs) {
 			int[][] distance = new int[lhs.length() + 1][rhs.length() + 1];
 
-			for (int i = 0; i <= lhs.length(); i++)
-				distance[i][0] = i;
-			for (int j = 1; j <= rhs.length(); j++)
-				distance[0][j] = j;
+			IntStream.range(0, lhs.length() + 1).forEach(i -> distance[i][0] = i);
+			IntStream.range(0, rhs.length() + 1).forEach(j -> distance[0][j] = j);
 
-			for (int i = 1; i <= lhs.length(); i++)
-				for (int j = 1; j <= rhs.length(); j++)
-					distance[i][j] = minimum(distance[i - 1][j] + 1, distance[i][j - 1] + 1,
+			for (int i = 1; i <= lhs.length(); i++) {
+				for (int j = 1; j <= rhs.length(); j++) {
+					distance[i][j] = min(distance[i - 1][j] + 1, distance[i][j - 1] + 1,
 							distance[i - 1][j - 1] + ((lhs.charAt(i - 1) == rhs.charAt(j - 1)) ? 0 : 1));
+				}
+			}
 
 			return distance[lhs.length()][rhs.length()];
 		}
