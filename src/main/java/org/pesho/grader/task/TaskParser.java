@@ -179,25 +179,10 @@ public class TaskParser {
 	}
 
 	public int countNumberInString(int number, String fileName) {
-		String s = fileName + ".";
-		int count = 0;
-		int current = -1;
-		for (char c : s.toCharArray()) {
-			if (Character.isDigit(c)) {
-				if (current >= 0) {
-					current *= 10;
-				} else {
-					current = 0;
-				}
-				current += c - '0';
-			} else {
-				if (current == number) {
-					count++;
-				}
-				current = -1;
-			}
-		}
-		return count;
+		return (int) Arrays.stream(fileName.replaceAll("[^0-9]", " ").split(" "))
+				.filter(x -> x.length() > 0)
+				.map(Integer::valueOf)
+				.filter(x -> x == number).count();
 	}
 
 	public int countInSubstrings(String string) {
