@@ -3,7 +3,9 @@ package org.pesho.grader.task;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -47,11 +49,39 @@ public class TaskParser {
 	}
 
 	protected void parseTestsDir() {
+		findSolutions();
+		findChecker();
+		findTests();
+	}
+
+	private void findSolutions() {
 		solutions = listAllFiles().stream().filter(x -> x.getName().endsWith(".cpp") || x.getName().endsWith(".java"))
 				.collect(Collectors.toList());
+	}
 
-		findChecker();
+	private void findChecker() {
+		List<File> filtered = listAllFiles().stream().filter(x -> x.getAbsolutePath().contains("checker"))
+				.filter(x -> x.getName().endsWith(".jar") || x.getName().endsWith(".sh") || !x.getName().contains("."))
+				.collect(Collectors.toList());
+		if (filtered.size() == 1) {
+			this.checker = filtered.get(0);
+			return;
+		}
+		for (File file : filtered) {
+			if (file.getName().equals("checker")) {
+				this.checker = file;
+				return;
+			} else if (file.getName().equals("checker.sh")) {
+				this.checker = file;
+				return;
+			} else if (file.getName().equals("checker.jar")) {
+				this.checker = file;
+				return;
+			}
+		}
+	}
 
+	private void findTests() {
 		List<String> files = listAllFiles().stream().filter(x -> x.isFile()).map(File::getAbsolutePath)
 				.filter(x -> !x.endsWith(".cpp") && !x.endsWith(".java") && !x.endsWith(".jar"))
 				.collect(Collectors.toList());
@@ -77,22 +107,18 @@ public class TaskParser {
 	}
 
 	private List<String> findTestCaseCandidates(int testCase, List<String> allCandidates) {
-		int testCaseNumberMaxOccurrenceCount = allCandidates.stream().map(x -> countNumberInString(testCase, x))
-				.max(Integer::compare).orElse(0);
-		if (testCaseNumberMaxOccurrenceCount == 0) {
-			return new ArrayList<String>();
-		}
 		List<String> testCaseCandidates = allCandidates.stream()
-				.filter(x -> countNumberInString(testCase, x) == testCaseNumberMaxOccurrenceCount)
-				.collect(Collectors.toList());
+				.collect(Collectors.groupingBy(x -> countNumberInString(testCase, x))).entrySet().stream()
+				.filter(e -> e.getKey() != 0).sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
+				.map(e -> e.getValue()).findFirst().orElse(new ArrayList<String>());
 		return testCaseCandidates;
 	}
 
 	private List<String> findInputCandidates(List<String> candidates) {
-		int inputMaxOccurrenceCount = candidates.stream().map(x -> countInSubstrings(x)).max(Integer::compare).orElse(0);
-		if (inputMaxOccurrenceCount == 0) return new ArrayList<>();
-		List<String> inputCandidates = candidates.stream().filter(x -> substringCount(x, "in") == inputMaxOccurrenceCount)
-				.collect(Collectors.toList());
+		List<String> inputCandidates = candidates.stream().collect(Collectors.groupingBy(x -> countInSubstrings(x)))
+				.entrySet().stream().filter(e -> e.getKey() != 0)
+				.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder())).map(e -> e.getValue()).findFirst()
+				.orElse(new ArrayList<String>());
 		return inputCandidates;
 	}
 
@@ -116,31 +142,9 @@ public class TaskParser {
 	}
 
 	private void listAllFiles(File dir, List<File> allFiles) {
-		if (dir.getName().startsWith("sandbox_"))
-			return;
-		Arrays.stream(dir.listFiles()).filter(File::isFile).forEach(allFiles::add);
-		Arrays.stream(dir.listFiles()).filter(File::isDirectory).forEach(x -> listAllFiles(x, allFiles));
-	}
-
-	private void findChecker() {
-		List<File> filtered = listAllFiles().stream().filter(x -> x.getAbsolutePath().contains("checker"))
-				.filter(x -> x.getName().endsWith(".jar") || x.getName().endsWith(".sh") || !x.getName().contains("."))
-				.collect(Collectors.toList());
-		if (filtered.size() == 1) {
-			this.checker = filtered.get(0);
-			return;
-		}
-		for (File file : filtered) {
-			if (file.getName().equals("checker")) {
-				this.checker = file;
-				return;
-			} else if (file.getName().equals("checker.sh")) {
-				this.checker = file;
-				return;
-			} else if (file.getName().equals("checker.jar")) {
-				this.checker = file;
-				return;
-			}
+		if (!dir.getName().startsWith("sandbox_")) {
+			Arrays.stream(dir.listFiles()).filter(File::isFile).forEach(allFiles::add);
+			Arrays.stream(dir.listFiles()).filter(File::isDirectory).forEach(x -> listAllFiles(x, allFiles));
 		}
 	}
 
@@ -179,10 +183,8 @@ public class TaskParser {
 	}
 
 	public int countNumberInString(int number, String fileName) {
-		return (int) Arrays.stream(fileName.replaceAll("[^0-9]", " ").split(" "))
-				.filter(x -> x.length() > 0)
-				.map(Integer::valueOf)
-				.filter(x -> x == number).count();
+		return (int) Arrays.stream(fileName.replaceAll("[^0-9]", " ").split(" ")).filter(x -> x.length() > 0)
+				.map(Integer::valueOf).filter(x -> x == number).count();
 	}
 
 	public int countInSubstrings(String string) {

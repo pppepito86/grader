@@ -27,12 +27,12 @@ public class Main {
 		TaskTests tests = new TaskTests(100, taskParser.getChecker().getAbsolutePath(), testGroups);
 		SubmissionGrader grader = null;
 		if (args.length == 2) grader = new SubmissionGrader(tests, args[1]);
-		else grader = new SubmissionGrader(tests, getSolution(taskParser.getSolutions()));
+		else grader = new SubmissionGrader(tests, selectSolution(taskParser.getSolutions()));
 		double score = grader.grade();
 		System.out.println("Score is: " + new DecimalFormat("#.00").format(score));
 	}
 
-	private static String getSolution(List<File> solutions) {
+	private static String selectSolution(List<File> solutions) {
 		System.out.println("Select solution to grade:");
 		for (int i = 1; i <= solutions.size(); i++) {
 			System.out.println(i + ". " + solutions.get(i-1).getName());
