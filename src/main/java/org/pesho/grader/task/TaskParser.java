@@ -196,7 +196,7 @@ public class TaskParser {
 	}
 
 	static class LevenshteinDistance {
-		
+
 		private static int min(int a, int b, int c) {
 			return Math.min(Math.min(a, b), c);
 		}

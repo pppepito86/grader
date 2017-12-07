@@ -13,9 +13,6 @@ public class Main {
 	
 	public static void main(String[] args) {
 		TaskParser taskParser = new TaskParser(new File(args[0]));
-//		for (int i = 0; i < taskParser.testsCount(); i++) {
-//			System.out.println(taskParser.getInput().get(i) + " " + taskParser.getOutput().get(i));
-//		}
 		TestCase[] testCases = new TestCase[taskParser.testsCount()];
 		for (int i = 0; i < testCases.length; i++) {
 			testCases[i] = new TestCase(taskParser.getInput().get(i).getAbsolutePath(), taskParser.getOutput().get(i).getAbsolutePath());
