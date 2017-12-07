@@ -11,9 +11,8 @@ public class CppTestStep extends TestStep {
 	}
 
 	@Override
-	public String[] getCommands() {
-		String command = String.format(EXECUTE_COMMAND_PATTERN, binaryFile.getName());
-		return new String[] { command };
+	public String getCommand() {
+		return String.format(EXECUTE_COMMAND_PATTERN, binaryFile.getName());
 	}
 
 }

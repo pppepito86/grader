@@ -1,84 +1,82 @@
 package org.pesho.grader.compile;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.BaseStep;
 import org.pesho.grader.step.Verdict;
 import org.pesho.sandbox.CommandStatus;
 import org.pesho.sandbox.SandboxExecutor;
-import org.pesho.sandbox.SandboxResult;
 
 public abstract class CompileStep implements BaseStep {
-	
+
 	protected final File sourceFile;
+	protected final File sandboxDir;
 	Verdict verdict;
-	
+
 	public CompileStep(File sourceFile) {
 		this.sourceFile = sourceFile.getAbsoluteFile();
+		this.sandboxDir = new File(sourceFile.getParentFile(), "sandbox_compile");
 	}
-	
+
 	public double execute() {
-		//System.out.println("***********");
-		//System.out.println("*Compiling* " + sourceFile.getAbsolutePath());
-		//System.out.println(sourceFile.getParentFile());
-		File sandboxDir = new File(sourceFile.getParentFile(), "sandbox_compile");
-		sandboxDir.mkdirs();
 		try {
-			//System.out.println(" - sandbox " + sandboxDir.getAbsolutePath());
-			//System.out.println(" - copying " + sourceFile.getAbsolutePath());
-			FileUtils.copyFile(sourceFile, new File(sandboxDir, sourceFile.getName()));
+			createSandboxDirectory();
+			copySandboxInput();
+
+			Verdict verdict = Arrays.stream(getCommands())
+				.map(command -> new SandboxExecutor().directory(sandboxDir).command(command).execute().getStatus())
+				.filter(status -> status != CommandStatus.SUCCESS)
+				.map(status -> getVerdict(status))
+				.findFirst().orElse(Verdict.OK);
+			copySandboxOutput();
+			
+			this.verdict = verdict;
 		} catch (Exception e) {
 			e.printStackTrace();
 			verdict = Verdict.SE;
-			return 0;
 		}
-				
-		String[] commands = getCommands();
-		for (String command: commands) {
-			SandboxResult result = new SandboxExecutor()
-					.directory(sandboxDir)
-					.command(command)
-					.execute();
-			//System.out.println("Executing command: " + command);
-			//System.out.println("Execution finished with result: " + result.getResult());
-			//System.out.println("Compilation status: " + result.getStatus());
-			if (result.getStatus() != CommandStatus.SUCCESS) {
-				if (result.getStatus() != CommandStatus.SYSTEM_ERROR) {
-					verdict = Verdict.CE;
-				} else {
-					verdict = Verdict.SE;
-				}
-				return 0;
-			}
+		if (verdict == Verdict.OK) {
+			return 1.0;
+		} else {
+			return 0.0;
 		}
-		
-		try {
-			//System.out.println(new File(sandboxDir, getBinaryFileName()).getAbsolutePath());
-			FileUtils.copyFile(new File(sandboxDir, getBinaryFileName()), getBinaryFile());
-			getBinaryFile().setExecutable(true);
-			//System.out.println(" - copying " + getBinaryFile().getAbsolutePath());
-		} catch (Exception e) {
-			//System.out.println(" FAILED");
-			e.printStackTrace();
-			verdict = Verdict.SE;
-			return 0;
-		}
-		verdict = Verdict.OK;
-		return 1;
 	}
-	
+
 	@Override
 	public Verdict getVerdict() {
 		return verdict;
 	}
 	
+	private Verdict getVerdict(CommandStatus status) {
+		switch (status) {
+		case SUCCESS: return Verdict.OK;
+		case SYSTEM_ERROR: return Verdict.SE;
+		default: return Verdict.CE;
+		}
+	}
+
 	public File getBinaryFile() {
 		return new File(sourceFile.getParentFile(), getBinaryFileName());
 	}
-	
+
 	public abstract String getBinaryFileName();
-	
+
 	protected abstract String[] getCommands();
-	
+
+	private void createSandboxDirectory() {
+		sandboxDir.mkdirs();
+	}
+
+	private void copySandboxInput() throws IOException {
+		FileUtils.copyFile(sourceFile, new File(sandboxDir, sourceFile.getName()));
+	}
+
+	private void copySandboxOutput() throws IOException {
+		FileUtils.copyFile(new File(sandboxDir, getBinaryFileName()), getBinaryFile());
+		getBinaryFile().setExecutable(true);
+	}
+
 }

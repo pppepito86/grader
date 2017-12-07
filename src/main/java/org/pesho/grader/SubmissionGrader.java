@@ -32,7 +32,9 @@ public class SubmissionGrader {
 		File checkerFile = new File(sandboxDir, originalCheckerFile.getName());
 		try {
 			FileUtils.copyFile(originalSourceFile, sourceFile);
-			FileUtils.copyFile(originalCheckerFile, checkerFile);
+			if (originalCheckerFile.exists()) {
+				FileUtils.copyFile(originalCheckerFile, checkerFile);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			return 0;

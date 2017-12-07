@@ -11,10 +11,9 @@ public class CppCheckStep extends CheckStep {
 	}
 
 	@Override
-	public String[] getCommands() {
-		String command = String.format(GRADE_COMMAND_PATTERN, binaryFile.getName(), inputFile.getName(),
+	public String getCommand() {
+		return String.format(GRADE_COMMAND_PATTERN, binaryFile.getName(), inputFile.getName(),
 				outputFile.getName(), solutionFile.getName());
-		return new String[] { command };
 	}
 
 }
