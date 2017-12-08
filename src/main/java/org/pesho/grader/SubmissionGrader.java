@@ -8,6 +8,7 @@ import org.pesho.grader.check.CheckStep;
 import org.pesho.grader.check.CheckStepFactory;
 import org.pesho.grader.compile.CompileStep;
 import org.pesho.grader.compile.CompileStepFactory;
+import org.pesho.grader.step.Verdict;
 import org.pesho.grader.task.TaskTests;
 import org.pesho.grader.task.TestCase;
 import org.pesho.grader.task.TestGroup;
@@ -18,10 +19,13 @@ public class SubmissionGrader {
 	
 	private TaskTests taskTests;
 	private File originalSourceFile;
+	private File binaryFile;
+	private SubmissionScore score;
 	
 	public SubmissionGrader(TaskTests taskTests, String sourceFile) {
 		this.taskTests = taskTests;
 		this.originalSourceFile = new File(sourceFile).getAbsoluteFile();
+		this.score = new SubmissionScore();
 	}
 
 	public double grade() {
@@ -40,47 +44,58 @@ public class SubmissionGrader {
 			return 0;
 		}
 		
-		System.out.print("Compilation ");
-		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile);
-		double compileScore = compileStep.execute();
-		System.out.println(" - " + compileStep.getVerdict());
-		if (compileScore != 1) return 0;
+		if (compile(sourceFile) == 0) return 0;
 		
-		File binaryFile = compileStep.getBinaryFile();
-		double score = executeTests(binaryFile, checkerFile);
-		return score * taskTests.getPoints();
+		double testsCcore = executeTests(checkerFile);
+		double finalScore = testsCcore * taskTests.getPoints();
+		score.addScore(finalScore);
+		return finalScore;
 	}
 
-	private double executeTests(File binaryFile, File checkerFile) {
+	private double compile(File sourceFile) {
+		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile);
+		double compileScore = compileStep.execute();
+		if (compileStep.getVerdict() == Verdict.OK) {
+			binaryFile = compileStep.getBinaryFile();
+		}
+		score.addScoreStep("Compile", compileStep.getVerdict());
+		return compileScore;
+	}
+	
+	private double executeTests(File checkerFile) {
 		double score = 0.0;
-		int count = 1;
 		for (TestGroup testGroup: taskTests.getTestGroups()) {
-			boolean hasFailed = false;
+			Verdict groupVerdict = Verdict.OK;
 			
 			for (TestCase testCase: testGroup.getTestCases()) {
-				File inputFile = new File(testCase.getInput());
-				System.out.print("Test #"+ (count++) + " (" + inputFile.getName() + ")");
-				File outputFile = new File(testCase.getOutput());
-				File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
-				TestStep testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile);
-				double testResult = testStep.execute();
-				if (testResult != 1) {
-					System.out.println(" - " + testStep.getVerdict());
-					hasFailed = true;
+				Verdict verdict = executeTest(testCase, checkerFile);
+				if (verdict != Verdict.OK) {
+					groupVerdict = verdict;
 					break;
 				}
-//				System.out.println(checkerFile.getAbsolutePath());
-				CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
-				double checkerResult = checkerStep.execute();
-				if (checkerResult != 1) {
-					System.out.println(" - " + checkerStep.getVerdict());
-					hasFailed = true;
-					break;
-				}
-				System.out.println(" - " + checkerStep.getVerdict());
 			}
-			if (!hasFailed) score += testGroup.getWeight();
+			if (groupVerdict == Verdict.OK) score += testGroup.getWeight();
 		}
+		return score;
+	}
+	
+	private Verdict executeTest(TestCase testCase, File checkerFile) {
+		File inputFile = new File(testCase.getInput());
+		File outputFile = new File(testCase.getOutput());
+		File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
+		TestStep testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile);
+		testStep.execute();
+		if (testStep.getVerdict() != Verdict.OK) {
+			score.addScoreStep("Test" + testCase.getNumber(), testStep.getVerdict());
+			return testStep.getVerdict();
+		}
+		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
+		checkerStep.execute();
+		score.addScoreStep("Test" + testCase.getNumber(), checkerStep.getVerdict());
+		return checkerStep.getVerdict();
+	}
+	
+	public SubmissionScore getScore() {
 		return score;
 	}
 

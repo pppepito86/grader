@@ -75,7 +75,10 @@ public abstract class CompileStep implements BaseStep {
 	}
 
 	private void copySandboxOutput() throws IOException {
-		FileUtils.copyFile(new File(sandboxDir, getBinaryFileName()), getBinaryFile());
+		File sandboxBinaryFile = new File(sandboxDir, getBinaryFileName());
+		if (!sandboxBinaryFile.exists()) return;
+		
+		FileUtils.copyFile(sandboxBinaryFile, getBinaryFile());
 		getBinaryFile().setExecutable(true);
 	}
 

@@ -2,8 +2,10 @@ package org.pesho.grader;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
+import org.pesho.grader.step.Verdict;
 import org.pesho.grader.task.TaskParser;
 import org.pesho.grader.task.TaskTests;
 import org.pesho.grader.task.TestCase;
@@ -15,7 +17,7 @@ public class Main {
 		TaskParser taskParser = new TaskParser(new File(args[0]));
 		TestCase[] testCases = new TestCase[taskParser.testsCount()];
 		for (int i = 0; i < testCases.length; i++) {
-			testCases[i] = new TestCase(taskParser.getInput().get(i).getAbsolutePath(), taskParser.getOutput().get(i).getAbsolutePath());
+			testCases[i] = new TestCase(i+1, taskParser.getInput().get(i).getAbsolutePath(), taskParser.getOutput().get(i).getAbsolutePath());
 		}
 		TestGroup[] testGroups = new TestGroup[testCases.length];
 		for (int i = 0; i < testGroups.length; i++) {
@@ -25,8 +27,12 @@ public class Main {
 		SubmissionGrader grader = null;
 		if (args.length == 2) grader = new SubmissionGrader(tests, args[1]);
 		else grader = new SubmissionGrader(tests, selectSolution(taskParser.getSolutions()));
-		double score = grader.grade();
-		System.out.println("Score is: " + new DecimalFormat("#.00").format(score));
+		grader.grade();
+		SubmissionScore score = grader.getScore();
+		for (Map.Entry<String, Verdict> entry: score.getScoreSteps().entrySet()) {
+			System.out.println(entry.getKey() + ": " + entry.getValue());
+		}
+		System.out.println("Score is: " + new DecimalFormat("#0.00").format(score.getScore()));
 	}
 
 	private static String selectSolution(List<File> solutions) {
