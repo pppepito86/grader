@@ -5,7 +5,9 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.BaseStep;
+import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
+import org.pesho.sandbox.CommandResult;
 import org.pesho.sandbox.CommandStatus;
 import org.pesho.sandbox.SandboxExecutor;
 
@@ -16,7 +18,7 @@ public abstract class CheckStep implements BaseStep {
 	protected final File outputFile;
 	protected final File solutionFile;
 	protected final File sandboxDir;
-	Verdict verdict;
+	protected StepResult result;
 
 	public CheckStep(File binaryFile, File inputFile, File outputFile, File solutionFile) {
 		this.binaryFile = binaryFile;
@@ -26,37 +28,39 @@ public abstract class CheckStep implements BaseStep {
 		this.sandboxDir = new File(binaryFile.getParentFile(), "sandbox_" + outputFile.getName());
 	}
 
-	public double execute() {
+	public void execute() {
 		try {
 			createSandboxDirectory();
 			copySandboxInput();
-			CommandStatus status = new SandboxExecutor().directory(sandboxDir).input("/dev/null")
-					.output("grade_" + inputFile.getName()).command(getCommand()).execute().getStatus();
+			CommandResult statusResult = new SandboxExecutor().directory(sandboxDir).input("/dev/null")
+					.output("grade_" + inputFile.getName()).command(getCommand()).execute().getResult();
 
-			verdict = getVerdict(status);
+			result = getResult(statusResult);
 		} catch (Exception e) {
 			e.printStackTrace();
-			verdict = Verdict.SE;
-		}
-		if (verdict == Verdict.OK) {
-			return 1.0;
-		} else {
-			return 0.0;
+			result = new StepResult(Verdict.SE, result.getReason());
 		}
 	}
 
-	private Verdict getVerdict(CommandStatus status) throws IOException {
-		if (status != CommandStatus.SUCCESS) return Verdict.SE;
+	private StepResult getResult(CommandResult result) throws IOException {
+		if (result.getStatus() != CommandStatus.SUCCESS) {
+			return new StepResult(Verdict.SE, result.getReason());
+		}
 		
 		File gradeFile = new File(sandboxDir, "grade_" + inputFile.getName());
 		String gradeString = FileUtils.readFileToString(gradeFile).trim();
 		double grade = Double.valueOf(gradeString);
-		return (grade == 1.0) ? Verdict.OK : Verdict.WA;
+		return new StepResult((grade == 1.0) ? Verdict.OK : Verdict.WA);
+	}
+	
+	@Override
+	public StepResult getResult() {
+		return result;
 	}
 
 	@Override
 	public Verdict getVerdict() {
-		return verdict;
+		return result.getVerdict();
 	}
 
 	protected abstract String getCommand();

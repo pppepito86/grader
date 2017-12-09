@@ -2,8 +2,10 @@ package org.pesho.grader.step;
 
 public interface BaseStep {
 	
-	double execute();
+	void execute();
 	
 	Verdict getVerdict();
+	
+	StepResult getResult();
 
 }

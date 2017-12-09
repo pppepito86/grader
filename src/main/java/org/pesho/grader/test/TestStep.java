@@ -5,8 +5,9 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.BaseStep;
+import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
-import org.pesho.sandbox.CommandStatus;
+import org.pesho.sandbox.CommandResult;
 import org.pesho.sandbox.SandboxExecutor;
 
 public abstract class TestStep implements BaseStep {
@@ -15,7 +16,7 @@ public abstract class TestStep implements BaseStep {
 	protected final File inputFile;
 	protected final File outputFile;
 	protected final File sandboxDir;
-	Verdict verdict;
+	protected StepResult result;
 
 	public TestStep(File binaryFile, File inputFile, File outputFile) {
 		this.binaryFile = binaryFile.getAbsoluteFile();
@@ -24,39 +25,39 @@ public abstract class TestStep implements BaseStep {
 		this.sandboxDir = new File(binaryFile.getParentFile(), "sandbox_" + inputFile.getName());
 	}
 
-	public double execute() {
+	public void execute() {
 		try {
 			createSandboxDirectory();
 			copySandboxInput();
-			CommandStatus status = new SandboxExecutor().directory(sandboxDir).input(inputFile.getName())
-					.output(outputFile.getName()).timeout(1.0).command(getCommand()).execute().getStatus();
+			CommandResult commandResult = new SandboxExecutor().directory(sandboxDir).input(inputFile.getName())
+					.output(outputFile.getName()).timeout(1.0).command(getCommand()).execute().getResult();
 			copySandboxOutput();
 			
-			verdict = getVerdict(status);
+			result = getResult(commandResult);
 		} catch (Exception e) {
 			e.printStackTrace();
-			verdict = Verdict.SE;
-		}
-		if (verdict == Verdict.OK) {
-			return 1.0;
-		} else {
-			return 0.0;
+			result = new StepResult(Verdict.SE, result.getReason());
 		}
 	}
 
-	private Verdict getVerdict(CommandStatus status) {
-		switch (status) {
-		case SUCCESS: return Verdict.OK;
-		case OOM: return Verdict.ML;
-		case PROGRAM_ERROR:	return Verdict.RE;
-		case TIMEOUT: return Verdict.TL;
-		default: return Verdict.SE;
+	private StepResult getResult(CommandResult result) {
+		switch (result.getStatus()) {
+		case SUCCESS: return new StepResult(Verdict.OK);
+		case OOM: return new StepResult(Verdict.ML);
+		case PROGRAM_ERROR:	return new StepResult(Verdict.RE, result.getReason());
+		case TIMEOUT: return new StepResult(Verdict.TL);
+		default:  return new StepResult(Verdict.SE, result.getReason());
 		}
 	}
 	
 	@Override
+	public StepResult getResult() {
+		return result;
+	}
+	
+	@Override
 	public Verdict getVerdict() {
-		return verdict;
+		return result.getVerdict();
 	}
 
 	protected abstract String getCommand();

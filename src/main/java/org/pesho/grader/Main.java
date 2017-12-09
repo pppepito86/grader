@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-import org.pesho.grader.step.Verdict;
+import org.pesho.grader.step.StepResult;
+import org.pesho.grader.task.TaskDetails;
 import org.pesho.grader.task.TaskParser;
-import org.pesho.grader.task.TaskTests;
 import org.pesho.grader.task.TestCase;
 import org.pesho.grader.task.TestGroup;
 
@@ -23,14 +23,14 @@ public class Main {
 		for (int i = 0; i < testGroups.length; i++) {
 			testGroups[i] = new TestGroup(1.0/testCases.length, testCases[i]);
 		}
-		TaskTests tests = new TaskTests(100, taskParser.getChecker().getAbsolutePath(), testGroups);
+		TaskDetails tests = new TaskDetails(100, taskParser.getChecker().getAbsolutePath(), testGroups);
 		SubmissionGrader grader = null;
 		if (args.length == 2) grader = new SubmissionGrader(tests, args[1]);
 		else grader = new SubmissionGrader(tests, selectSolution(taskParser.getSolutions()));
 		grader.grade();
 		SubmissionScore score = grader.getScore();
-		for (Map.Entry<String, Verdict> entry: score.getScoreSteps().entrySet()) {
-			System.out.println(entry.getKey() + ": " + entry.getValue());
+		for (Map.Entry<String, StepResult> entry: score.getScoreSteps().entrySet()) {
+			System.out.println(entry.getKey() + ": " + entry.getValue().getVerdict());
 		}
 		System.out.println("Score is: " + new DecimalFormat("#0.00").format(score.getScore()));
 	}

@@ -6,55 +6,56 @@ import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.BaseStep;
+import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
-import org.pesho.sandbox.CommandStatus;
+import org.pesho.sandbox.CommandResult;
 import org.pesho.sandbox.SandboxExecutor;
 
 public abstract class CompileStep implements BaseStep {
 
 	protected final File sourceFile;
 	protected final File sandboxDir;
-	Verdict verdict;
+	protected StepResult result;
 
 	public CompileStep(File sourceFile) {
 		this.sourceFile = sourceFile.getAbsoluteFile();
 		this.sandboxDir = new File(sourceFile.getParentFile(), "sandbox_compile");
 	}
 
-	public double execute() {
+	public void execute() {
 		try {
 			createSandboxDirectory();
 			copySandboxInput();
 
-			Verdict verdict = Arrays.stream(getCommands())
-				.map(command -> new SandboxExecutor().directory(sandboxDir).command(command).execute().getStatus())
-				.filter(status -> status != CommandStatus.SUCCESS)
-				.map(status -> getVerdict(status))
-				.findFirst().orElse(Verdict.OK);
+			StepResult result = Arrays.stream(getCommands())
+				.map(command -> new SandboxExecutor().directory(sandboxDir).command(command).execute().getResult())
+				.map(x -> getResult(x))
+				.filter(x -> x.getVerdict() != Verdict.OK)
+				.findFirst().orElse(new StepResult(Verdict.OK));
 			copySandboxOutput();
 			
-			this.verdict = verdict;
+			this.result = result;
 		} catch (Exception e) {
 			e.printStackTrace();
-			verdict = Verdict.SE;
-		}
-		if (verdict == Verdict.OK) {
-			return 1.0;
-		} else {
-			return 0.0;
+			this.result = new StepResult(Verdict.SE, e.getMessage());
 		}
 	}
 
 	@Override
-	public Verdict getVerdict() {
-		return verdict;
+	public StepResult getResult() {
+		return result;
 	}
 	
-	private Verdict getVerdict(CommandStatus status) {
-		switch (status) {
-		case SUCCESS: return Verdict.OK;
-		case SYSTEM_ERROR: return Verdict.SE;
-		default: return Verdict.CE;
+	@Override
+	public Verdict getVerdict() {
+		return getResult().getVerdict();
+	}
+	
+	private StepResult getResult(CommandResult result) {
+		switch (result.getStatus()) {
+		case SUCCESS: return new StepResult(Verdict.OK);
+		case SYSTEM_ERROR: return new StepResult(Verdict.SE, result.getReason());
+		default: return new StepResult(Verdict.CE, result.getStatus() + " " + result.getReason());
 		}
 	}
 
