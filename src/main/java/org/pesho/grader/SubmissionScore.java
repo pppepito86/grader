@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 
 import org.pesho.grader.step.StepResult;
 
-public class SubmissionScore {
+public class SubmissionScore implements GradeListener {
 	
 	private LinkedHashMap<String, StepResult> scoreSteps;
 	private double score;

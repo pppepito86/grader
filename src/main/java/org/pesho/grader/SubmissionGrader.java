@@ -21,13 +21,19 @@ public class SubmissionGrader {
 	private File originalSourceFile;
 	private File binaryFile;
 	private SubmissionScore score;
+	private GradeListener listener;
 	
 	public SubmissionGrader(TaskDetails taskTests, String sourceFile) {
+		this(taskTests, sourceFile, null);
+	}
+
+	public SubmissionGrader(TaskDetails taskTests, String sourceFile, GradeListener listener) {
 		this.taskTests = taskTests;
 		this.originalSourceFile = new File(sourceFile).getAbsoluteFile();
 		this.score = new SubmissionScore();
+		this.listener = listener;
 	}
-
+	
 	public double grade() {
 		File sandboxDir = new File(originalSourceFile.getParentFile(), "sandbox_"+originalSourceFile.getName());
 		sandboxDir.mkdirs();
@@ -49,6 +55,7 @@ public class SubmissionGrader {
 		double testsCcore = executeTests(checkerFile);
 		double finalScore = testsCcore * taskTests.getPoints();
 		score.addScore(finalScore);
+		listener.addScore(finalScore);
 		return finalScore;
 	}
 
@@ -56,6 +63,7 @@ public class SubmissionGrader {
 		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile);
 		compileStep.execute();
 		score.addScoreStep("Compile", compileStep.getResult());
+		listener.addScoreStep("Compile", compileStep.getResult());
 		if (compileStep.getVerdict() == Verdict.OK) {
 			binaryFile = compileStep.getBinaryFile();
 			return 1;
@@ -88,11 +96,13 @@ public class SubmissionGrader {
 		testStep.execute();
 		if (testStep.getVerdict() != Verdict.OK) {
 			score.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
+			listener.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
 			return testStep.getVerdict();
 		}
 		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
 		checkerStep.execute();
 		score.addScoreStep("Test" + testCase.getNumber(), checkerStep.getResult());
+		listener.addScoreStep("Test" + testCase.getNumber(), checkerStep.getResult());
 		return checkerStep.getVerdict();
 	}
 	
