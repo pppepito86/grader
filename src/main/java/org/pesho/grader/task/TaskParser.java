@@ -23,7 +23,6 @@ public class TaskParser {
 		if (prefix.endsWith(".")) {
 			prefix = prefix.substring(0, prefix.length() - 1);
 		}
-		// System.out.println(prefix);
 		taskDir = dir.getAbsoluteFile();
 		parseTestsDir();
 	}
