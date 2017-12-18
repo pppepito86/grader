@@ -50,12 +50,21 @@ public class SubmissionGrader {
 			return 0;
 		}
 		
-		if (compile(sourceFile) == 0) return 0;
+		if (compile(sourceFile) == 0) {
+			score.addFinalScore("Compilation Failed", 0);
+			listener.addFinalScore("Compilation Failed", 0);
+			return 0;
+		}
 		
-		double testsCcore = executeTests(checkerFile);
-		double finalScore = testsCcore * taskTests.getPoints();
-		score.addScore(finalScore);
-		listener.addScore(finalScore);
+		double testsScore = executeTests(checkerFile);
+		double finalScore = testsScore * taskTests.getPoints();
+		int percent = (int) Math.round(100 * finalScore / testsScore);
+		String verdict = "Accepted";
+		if (percent < 100) {
+			verdict = percent + "%";
+		}
+		score.addFinalScore(verdict, finalScore);
+		listener.addFinalScore(verdict, finalScore);
 		return finalScore;
 	}
 

@@ -17,7 +17,7 @@ public class SubmissionScore implements GradeListener {
 		scoreSteps.put(step, result);
 	}
 	
-	public void addScore(double score) {
+	public void addFinalScore(String verdict, double score) {
 		this.score = score;
 	}
 	

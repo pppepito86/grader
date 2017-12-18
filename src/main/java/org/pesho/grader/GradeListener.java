@@ -6,6 +6,6 @@ public interface GradeListener {
 	
 	void addScoreStep(String step, StepResult result);	
 	
-	void addScore(double score);
+	void addFinalScore(String verdict, double score);
 
 }
