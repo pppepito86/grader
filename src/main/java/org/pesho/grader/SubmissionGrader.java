@@ -52,7 +52,9 @@ public class SubmissionGrader {
 		
 		if (compile(sourceFile) == 0) {
 			score.addFinalScore("Compilation Failed", 0);
-			listener.addFinalScore("Compilation Failed", 0);
+			if (listener != null) {
+				listener.addFinalScore("Compilation Failed", 0);
+			}
 			return 0;
 		}
 		
@@ -64,7 +66,9 @@ public class SubmissionGrader {
 			verdict = percent + "%";
 		}
 		score.addFinalScore(verdict, finalScore);
-		listener.addFinalScore(verdict, finalScore);
+		if (listener != null) {
+			listener.addFinalScore(verdict, finalScore);
+		}
 		return finalScore;
 	}
 
@@ -72,7 +76,9 @@ public class SubmissionGrader {
 		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile);
 		compileStep.execute();
 		score.addScoreStep("Compile", compileStep.getResult());
-		listener.addScoreStep("Compile", compileStep.getResult());
+		if (listener != null) {
+			listener.addScoreStep("Compile", compileStep.getResult());
+		}
 		if (compileStep.getVerdict() == Verdict.OK) {
 			binaryFile = compileStep.getBinaryFile();
 			return 1;
@@ -105,13 +111,17 @@ public class SubmissionGrader {
 		testStep.execute();
 		if (testStep.getVerdict() != Verdict.OK) {
 			score.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
-			listener.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
+			if (listener != null) {
+				listener.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
+			}
 			return testStep.getVerdict();
 		}
 		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
 		checkerStep.execute();
 		score.addScoreStep("Test" + testCase.getNumber(), checkerStep.getResult());
-		listener.addScoreStep("Test" + testCase.getNumber(), checkerStep.getResult());
+		if (listener != null) {
+			listener.addScoreStep("Test" + testCase.getNumber(), checkerStep.getResult());
+		}
 		return checkerStep.getVerdict();
 	}
 	
