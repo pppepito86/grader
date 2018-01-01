@@ -5,6 +5,9 @@ public class StepResult {
 	private Verdict verdict;
 	private String reason;
 	
+	public StepResult() {
+	}
+	
 	public StepResult(Verdict verdict) {
 		this(verdict, null);
 	}
@@ -14,8 +17,16 @@ public class StepResult {
 		this.reason = reason;
 	}
 	
+	public void setVerdict(Verdict verdict) {
+		this.verdict = verdict;
+	}
+	
 	public Verdict getVerdict() {
 		return verdict;
+	}
+	
+	public void setReason(String reason) {
+		this.reason = reason;
 	}
 	
 	public String getReason() {
