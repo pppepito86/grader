@@ -33,6 +33,9 @@ public class TaskDetails {
 		return new TaskDetails(props, taskParser.getChecker().getAbsolutePath(), testGroups);
 	}
 	
+	public TaskDetails() {
+	}
+	
 	public TaskDetails(Properties props, String checker, TestGroup... testGroups) {
 		this.points = Double.valueOf(props.getProperty("points", "100"));
 		this.time = Double.valueOf(props.getProperty("time", "1"));
@@ -40,21 +43,41 @@ public class TaskDetails {
 		this.checker = checker;
 		this.testGroups = Arrays.asList(testGroups);
 	}
+
+	public void setPoints(double points) {
+		this.points = points;
+	}
 	
 	public double getPoints() {
 		return points;
 	}
 
+	public void setTime(double time) {
+		this.time = time;
+	}
+	
 	public double getTime() {
 		return time;
+	}
+	
+	public void setMemory(int memory) {
+		this.memory = memory;
 	}
 	
 	public int getMemory() {
 		return memory;
 	}
 	
+	public void setChecker(String checker) {
+		this.checker = checker;
+	}
+	
 	public String getChecker() {
 		return checker;
+	}
+	
+	public void setTestGroups(List<TestGroup> testGroups) {
+		this.testGroups = testGroups;
 	}
 	
 	public List<TestGroup> getTestGroups() {
