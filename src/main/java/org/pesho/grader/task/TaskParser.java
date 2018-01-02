@@ -16,6 +16,7 @@ public class TaskParser {
 	private List<File> output = new ArrayList<>();
 	private List<File> solutions = new ArrayList<>();
 	private File checker = new File("checker");
+	private File properties = new File("properties");
 	private String prefix;
 
 	public TaskParser(File dir) {
@@ -38,7 +39,11 @@ public class TaskParser {
 	public File getChecker() {
 		return checker;
 	}
-
+	
+	public File getProperties() {
+		return properties;
+	}
+	
 	public List<File> getSolutions() {
 		return solutions;
 	}
@@ -50,6 +55,7 @@ public class TaskParser {
 	protected void parseTestsDir() {
 		findSolutions();
 		findChecker();
+		findProperties();
 		findTests();
 	}
 
@@ -80,6 +86,21 @@ public class TaskParser {
 		}
 	}
 
+	private void findProperties() {
+		List<File> filtered = listAllFiles().stream().filter(x -> x.getAbsolutePath().contains("props")||x.getAbsolutePath().contains("properties"))
+				.collect(Collectors.toList());
+		if (filtered.size() == 1) {
+			this.properties = filtered.get(0);
+			return;
+		}
+		
+		List<File> filteredProperties = filtered.stream().filter(x -> x.getName().equals(".properties"))
+				.collect(Collectors.toList());
+		if (filtered.size() == 1) {
+			this.properties = filteredProperties.get(0);
+		}
+	}
+	
 	private void findTests() {
 		List<String> files = listAllFiles().stream().filter(x -> x.isFile()).map(File::getAbsolutePath)
 				.filter(x -> !x.endsWith(".cpp") && !x.endsWith(".java") && !x.endsWith(".jar"))

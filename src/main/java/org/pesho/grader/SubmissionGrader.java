@@ -17,7 +17,7 @@ import org.pesho.grader.test.TestStepFactory;
 
 public class SubmissionGrader {
 	
-	private TaskDetails taskTests;
+	private TaskDetails taskDetails;
 	private File originalSourceFile;
 	private File binaryFile;
 	private SubmissionScore score;
@@ -28,7 +28,7 @@ public class SubmissionGrader {
 	}
 
 	public SubmissionGrader(TaskDetails taskTests, String sourceFile, GradeListener listener) {
-		this.taskTests = taskTests;
+		this.taskDetails = taskTests;
 		this.originalSourceFile = new File(sourceFile).getAbsoluteFile();
 		this.score = new SubmissionScore();
 		this.listener = listener;
@@ -38,7 +38,7 @@ public class SubmissionGrader {
 		File sandboxDir = new File(originalSourceFile.getParentFile(), "sandbox_"+originalSourceFile.getName());
 		sandboxDir.mkdirs();
 		File sourceFile = new File(sandboxDir, originalSourceFile.getName());
-		File originalCheckerFile = new File(taskTests.getChecker());
+		File originalCheckerFile = new File(taskDetails.getChecker());
 		File checkerFile = new File(sandboxDir, originalCheckerFile.getName());
 		try {
 			FileUtils.copyFile(originalSourceFile, sourceFile);
@@ -59,7 +59,7 @@ public class SubmissionGrader {
 		}
 		
 		double testsScore = executeTests(checkerFile);
-		double finalScore = testsScore * taskTests.getPoints();
+		double finalScore = testsScore * taskDetails.getPoints();
 		int percent = (int) Math.round(100 * finalScore / testsScore);
 		String verdict = "Accepted";
 		if (percent < 100) {
@@ -88,7 +88,7 @@ public class SubmissionGrader {
 	
 	private double executeTests(File checkerFile) {
 		double score = 0.0;
-		for (TestGroup testGroup: taskTests.getTestGroups()) {
+		for (TestGroup testGroup: taskDetails.getTestGroups()) {
 			Verdict groupVerdict = Verdict.OK;
 			
 			for (TestCase testCase: testGroup.getTestCases()) {
@@ -107,7 +107,7 @@ public class SubmissionGrader {
 		File inputFile = new File(testCase.getInput());
 		File outputFile = new File(testCase.getOutput());
 		File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
-		TestStep testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile);
+		TestStep testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, taskDetails.getTime(), taskDetails.getMemory());
 		testStep.execute();
 		if (testStep.getVerdict() != Verdict.OK) {
 			score.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());

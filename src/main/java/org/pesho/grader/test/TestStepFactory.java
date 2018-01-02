@@ -5,12 +5,11 @@ import org.pesho.grader.compile.JavaCompileStep;
 
 public class TestStepFactory {
 	
-	public static TestStep getInstance(File binaryFile, File inputFile, File outputFile) {
+	public static TestStep getInstance(File binaryFile, File inputFile, File outputFile, double time, int memory) {
 		if (binaryFile.getName().endsWith(JavaCompileStep.BINARY_FILE_ENDING)) {
-			return new JavaTestStep(binaryFile, inputFile, outputFile);
+			return new JavaTestStep(binaryFile, inputFile, outputFile, time, memory);
 		}
-		return new CppTestStep(binaryFile, inputFile, outputFile);
-		//throw new IllegalStateException("binary file language is not supported");
+		return new CppTestStep(binaryFile, inputFile, outputFile, time, memory);
 	}
 
 }

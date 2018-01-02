@@ -1,11 +1,15 @@
 package org.pesho.grader.task;
 
+import java.io.FileInputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 public class TaskDetails {
 
 	private double points;
+	private double time;
+	private int memory;
 	private String checker;
 	private List<TestGroup> testGroups;
 	
@@ -18,17 +22,35 @@ public class TaskDetails {
 		for (int i = 0; i < testGroups.length; i++) {
 			testGroups[i] = new TestGroup(1.0/testCases.length, testCases[i]);
 		}
-		return new TaskDetails(100, taskParser.getChecker().getAbsolutePath(), testGroups);
+		Properties props = new Properties();
+		if (taskParser.getProperties().exists()) {
+			try (FileInputStream fileInputStream = new FileInputStream(taskParser.getProperties())) {
+				props.load(fileInputStream);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return new TaskDetails(props, taskParser.getChecker().getAbsolutePath(), testGroups);
 	}
 	
-	public TaskDetails(double points, String checker, TestGroup... testGroups) {
-		this.points = points;
+	public TaskDetails(Properties props, String checker, TestGroup... testGroups) {
+		this.points = Double.valueOf(props.getProperty("points", "100"));
+		this.time = Double.valueOf(props.getProperty("time", "1"));
+		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
 		this.checker = checker;
 		this.testGroups = Arrays.asList(testGroups);
 	}
 	
 	public double getPoints() {
 		return points;
+	}
+
+	public double getTime() {
+		return time;
+	}
+	
+	public int getMemory() {
+		return memory;
 	}
 	
 	public String getChecker() {

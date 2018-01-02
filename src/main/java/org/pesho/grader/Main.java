@@ -3,6 +3,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Scanner;
 
 import org.pesho.grader.step.StepResult;
@@ -23,7 +24,7 @@ public class Main {
 		for (int i = 0; i < testGroups.length; i++) {
 			testGroups[i] = new TestGroup(1.0/testCases.length, testCases[i]);
 		}
-		TaskDetails tests = new TaskDetails(100, taskParser.getChecker().getAbsolutePath(), testGroups);
+		TaskDetails tests = new TaskDetails(new Properties(), taskParser.getChecker().getAbsolutePath(), testGroups);
 		SubmissionGrader grader = null;
 		if (args.length == 2) grader = new SubmissionGrader(tests, args[1]);
 		else grader = new SubmissionGrader(tests, selectSolution(taskParser.getSolutions()));
@@ -40,8 +41,9 @@ public class Main {
 		for (int i = 1; i <= solutions.size(); i++) {
 			System.out.println(i + ". " + solutions.get(i-1).getName());
 		}
-		Scanner in = new Scanner(System.in);
-		return solutions.get(in.nextInt()-1).getAbsolutePath();
+		try (Scanner in = new Scanner(System.in)) {
+			return solutions.get(in.nextInt()-1).getAbsolutePath();
+		}
 	}
 
 }

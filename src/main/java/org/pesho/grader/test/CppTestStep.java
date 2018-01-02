@@ -6,8 +6,8 @@ public class CppTestStep extends TestStep {
 
 	public static final String EXECUTE_COMMAND_PATTERN = "./%s";
 
-	public CppTestStep(File binaryFile, File inputFile, File outputFile) {
-		super(binaryFile, inputFile, outputFile);
+	public CppTestStep(File binaryFile, File inputFile, File outputFile, double time, int memory) {
+		super(binaryFile, inputFile, outputFile, time, memory);
 	}
 
 	@Override

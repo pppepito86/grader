@@ -16,12 +16,16 @@ public abstract class TestStep implements BaseStep {
 	protected final File inputFile;
 	protected final File outputFile;
 	protected final File sandboxDir;
+	protected final double time;
+	protected final int memory;
 	protected StepResult result;
 
-	public TestStep(File binaryFile, File inputFile, File outputFile) {
+	public TestStep(File binaryFile, File inputFile, File outputFile, double time, int memory) {
 		this.binaryFile = binaryFile.getAbsoluteFile();
 		this.inputFile = inputFile.getAbsoluteFile();
 		this.outputFile = outputFile.getAbsoluteFile();
+		this.time = time;
+		this.memory = memory;
 		this.sandboxDir = new File(binaryFile.getParentFile(), "sandbox_" + inputFile.getName());
 	}
 
@@ -30,7 +34,10 @@ public abstract class TestStep implements BaseStep {
 			createSandboxDirectory();
 			copySandboxInput();
 			CommandResult commandResult = new SandboxExecutor().directory(sandboxDir).input(inputFile.getName())
-					.output(outputFile.getName()).timeout(1.0).command(getCommand()).execute().getResult();
+					.output(outputFile.getName())
+					.timeout(time)
+					.memory(memory)
+					.command(getCommand()).execute().getResult();
 			copySandboxOutput();
 			
 			result = getResult(commandResult);
