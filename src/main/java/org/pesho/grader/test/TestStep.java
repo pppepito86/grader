@@ -35,7 +35,6 @@ public abstract class TestStep implements BaseStep {
 			copySandboxInput();
 			CommandResult commandResult = new SandboxExecutor()
 					.directory(sandboxDir)
-					.clean(true)
 					.input(inputFile.getName())
 					.output(outputFile.getName())
 					.timeout(time)
@@ -47,6 +46,8 @@ public abstract class TestStep implements BaseStep {
 		} catch (Exception e) {
 			e.printStackTrace();
 			result = new StepResult(Verdict.SE, result.getReason());
+		} finally {
+			FileUtils.deleteQuietly(sandboxDir);
 		}
 	}
 

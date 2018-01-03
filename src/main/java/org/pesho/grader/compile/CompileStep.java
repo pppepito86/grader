@@ -30,7 +30,6 @@ public abstract class CompileStep implements BaseStep {
 			StepResult result = Arrays.stream(getCommands())
 				.map(command -> new SandboxExecutor()
 						.directory(sandboxDir)
-						.clean(true)
 						.command(command)
 						.execute().getResult())
 				.map(x -> getResult(x))
@@ -42,6 +41,8 @@ public abstract class CompileStep implements BaseStep {
 		} catch (Exception e) {
 			e.printStackTrace();
 			this.result = new StepResult(Verdict.SE, e.getMessage());
+		} finally {
+			FileUtils.deleteQuietly(sandboxDir);
 		}
 	}
 

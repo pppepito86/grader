@@ -34,7 +34,6 @@ public abstract class CheckStep implements BaseStep {
 			copySandboxInput();
 			CommandResult statusResult = new SandboxExecutor()
 					.directory(sandboxDir)
-					.clean(true)
 					.input("/dev/null")
 					.output("grade_" + inputFile.getName())
 					.command(getCommand())
@@ -44,6 +43,8 @@ public abstract class CheckStep implements BaseStep {
 		} catch (Exception e) {
 			e.printStackTrace();
 			result = new StepResult(Verdict.SE, result.getReason());
+		} finally {
+			FileUtils.deleteQuietly(sandboxDir);
 		}
 	}
 
