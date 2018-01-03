@@ -36,6 +36,14 @@ public class SubmissionGrader {
 	
 	public double grade() {
 		File sandboxDir = new File(originalSourceFile.getParentFile(), "sandbox_"+originalSourceFile.getName());
+		try {
+			return gradeInternal(sandboxDir);
+		} finally {
+			FileUtils.deleteQuietly(sandboxDir);
+		}
+	}
+	
+	public double gradeInternal(File sandboxDir) {
 		sandboxDir.mkdirs();
 		File sourceFile = new File(sandboxDir, originalSourceFile.getName());
 		File originalCheckerFile = new File(taskDetails.getChecker());
