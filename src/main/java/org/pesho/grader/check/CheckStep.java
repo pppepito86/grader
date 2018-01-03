@@ -32,8 +32,13 @@ public abstract class CheckStep implements BaseStep {
 		try {
 			createSandboxDirectory();
 			copySandboxInput();
-			CommandResult statusResult = new SandboxExecutor().directory(sandboxDir).input("/dev/null")
-					.output("grade_" + inputFile.getName()).command(getCommand()).execute().getResult();
+			CommandResult statusResult = new SandboxExecutor()
+					.directory(sandboxDir)
+					.clean(true)
+					.input("/dev/null")
+					.output("grade_" + inputFile.getName())
+					.command(getCommand())
+					.execute().getResult();
 
 			result = getResult(statusResult);
 		} catch (Exception e) {

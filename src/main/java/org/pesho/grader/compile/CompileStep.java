@@ -28,7 +28,11 @@ public abstract class CompileStep implements BaseStep {
 			copySandboxInput();
 
 			StepResult result = Arrays.stream(getCommands())
-				.map(command -> new SandboxExecutor().directory(sandboxDir).command(command).execute().getResult())
+				.map(command -> new SandboxExecutor()
+						.directory(sandboxDir)
+						.clean(true)
+						.command(command)
+						.execute().getResult())
 				.map(x -> getResult(x))
 				.filter(x -> x.getVerdict() != Verdict.OK)
 				.findFirst().orElse(new StepResult(Verdict.OK));
