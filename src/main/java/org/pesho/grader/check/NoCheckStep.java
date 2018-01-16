@@ -25,7 +25,7 @@ public class NoCheckStep extends CheckStep {
 			if (exitValue == 0) {
 				result = new StepResult(Verdict.OK);
 			} else {
-				result = new StepResult(Verdict.WA);
+				result = new StepResult(Verdict.WA, readOutput());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

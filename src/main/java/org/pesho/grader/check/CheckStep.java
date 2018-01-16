@@ -61,7 +61,7 @@ public abstract class CheckStep implements BaseStep {
 		else return new StepResult(Verdict.WA, readOutput());
 	}
 	
-	private String readOutput() {
+	protected String readOutput() {
 	    try {
 	    	byte[] b = new byte[1000];
 	        InputStream is = new FileInputStream(solutionFile);
