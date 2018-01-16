@@ -65,7 +65,9 @@ public abstract class CheckStep implements BaseStep {
 	    try {
 	    	byte[] b = new byte[1000];
 	        InputStream is = new FileInputStream(solutionFile);
+	        System.out.println("Solution file: " + solutionFile.exists());
 	        int read = is.read(b);
+	        System.out.println(new String(b));
 	        is.close();
 	        return new String(b, 0, read);
 	    } catch (Exception e) {
