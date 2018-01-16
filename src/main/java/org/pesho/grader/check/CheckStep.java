@@ -1,7 +1,9 @@
 package org.pesho.grader.check;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.BaseStep;
@@ -52,13 +54,26 @@ public abstract class CheckStep implements BaseStep {
 		if (result.getStatus() != CommandStatus.SUCCESS) {
 			return new StepResult(Verdict.SE, result.getReason());
 		}
-		
 		File gradeFile = new File(sandboxDir, "grade_" + inputFile.getName());
 		String gradeString = FileUtils.readFileToString(gradeFile).trim();
 		double grade = Double.valueOf(gradeString);
-		return new StepResult((grade == 1.0) ? Verdict.OK : Verdict.WA);
+		if (grade == 1.0) return new StepResult(Verdict.OK);
+		else return new StepResult(Verdict.WA, readOutput());
 	}
 	
+	private String readOutput() {
+	    try {
+	    	byte[] b = new byte[1000];
+	        InputStream is = new FileInputStream(solutionFile);
+	        int read = is.read(b);
+	        is.close();
+	        return new String(b, 0, read);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return null;
+	    }
+	}
+
 	@Override
 	public StepResult getResult() {
 		return result;

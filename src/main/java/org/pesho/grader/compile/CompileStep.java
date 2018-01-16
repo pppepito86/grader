@@ -42,7 +42,7 @@ public abstract class CompileStep implements BaseStep {
 			e.printStackTrace();
 			this.result = new StepResult(Verdict.SE, e.getMessage());
 		} finally {
-//			FileUtils.deleteQuietly(sandboxDir);
+			FileUtils.deleteQuietly(sandboxDir);
 		}
 	}
 
@@ -56,11 +56,13 @@ public abstract class CompileStep implements BaseStep {
 		return getResult().getVerdict();
 	}
 	
-	private StepResult getResult(CommandResult result) {
+	protected StepResult getResult(CommandResult result) {
 		switch (result.getStatus()) {
 		case SUCCESS: return new StepResult(Verdict.OK);
+		case TIMEOUT: return new StepResult(Verdict.CE, "Compilation timeout");
+		case OOM: return new StepResult(Verdict.CE, "OOM");
 		case SYSTEM_ERROR: return new StepResult(Verdict.SE, result.getReason());
-		default: return new StepResult(Verdict.CE, result.getStatus() + " " + result.getReason());
+		default: return new StepResult(Verdict.CE, result.getReason());
 		}
 	}
 
@@ -79,8 +81,8 @@ public abstract class CompileStep implements BaseStep {
 	private void copySandboxInput() throws IOException {
 		FileUtils.copyFile(sourceFile, new File(sandboxDir, sourceFile.getName()));
 	}
-
-	private void copySandboxOutput() throws IOException {
+	
+	protected void copySandboxOutput() throws IOException {
 		File sandboxBinaryFile = new File(sandboxDir, getBinaryFileName());
 		if (!sandboxBinaryFile.exists()) return;
 		
