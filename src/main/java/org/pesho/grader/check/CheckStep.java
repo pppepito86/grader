@@ -7,10 +7,8 @@ import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.BaseStep;
-import org.pesho.grader.step.Reason;
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
-import org.pesho.grader.step.WAReason;
 import org.pesho.sandbox.CommandResult;
 import org.pesho.sandbox.CommandStatus;
 import org.pesho.sandbox.SandboxExecutor;
@@ -60,13 +58,13 @@ public abstract class CheckStep implements BaseStep {
 		String gradeString = FileUtils.readFileToString(gradeFile).trim();
 		double grade = Double.valueOf(gradeString);
 		if (grade == 1.0) return new StepResult(Verdict.OK);
-		else return new StepResult(Verdict.WA, getWAReason());
+		else return getWAResult();
 	}
 	
-	protected Reason getWAReason() {
+	protected StepResult getWAResult() {
 		String output = readOutput(outputFile);
 		String solution = readOutput(solutionFile);
-		return new WAReason(output, solution);
+		return new StepResult(Verdict.WA, output, solution);
 	}
 	
 	protected String readOutput(File file) {

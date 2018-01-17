@@ -3,24 +3,26 @@ package org.pesho.grader.step;
 public class StepResult {
 	
 	private Verdict verdict;
-	private Reason reason;
+	private String reason;
+	private String output;
+	private String expectedOutput;
 	
 	public StepResult() {
 	}
 	
 	public StepResult(Verdict verdict) {
-		this.verdict = verdict;
-		this.reason = new DefaultReason();
+		this(verdict, null);
 	}
 	
 	public StepResult(Verdict verdict, String reason) {
 		this.verdict = verdict;
-		this.reason = new DefaultReason(reason);
+		this.reason = reason;
 	}
 	
-	public StepResult(Verdict verdict, Reason reason) {
+	public StepResult(Verdict verdict, String output, String expectedOutput) {
 		this.verdict = verdict;
-		this.reason = reason;
+		this.output = output;
+		this.expectedOutput = expectedOutput;
 	}
 	
 	public void setVerdict(Verdict verdict) {
@@ -30,13 +32,29 @@ public class StepResult {
 	public Verdict getVerdict() {
 		return verdict;
 	}
+
+	public String getReason() {
+		return reason;
+	}
 	
-	public void setReason(Reason reason) {
+	public void setReason(String reason) {
 		this.reason = reason;
 	}
 	
-	public Reason getReason() {
-		return reason;
+	public String getOutput() {
+		return output;
+	}
+	
+	public void setOutput(String output) {
+		this.output = output;
+	}
+	
+	public String getExpectedOutput() {
+		return expectedOutput;
+	}
+	
+	public void setExpectedOutput(String expectedOutput) {
+		this.expectedOutput = expectedOutput;
 	}
 	
 }
