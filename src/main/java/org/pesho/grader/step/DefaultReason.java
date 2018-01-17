@@ -4,6 +4,9 @@ public class DefaultReason implements Reason {
 
 	private String reason;
 	
+	public DefaultReason() {
+	}
+	
 	public DefaultReason(String reason) {
 		this.reason = reason;
 	}

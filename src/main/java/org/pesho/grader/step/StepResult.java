@@ -10,6 +10,7 @@ public class StepResult {
 	
 	public StepResult(Verdict verdict) {
 		this.verdict = verdict;
+		this.reason = new DefaultReason();
 	}
 	
 	public StepResult(Verdict verdict, String reason) {

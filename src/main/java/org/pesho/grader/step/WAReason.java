@@ -5,6 +5,9 @@ public class WAReason implements Reason {
 	private String output;
 	private String solution;
 	
+	public WAReason() {
+	}
+	
 	public WAReason(String output, String solution) {
 		this.output = output;
 		this.solution = solution;
