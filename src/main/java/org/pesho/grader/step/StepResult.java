@@ -3,16 +3,21 @@ package org.pesho.grader.step;
 public class StepResult {
 	
 	private Verdict verdict;
-	private String reason;
+	private Reason reason;
 	
 	public StepResult() {
 	}
 	
 	public StepResult(Verdict verdict) {
-		this(verdict, null);
+		this.verdict = verdict;
 	}
-
+	
 	public StepResult(Verdict verdict, String reason) {
+		this.verdict = verdict;
+		this.reason = new DefaultReason(reason);
+	}
+	
+	public StepResult(Verdict verdict, Reason reason) {
 		this.verdict = verdict;
 		this.reason = reason;
 	}
@@ -25,11 +30,11 @@ public class StepResult {
 		return verdict;
 	}
 	
-	public void setReason(String reason) {
+	public void setReason(Reason reason) {
 		this.reason = reason;
 	}
 	
-	public String getReason() {
+	public Reason getReason() {
 		return reason;
 	}
 	
