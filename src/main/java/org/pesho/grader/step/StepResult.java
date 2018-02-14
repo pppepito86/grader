@@ -6,6 +6,7 @@ public class StepResult {
 	private String reason;
 	private String output;
 	private String expectedOutput;
+	private Double time;
 	
 	public StepResult() {
 	}
@@ -17,6 +18,12 @@ public class StepResult {
 	public StepResult(Verdict verdict, String reason) {
 		this.verdict = verdict;
 		this.reason = reason;
+	}
+	
+	public StepResult(Verdict verdict, String reason, Double time) {
+		this.verdict = verdict;
+		this.reason = reason;
+		this.time = time;
 	}
 	
 	public StepResult(Verdict verdict, String output, String expectedOutput) {
@@ -55,6 +62,14 @@ public class StepResult {
 	
 	public void setExpectedOutput(String expectedOutput) {
 		this.expectedOutput = expectedOutput;
+	}
+	
+	public Double getTime() {
+		return time;
+	}
+	
+	public void setTime(Double time) {
+		this.time = time;
 	}
 	
 }

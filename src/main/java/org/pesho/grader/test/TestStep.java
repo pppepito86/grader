@@ -53,10 +53,10 @@ public abstract class TestStep implements BaseStep {
 
 	private StepResult getResult(CommandResult result) {
 		switch (result.getStatus()) {
-		case SUCCESS: return new StepResult(Verdict.OK);
-		case OOM: return new StepResult(Verdict.ML);
-		case PROGRAM_ERROR:	return new StepResult(Verdict.RE, result.getReason());
-		case TIMEOUT: return new StepResult(Verdict.TL);
+		case SUCCESS: return new StepResult(Verdict.OK, null, result.getTime());
+		case OOM: return new StepResult(Verdict.ML, null, result.getTime());
+		case PROGRAM_ERROR:	return new StepResult(Verdict.RE, result.getReason(), result.getTime());
+		case TIMEOUT: return new StepResult(Verdict.TL, null, result.getTime());
 		default:  return new StepResult(Verdict.SE, result.getReason());
 		}
 	}

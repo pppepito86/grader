@@ -8,6 +8,7 @@ import org.pesho.grader.check.CheckStep;
 import org.pesho.grader.check.CheckStepFactory;
 import org.pesho.grader.compile.CompileStep;
 import org.pesho.grader.compile.CompileStepFactory;
+import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 import org.pesho.grader.task.TaskDetails;
 import org.pesho.grader.task.TestCase;
@@ -128,9 +129,11 @@ public class SubmissionGrader {
 		}
 		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
 		checkerStep.execute();
-		score.addScoreStep("Test" + testCase.getNumber(), checkerStep.getResult());
+		StepResult result = checkerStep.getResult();
+		result.setTime(testStep.getResult().getTime());
+		score.addScoreStep("Test" + testCase.getNumber(), result);
 		if (listener != null) {
-			listener.addScoreStep("Test" + testCase.getNumber(), checkerStep.getResult());
+			listener.addScoreStep("Test" + testCase.getNumber(), result);
 		}
 		return checkerStep.getVerdict();
 	}
