@@ -11,6 +11,9 @@ public class CppCompileStep extends CompileStep {
 
 	public static final String COMPILE_COMMAND_PATTERN = "g++ -O2 -std=c++11 -o %s %s";
 	public static final String COMPILE_NO_CPP11_COMMAND_PATTERN = "g++ -O2 -o %s %s";
+	public static final String COMPILE_CPP14_COMMAND_PATTERN = "g++ -O2 -std=c++14 -o %s %s";
+	public static final String COMPILE_CPP17_COMMAND_PATTERN = "g++ -O2 -std=c++17 -o %s %s";
+	public static final String COMPILE_CPP98_COMMAND_PATTERN = "g++ -O2 -std=c++98 -o %s %s";
 	public static final String SOURCE_FILE_ENDING = ".cpp";
 
 	public CppCompileStep(File sourceFile) {
@@ -22,13 +25,25 @@ public class CppCompileStep extends CompileStep {
 		super.execute();
 		if (getVerdict() != Verdict.OK) {
 			System.out.println("Compilation failed with c++11, will try without it.");
-			tryWithNoCpp11();
+			tryOther(COMPILE_NO_CPP11_COMMAND_PATTERN);
+		}
+		if (getVerdict() != Verdict.OK) {
+			System.out.println("Compilation failed, will try with c++14.");
+			tryOther(COMPILE_CPP14_COMMAND_PATTERN);
+		}
+		if (getVerdict() != Verdict.OK) {
+			System.out.println("Compilation failed, will try with c++17.");
+			tryOther(COMPILE_CPP17_COMMAND_PATTERN);
+		}
+		if (getVerdict() != Verdict.OK) {
+			System.out.println("Compilation failed, will try with c++98.");
+			tryOther(COMPILE_CPP98_COMMAND_PATTERN);
 		}
 	}
 
-	private void tryWithNoCpp11() {
+	private void tryOther(String pattern) {
 		String compiledFileName = getBinaryFileName();
-		String command = String.format(COMPILE_COMMAND_PATTERN, compiledFileName, sourceFile.getName());
+		String command = String.format(pattern, compiledFileName, sourceFile.getName());
 
 		CommandResult commandResult = new SandboxExecutor()
 				.directory(sandboxDir)
