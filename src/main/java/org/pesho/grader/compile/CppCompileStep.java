@@ -44,22 +44,28 @@ public class CppCompileStep extends CompileStep {
 	private void tryOther(String pattern) {
 		String compiledFileName = getBinaryFileName();
 		String command = String.format(pattern, compiledFileName, sourceFile.getName());
-
-		CommandResult commandResult = new SandboxExecutor()
-				.directory(sandboxDir)
-				.command(command)
-				.execute().getResult();
-		StepResult result = getResult(commandResult);
-		if (result.getVerdict() == Verdict.OK) {
-			try {
-				copySandboxOutput();
-				this.result = result;
-			} catch (Exception e) {
-				e.printStackTrace();
-				this.result = new StepResult(Verdict.SE, e.getMessage());
-			} finally {
-				FileUtils.deleteQuietly(sandboxDir);
+		
+		try {
+			createSandboxDirectory();
+			copySandboxInput();
+	
+			CommandResult commandResult = new SandboxExecutor()
+					.directory(sandboxDir)
+					.command(command)
+					.execute().getResult();
+			StepResult result = getResult(commandResult);
+			if (result.getVerdict() == Verdict.OK) {
+				try {
+					copySandboxOutput();
+					this.result = result;
+				} catch (Exception e) {
+					e.printStackTrace();
+					this.result = new StepResult(Verdict.SE, e.getMessage());
+				} finally {
+					FileUtils.deleteQuietly(sandboxDir);
+				}
 			}
+		} catch (Exception e) {
 		}
 	}
 

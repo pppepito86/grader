@@ -74,11 +74,11 @@ public abstract class CompileStep implements BaseStep {
 
 	protected abstract String[] getCommands();
 
-	private void createSandboxDirectory() {
+	protected void createSandboxDirectory() {
 		sandboxDir.mkdirs();
 	}
 
-	private void copySandboxInput() throws IOException {
+	protected void copySandboxInput() throws IOException {
 		FileUtils.copyFile(sourceFile, new File(sandboxDir, sourceFile.getName()));
 	}
 	
