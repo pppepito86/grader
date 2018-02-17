@@ -3,7 +3,7 @@ import java.io.File;
 
 public class CCompileStep extends CompileStep {
 
-	public static final String COMPILE_COMMAND_PATTERN = "gcc -c -std=c99 -o %s %s";
+	public static final String COMPILE_COMMAND_PATTERN = "gcc -std=c99 -o %s %s";
 	public static final String SOURCE_FILE_ENDING = ".c";
 
 	public CCompileStep(File sourceFile) {
