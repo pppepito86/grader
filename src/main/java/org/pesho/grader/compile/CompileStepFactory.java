@@ -5,7 +5,7 @@ public class CompileStepFactory {
 	
 	public static CompileStep getInstance(File sourceFile) {
 		if (sourceFile.getName().endsWith(CCompileStep.SOURCE_FILE_ENDING)) {
-			return new CppCompileStep(sourceFile);
+			return new CCompileStep(sourceFile);
 		}
 		if (sourceFile.getName().endsWith(CppCompileStep.SOURCE_FILE_ENDING)) {
 			return new CppCompileStep(sourceFile);
