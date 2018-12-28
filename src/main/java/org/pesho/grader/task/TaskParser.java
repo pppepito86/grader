@@ -73,6 +73,19 @@ public class TaskParser {
 			return;
 		}
 		for (File file : filtered) {
+			if (file.getParentFile() == null || !file.getParentFile().getName().equals("author")) continue;
+			if (file.getName().equals("checker")) {
+				this.checker = file;
+				return;
+			} else if (file.getName().equals("checker.sh")) {
+				this.checker = file;
+				return;
+			} else if (file.getName().equals("checker.jar")) {
+				this.checker = file;
+				return;
+			}
+		}
+		for (File file : filtered) {
 			if (file.getName().equals("checker")) {
 				this.checker = file;
 				return;
