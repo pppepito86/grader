@@ -55,6 +55,7 @@ public class SubmissionGrader {
 			FileUtils.copyFile(originalSourceFile, sourceFile);
 			if (originalCheckerFile.exists()) {
 				FileUtils.copyFile(originalCheckerFile, checkerFile);
+				checkerFile.setExecutable(true);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
