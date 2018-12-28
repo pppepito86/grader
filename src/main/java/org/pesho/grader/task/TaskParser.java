@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -16,8 +17,10 @@ public class TaskParser {
 	private List<File> output = new ArrayList<>();
 	private List<File> solutions = new ArrayList<>();
 	private File checker = new File("checker");
+	private File cppChecker = new File("checker.cpp");
 	private File properties = new File("properties");
 	private String prefix;
+	private Optional<File> taskDescription = Optional.empty();
 
 	public TaskParser(File dir) {
 		prefix = new File(dir, ".").getAbsolutePath();
@@ -26,6 +29,10 @@ public class TaskParser {
 		}
 		taskDir = dir.getAbsoluteFile();
 		parseTestsDir();
+	}
+	
+	public Optional<File> getTaskDescription() {
+		return taskDescription;
 	}
 
 	public List<File> getInput() {
@@ -38,6 +45,10 @@ public class TaskParser {
 
 	public File getChecker() {
 		return checker;
+	}
+	
+	public File getCppChecker() {
+		return cppChecker;
 	}
 	
 	public File getProperties() {
@@ -55,8 +66,29 @@ public class TaskParser {
 	protected void parseTestsDir() {
 		findSolutions();
 		findChecker();
+		findCppChecker();
 		findProperties();
+		findTaskDescription();
 		findTests();
+	}
+
+	private void findTaskDescription() {
+		List<File> filtered = listAllFiles().stream()
+				.filter(x -> x.getName().toLowerCase().endsWith("pdf"))
+				.collect(Collectors.toList());
+		
+		if (filtered.size() == 0) return;
+		
+		for (String s: new String[]{"task.pdf", "description.pdf"}) {
+			if (filtered.stream().filter(f -> f.getName().toLowerCase().equals(s)).count() > 0) {
+				filtered = filtered.stream().filter(f -> f.getName().toLowerCase().equals(s)).collect(Collectors.toList());
+				break;
+			}
+		}
+		
+		filtered.sort((a, b) -> a.getAbsolutePath().length() - b.getAbsolutePath().length());
+		
+		taskDescription = Optional.of(filtered.get(0));
 	}
 
 	private void findSolutions() {
@@ -73,7 +105,7 @@ public class TaskParser {
 			return;
 		}
 		for (File file : filtered) {
-			if (file.getParentFile() == null || !file.getParentFile().getName().equals("author")) continue;
+			if (file.getParentFile() == null || !file.getParentFile().getName().equals("checker")) continue;
 			if (file.getName().equals("checker")) {
 				this.checker = file;
 				return;
@@ -98,7 +130,30 @@ public class TaskParser {
 			}
 		}
 	}
-
+	
+	private void findCppChecker() {
+		List<File> filtered = listAllFiles().stream().filter(x -> x.getAbsolutePath().contains("checker"))
+				.filter(x -> x.getName().endsWith(".cpp"))
+				.collect(Collectors.toList());
+		if (filtered.size() == 1) {
+			this.cppChecker = filtered.get(0);
+			return;
+		}
+		for (File file : filtered) {
+			if (file.getParentFile() == null || !file.getParentFile().getName().equals("checker")) continue;
+			if (file.getName().equals("checker.cpp")) {
+				this.cppChecker = file;
+				return;
+			}
+		}
+		for (File file : filtered) {
+			if (file.getName().equals("checker.cpp")) {
+				this.cppChecker = file;
+				return;
+			}
+		}
+	}
+	
 	private void findProperties() {
 		List<File> filtered = listAllFiles().stream().filter(x -> x.getAbsolutePath().contains("props")||x.getAbsolutePath().contains("properties"))
 				.collect(Collectors.toList());
