@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.BaseStep;
@@ -55,7 +56,7 @@ public abstract class CheckStep implements BaseStep {
 			return new StepResult(Verdict.SE, result.getReason());
 		}
 		File gradeFile = new File(sandboxDir, "grade_" + inputFile.getName());
-		String gradeString = FileUtils.readFileToString(gradeFile).trim();
+		String gradeString = FileUtils.readLines(gradeFile, StandardCharsets.UTF_8.toString()).get(0).toString().trim();
 		double grade = Double.valueOf(gradeString);
 		if (grade == 1.0) return getOKResult();
 		else return getWAResult();
