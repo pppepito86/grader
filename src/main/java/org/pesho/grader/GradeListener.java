@@ -8,4 +8,6 @@ public interface GradeListener {
 	
 	void addFinalScore(String verdict, double score);
 
+	void scoreUpdated(String submissionId, SubmissionScore score);
+
 }

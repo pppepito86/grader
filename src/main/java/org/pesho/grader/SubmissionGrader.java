@@ -18,17 +18,19 @@ import org.pesho.grader.test.TestStepFactory;
 
 public class SubmissionGrader {
 	
+	private String submissionId;
 	private TaskDetails taskDetails;
 	private File originalSourceFile;
 	private File binaryFile;
 	private SubmissionScore score;
 	private GradeListener listener;
 	
-	public SubmissionGrader(TaskDetails taskTests, String sourceFile) {
-		this(taskTests, sourceFile, null);
+	public SubmissionGrader(String submissionId, TaskDetails taskTests, String sourceFile) {
+		this(submissionId, taskTests, sourceFile, null);
 	}
-
-	public SubmissionGrader(TaskDetails taskTests, String sourceFile, GradeListener listener) {
+	
+	public SubmissionGrader(String submissionId, TaskDetails taskTests, String sourceFile, GradeListener listener) {
+		this.submissionId = submissionId;
 		this.taskDetails = taskTests;
 		this.originalSourceFile = new File(sourceFile).getAbsoluteFile();
 		this.score = new SubmissionScore();
@@ -66,6 +68,7 @@ public class SubmissionGrader {
 			score.addFinalScore("Compilation Failed", 0);
 			if (listener != null) {
 				listener.addFinalScore("Compilation Failed", 0);
+				listener.scoreUpdated(submissionId, score);
 			}
 			return 0;
 		}
@@ -80,6 +83,7 @@ public class SubmissionGrader {
 		score.addFinalScore(verdict, finalScore);
 		if (listener != null) {
 			listener.addFinalScore(verdict, finalScore);
+			listener.scoreUpdated(submissionId, score);
 		}
 		return finalScore;
 	}
@@ -90,6 +94,7 @@ public class SubmissionGrader {
 		score.addScoreStep("Compile", compileStep.getResult());
 		if (listener != null) {
 			listener.addScoreStep("Compile", compileStep.getResult());
+			listener.scoreUpdated(submissionId, score);
 		}
 		if (compileStep.getVerdict() == Verdict.OK) {
 			binaryFile = compileStep.getBinaryFile();
@@ -125,6 +130,7 @@ public class SubmissionGrader {
 			score.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
 			if (listener != null) {
 				listener.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
+				listener.scoreUpdated(submissionId, score);
 			}
 			return testStep.getVerdict();
 		}
@@ -135,6 +141,7 @@ public class SubmissionGrader {
 		score.addScoreStep("Test" + testCase.getNumber(), result);
 		if (listener != null) {
 			listener.addScoreStep("Test" + testCase.getNumber(), result);
+			listener.scoreUpdated(submissionId, score);
 		}
 		return checkerStep.getVerdict();
 	}

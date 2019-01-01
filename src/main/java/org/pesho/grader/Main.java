@@ -26,8 +26,8 @@ public class Main {
 		}
 		TaskDetails tests = new TaskDetails(new Properties(), taskParser.getChecker().getAbsolutePath(), testGroups);
 		SubmissionGrader grader = null;
-		if (args.length == 2) grader = new SubmissionGrader(tests, args[1]);
-		else grader = new SubmissionGrader(tests, selectSolution(taskParser.getSolutions()));
+		if (args.length == 2) grader = new SubmissionGrader("1", tests, args[1]);
+		else grader = new SubmissionGrader("1", tests, selectSolution(taskParser.getSolutions()));
 		grader.grade();
 		SubmissionScore score = grader.getScore();
 		for (Map.Entry<String, StepResult> entry: score.getScoreSteps().entrySet()) {
