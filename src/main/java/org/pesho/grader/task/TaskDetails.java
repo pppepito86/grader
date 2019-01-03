@@ -11,6 +11,7 @@ public class TaskDetails {
 	private double time;
 	private int memory;
 	private String checker;
+	private String feedback;
 	private List<TestGroup> testGroups;
 	
 	public static TaskDetails create(TaskParser taskParser) {
@@ -40,6 +41,7 @@ public class TaskDetails {
 		this.points = Double.valueOf(props.getProperty("points", "100"));
 		this.time = Double.valueOf(props.getProperty("time", "1"));
 		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
+		this.feedback = props.getProperty("feedback", "FULL");
 		this.checker = checker;
 		this.testGroups = Arrays.asList(testGroups);
 	}
@@ -66,6 +68,14 @@ public class TaskDetails {
 	
 	public int getMemory() {
 		return memory;
+	}
+	
+	public void setFeedback(String feedback) {
+		this.feedback = feedback;
+	}
+	
+	public String getFeedback() {
+		return feedback;
 	}
 	
 	public void setChecker(String checker) {

@@ -8,6 +8,7 @@ public enum Verdict {
 	TL,
 	ML,
 	WA,
-	SE
+	SE,
+	HIDDEN
 	
 }
