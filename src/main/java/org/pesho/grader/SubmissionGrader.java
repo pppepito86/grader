@@ -112,7 +112,7 @@ public class SubmissionGrader {
 				Verdict verdict = executeTest(testCase, checkerFile);
 				if (verdict != Verdict.OK) {
 					groupVerdict = verdict;
-					break;
+//					break;
 				}
 			}
 			if (groupVerdict == Verdict.OK) score += testGroup.getWeight();
