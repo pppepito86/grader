@@ -69,9 +69,9 @@ public abstract class CheckStep implements BaseStep {
 	}
 	
 	protected StepResult getWAResult() {
-		String output = readOutput(solutionFile);
-		String expectedOutput = readOutput(outputFile);
-		return new StepResult(Verdict.WA, output, expectedOutput);
+		String output = readOutput(outputFile);
+		String solution = readOutput(solutionFile);
+		return new StepResult(Verdict.WA, output, solution);
 	}
 	
 	protected String readOutput(File file) {
