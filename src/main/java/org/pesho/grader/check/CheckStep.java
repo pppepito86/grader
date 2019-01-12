@@ -65,13 +65,13 @@ public abstract class CheckStep implements BaseStep {
 	protected StepResult getOKResult() {
 		String output = readOutput(outputFile);
 		String solution = readOutput(solutionFile);
-		return new StepResult(Verdict.OK, output, solution);
+		return new StepResult(Verdict.OK, solution, output);
 	}
 	
 	protected StepResult getWAResult() {
 		String output = readOutput(outputFile);
 		String solution = readOutput(solutionFile);
-		return new StepResult(Verdict.WA, output, solution);
+		return new StepResult(Verdict.WA, solution, output);
 	}
 	
 	protected String readOutput(File file) {
