@@ -75,7 +75,7 @@ public class SubmissionGrader {
 		
 		double testsScore = executeTests(checkerFile);
 		double finalScore = testsScore * taskDetails.getPoints();
-		int percent = (int) Math.round(100 * finalScore / testsScore);
+		int percent = (int) (Math.round(100 * finalScore / testsScore)+0.5);
 		String verdict = "Accepted";
 		if (percent < 100) {
 			verdict = percent + "%";
@@ -108,14 +108,21 @@ public class SubmissionGrader {
 		for (TestGroup testGroup: taskDetails.getTestGroups()) {
 			Verdict groupVerdict = Verdict.OK;
 			
+			int okTests = 0;
 			for (TestCase testCase: testGroup.getTestCases()) {
 				Verdict verdict = executeTest(testCase, checkerFile);
-				if (verdict != Verdict.OK) {
+				if (verdict == Verdict.OK) {
+					okTests++;
+				} else if(groupVerdict == Verdict.OK) {
 					groupVerdict = verdict;
-//					break;
 				}
 			}
-			if (groupVerdict == Verdict.OK) score += testGroup.getWeight();
+
+			if (taskDetails.groupsScoring() && groupVerdict == Verdict.OK) {
+				score += testGroup.getWeight();
+			} else {
+				score += testGroup.getWeight()*okTests/testGroup.getTestCases().size();
+			}
 		}
 		return score;
 	}

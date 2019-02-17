@@ -13,6 +13,8 @@ public class TaskDetails {
 	private String checker;
 	private String feedback;
 	private String groups;
+	private String weights;
+	private String scoring;
 	private List<TestGroup> testGroups;
 	
 	public static TaskDetails create(TaskParser taskParser) {
@@ -28,6 +30,8 @@ public class TaskDetails {
         this.memory = Integer.valueOf(props.getProperty("memory", "256"));
         this.feedback = props.getProperty("feedback", "FULL").trim();
         this.groups = props.getProperty("groups", "").trim();
+        this.weights = props.getProperty("weights", "").trim();
+        this.scoring = props.getProperty("scoring", "groups").trim();
         this.checker = checker;
 	}
 	
@@ -58,10 +62,15 @@ public class TaskDetails {
 				testGroups[i] = new TestGroup(1.0/testCases.length, testCases[i]);
 			}
 		} else {
-			String[] split = groups.split(",");
-			testGroups = new TestGroup[split.length];
+			String[] groupsSplit = groups.split(",");
+			String[] weightsSplit = weights.split(",");
+			double totalWeight = 0;
+			for (String weight: weightsSplit) totalWeight += Double.valueOf(weight.trim());
+			if (totalWeight == 0) totalWeight = testGroups.length;
+			
+			testGroups = new TestGroup[groupsSplit.length];
 			for (int i = 0; i < testGroups.length; i++) {
-				String[] s = split[i].trim().split("-");
+				String[] s = groupsSplit[i].trim().split("-");
 				int first = Integer.valueOf(s[0]);
 				int last = Integer.valueOf(s[1]);
 				TestCase[] cases = new TestCase[last-first+1];
@@ -69,7 +78,9 @@ public class TaskDetails {
 					cases[j-first] = testCases[j-1];
 				}
 				
-				testGroups[i] = new TestGroup(1.0/testGroups.length, cases);
+				double weight = 1;
+				if (weightsSplit.length == groupsSplit.length) weight = Double.valueOf(weightsSplit[i].trim());
+				testGroups[i] = new TestGroup(weight/totalWeight, cases);
 			}
 		}
 		
@@ -130,6 +141,14 @@ public class TaskDetails {
 	
 	public List<TestGroup> getTestGroups() {
 		return testGroups;
+	}
+	
+	public boolean groupsScoring() {
+		return scoring.equalsIgnoreCase("groups");
+	}
+	
+	public boolean testsScoring() {
+		return !groupsScoring();
 	}
 	
 }
