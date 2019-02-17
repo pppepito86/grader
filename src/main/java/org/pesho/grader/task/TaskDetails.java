@@ -49,6 +49,8 @@ public class TaskDetails {
 		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
 		this.feedback = props.getProperty("feedback", "FULL").trim();
 		this.groups = props.getProperty("groups", "").trim();
+        this.weights = props.getProperty("weights", "").trim();
+        this.scoring = props.getProperty("scoring", "groups").trim();
 		this.checker = taskParser.getChecker().getAbsolutePath();
 		
 		TestCase[] testCases = new TestCase[taskParser.testsCount()];
@@ -66,7 +68,7 @@ public class TaskDetails {
 			String[] weightsSplit = weights.split(",");
 			double totalWeight = 0;
 			for (String weight: weightsSplit) totalWeight += Double.valueOf(weight.trim());
-			if (totalWeight == 0) totalWeight = testGroups.length;
+			if (totalWeight == 0) totalWeight = groupsSplit.length;
 			
 			testGroups = new TestGroup[groupsSplit.length];
 			for (int i = 0; i < testGroups.length; i++) {
