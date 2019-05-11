@@ -120,7 +120,8 @@ public class SubmissionGrader {
 
 			if (taskDetails.groupsScoring() && groupVerdict == Verdict.OK) {
 				score += testGroup.getWeight();
-			} else {
+			}
+			if (!taskDetails.groupsScoring()) {
 				score += testGroup.getWeight()*okTests/testGroup.getTestCases().size();
 			}
 		}
