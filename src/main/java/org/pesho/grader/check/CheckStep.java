@@ -58,20 +58,13 @@ public abstract class CheckStep implements BaseStep {
 		File gradeFile = new File(sandboxDir, "grade_" + inputFile.getName());
 		String gradeString = FileUtils.readLines(gradeFile, StandardCharsets.UTF_8.toString()).get(0).toString().trim();
 		double grade = Double.valueOf(gradeString);
-		if (grade == 1.0) return getOKResult();
-		else return getWAResult();
+		return getPartialResult(grade);
 	}
 	
-	protected StepResult getOKResult() {
+	protected StepResult getPartialResult(double score) {
 		String output = readOutput(outputFile);
 		String solution = readOutput(solutionFile);
-		return new StepResult(Verdict.OK, solution, output);
-	}
-	
-	protected StepResult getWAResult() {
-		String output = readOutput(outputFile);
-		String solution = readOutput(solutionFile);
-		return new StepResult(Verdict.WA, solution, output);
+		return new StepResult(Verdict.OK, solution, output, score);
 	}
 	
 	protected String readOutput(File file) {

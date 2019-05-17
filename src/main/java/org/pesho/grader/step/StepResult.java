@@ -7,6 +7,7 @@ public class StepResult {
 	private String output;
 	private String expectedOutput;
 	private Double time;
+	private Double checkerOutput;
 	
 	public StepResult() {
 	}
@@ -31,7 +32,14 @@ public class StepResult {
 		this.output = output;
 		this.expectedOutput = expectedOutput;
 	}
-	
+
+	public StepResult(Verdict verdict, String output, String expectedOutput, double checkerOutput) {
+		this.verdict = verdict;
+		this.output = output;
+		this.expectedOutput = expectedOutput;
+		this.checkerOutput = checkerOutput;
+	}
+
 	public void setVerdict(Verdict verdict) {
 		this.verdict = verdict;
 	}
@@ -71,5 +79,8 @@ public class StepResult {
 	public void setTime(Double time) {
 		this.time = time;
 	}
-	
+
+	public Double getCheckerOutput() {
+		return checkerOutput;
+	}
 }

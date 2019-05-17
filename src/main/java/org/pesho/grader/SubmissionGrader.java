@@ -74,11 +74,17 @@ public class SubmissionGrader {
 		}
 		
 		double testsScore = executeTests(checkerFile);
-		double finalScore = testsScore * taskDetails.getPoints();
-		int percent = (int) (Math.round(100 * finalScore / testsScore)+0.5);
-		String verdict = "Accepted";
-		if (percent < 100) {
-			verdict = percent + "%";
+		double finalScore = 0;
+		String verdict = "";
+		if (taskDetails.getPoints() == -1) {
+			finalScore = testsScore;
+		} else {
+			finalScore = testsScore * taskDetails.getPoints();
+			int percent = (int) (Math.round(100 * finalScore / testsScore) + 0.5);
+			verdict = "Accepted";
+			if (percent < 100) {
+				verdict = percent + "%";
+			}
 		}
 		score.addFinalScore(verdict, finalScore);
 		if (listener != null) {
@@ -107,28 +113,34 @@ public class SubmissionGrader {
 		double score = 0.0;
 		for (TestGroup testGroup: taskDetails.getTestGroups()) {
 			Verdict groupVerdict = Verdict.OK;
+			double checkerSum = 0.0;
 			
 			int okTests = 0;
 			for (TestCase testCase: testGroup.getTestCases()) {
-				Verdict verdict = executeTest(testCase, checkerFile);
-				if (verdict == Verdict.OK) {
+				StepResult result = executeTest(testCase, checkerFile);
+				if (result.getVerdict() == Verdict.OK) {
 					okTests++;
 				} else if(groupVerdict == Verdict.OK) {
-					groupVerdict = verdict;
+					groupVerdict = result.getVerdict();
 				}
+				checkerSum += result.getCheckerOutput();
 			}
 
-			if (taskDetails.groupsScoring() && groupVerdict == Verdict.OK) {
-				score += testGroup.getWeight();
-			}
-			if (!taskDetails.groupsScoring()) {
-				score += testGroup.getWeight()*okTests/testGroup.getTestCases().size();
+			if (taskDetails.getPoints() == -1) {
+				score += checkerSum;
+			} else {
+				if (taskDetails.groupsScoring() && groupVerdict == Verdict.OK) {
+					score += testGroup.getWeight();
+				}
+				if (!taskDetails.groupsScoring()) {
+					score += testGroup.getWeight() * okTests / testGroup.getTestCases().size();
+				}
 			}
 		}
 		return score;
 	}
 	
-	private Verdict executeTest(TestCase testCase, File checkerFile) {
+	private StepResult executeTest(TestCase testCase, File checkerFile) {
 		File inputFile = new File(testCase.getInput());
 		File outputFile = new File(testCase.getOutput());
 		File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
@@ -140,18 +152,24 @@ public class SubmissionGrader {
 				listener.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
 				listener.scoreUpdated(submissionId, score);
 			}
-			return testStep.getVerdict();
+			return new StepResult(testStep.getVerdict());
 		}
 		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
 		checkerStep.execute();
 		StepResult result = checkerStep.getResult();
 		result.setTime(testStep.getResult().getTime());
+
+		if (taskDetails.getPoints() != -1) {
+			if (Double.compare(result.getCheckerOutput(), 1.0) == 0) result.setVerdict(Verdict.OK);
+			else result.setVerdict(Verdict.WA);
+		}
+
 		score.addScoreStep("Test" + testCase.getNumber(), result);
 		if (listener != null) {
 			listener.addScoreStep("Test" + testCase.getNumber(), result);
 			listener.scoreUpdated(submissionId, score);
 		}
-		return checkerStep.getVerdict();
+		return result;
 	}
 	
 	public SubmissionScore getScore() {
