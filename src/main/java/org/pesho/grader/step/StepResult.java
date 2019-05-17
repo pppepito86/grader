@@ -7,7 +7,7 @@ public class StepResult {
 	private String output;
 	private String expectedOutput;
 	private Double time;
-	private Double checkerOutput;
+	private double checkerOutput;
 	
 	public StepResult() {
 	}
@@ -80,7 +80,7 @@ public class StepResult {
 		this.time = time;
 	}
 
-	public Double getCheckerOutput() {
+	public double getCheckerOutput() {
 		return checkerOutput;
 	}
 }
