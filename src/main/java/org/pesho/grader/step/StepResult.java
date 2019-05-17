@@ -1,5 +1,7 @@
 package org.pesho.grader.step;
 
+import java.util.Optional;
+
 public class StepResult {
 	
 	private Verdict verdict;
@@ -80,7 +82,7 @@ public class StepResult {
 		this.time = time;
 	}
 
-	public double getCheckerOutput() {
-		return checkerOutput!=null?checkerOutput:0;
+	public Optional<Double> getCheckerOutput() {
+		return Optional.ofNullable(checkerOutput);
 	}
 }
