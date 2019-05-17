@@ -69,9 +69,10 @@ public abstract class CheckStep implements BaseStep {
 	
 	protected String readOutput(File file) {
 	    try (InputStream is = new FileInputStream(file)) {
+	    	String output = "";
 	    	byte[] b = new byte[1000];
 	        int read = is.read(b);
-	        String output = new String(b, 0, read);
+	        if (read > 0) output += new String(b, 0, read);
 	        if (is.available() > 0) {
 	        	output += "...";
 	        }
