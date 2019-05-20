@@ -123,7 +123,7 @@ public class SubmissionGrader {
 				} else if(groupVerdict == Verdict.OK) {
 					groupVerdict = result.getVerdict();
 				}
-				checkerSum += result.getCheckerOutput().orElse(0.);
+				checkerSum += result.getCheckerOutput();
 			}
 
 			if (taskDetails.getPoints() == -1) {
@@ -160,7 +160,7 @@ public class SubmissionGrader {
 		result.setTime(testStep.getResult().getTime());
 
 		if (taskDetails.getPoints() != -1) {
-			if (Double.compare(result.getCheckerOutput().orElse(0.), 1.0) == 0) result.setVerdict(Verdict.OK);
+			if (Double.compare(result.getCheckerOutput(), 1.0) == 0) result.setVerdict(Verdict.OK);
 			else result.setVerdict(Verdict.WA);
 		}
 
