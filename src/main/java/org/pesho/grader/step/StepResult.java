@@ -82,7 +82,7 @@ public class StepResult {
 		this.time = time;
 	}
 
-	public Optional<Double> getCheckerOutput() {
-		return Optional.ofNullable(checkerOutput);
+	public Double getCheckerOutput() {
+		return Optional.ofNullable(checkerOutput).orElse(0.0);
 	}
 }
