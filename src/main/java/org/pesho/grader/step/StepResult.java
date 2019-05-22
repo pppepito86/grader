@@ -28,11 +28,19 @@ public class StepResult {
 		this.reason = reason;
 		this.time = time;
 	}
-	
+
 	public StepResult(Verdict verdict, String output, String expectedOutput) {
 		this.verdict = verdict;
 		this.output = output;
 		this.expectedOutput = expectedOutput;
+	}
+
+	public StepResult(Verdict verdict,  String reason, String output, String expectedOutput, double checkerOutput) {
+		this.verdict = verdict;
+		this.reason = reason;
+		this.output = output;
+		this.expectedOutput = expectedOutput;
+		this.checkerOutput = checkerOutput;
 	}
 
 	public StepResult(Verdict verdict, String output, String expectedOutput, double checkerOutput) {

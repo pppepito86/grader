@@ -23,9 +23,9 @@ public class NoCheckStep extends CheckStep {
 			List<String> cmd = Arrays.asList("diff", "-Z", "-B", "-q", outputFile.getAbsolutePath(), solutionFile.getAbsolutePath());
 			int exitValue = new ProcessExecutor().readOutput(false).command(cmd).execute().getExitValue();
 			if (exitValue == 0) {
-				result = getPartialResult(1);
+				result = getPartialResult(1, null);
 			} else {
-				result = getPartialResult(0);
+				result = getPartialResult(0, null);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
