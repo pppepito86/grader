@@ -163,7 +163,7 @@ public class SubmissionGrader {
 			if (Double.compare(result.getCheckerOutput(), 1.0) == 0) result.setVerdict(Verdict.OK);
 			else result.setVerdict(Verdict.WA);
 		} else {
-			if (Double.compare(result.getCheckerOutput(), 0.0) == 0 && result.getReason() != null && !result.getReason().isEmpty()) result.setVerdict(Verdict.WA);
+			if (Double.compare(result.getCheckerOutput(), -1.0) == 0) result.setVerdict(Verdict.WA);
 		}
 
 		score.addScoreStep("Test" + testCase.getNumber(), result);
