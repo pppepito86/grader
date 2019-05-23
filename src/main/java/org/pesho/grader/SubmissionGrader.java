@@ -120,10 +120,10 @@ public class SubmissionGrader {
 				StepResult result = executeTest(testCase, checkerFile);
 				if (result.getVerdict() == Verdict.OK) {
 					okTests++;
+					checkerSum += result.getCheckerOutput();
 				} else if(groupVerdict == Verdict.OK) {
 					groupVerdict = result.getVerdict();
 				}
-				checkerSum += result.getCheckerOutput();
 			}
 
 			if (taskDetails.getPoints() == -1) {
