@@ -162,7 +162,7 @@ public class TaskParser {
 	
 	private void findGrader() {
 		List<File> filtered = listAllFiles().stream()
-				.filter(x -> x.getAbsolutePath().toLowerCase().contains("grader.cpp"))
+				.filter(x -> x.getName().equalsIgnoreCase("grader.cpp"))
 				.collect(Collectors.toList());
 		if (filtered.size() == 1) {
 			this.graderDir = filtered.get(0).getParentFile();
