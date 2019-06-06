@@ -18,6 +18,7 @@ public class TaskParser {
 	private List<File> solutions = new ArrayList<>();
 	private File checker = new File("checker");
 	private File cppChecker = new File("checker.cpp");
+	private File graderDir = new File("system");
 	private File properties = new File("properties");
 	private String prefix;
 	private Optional<File> taskDescription = Optional.empty();
@@ -47,6 +48,10 @@ public class TaskParser {
 		return checker;
 	}
 	
+	public File getGraderDir() {
+		return graderDir;
+	}
+	
 	public File getCppChecker() {
 		return cppChecker;
 	}
@@ -67,6 +72,7 @@ public class TaskParser {
 		findSolutions();
 		findChecker();
 		findCppChecker();
+		findGrader();
 		findProperties();
 		findTaskDescription();
 		findTests();
@@ -151,6 +157,15 @@ public class TaskParser {
 				this.cppChecker = file;
 				return;
 			}
+		}
+	}
+	
+	private void findGrader() {
+		List<File> filtered = listAllFiles().stream()
+				.filter(x -> x.getAbsolutePath().toLowerCase().contains("grader.cpp"))
+				.collect(Collectors.toList());
+		if (filtered.size() == 1) {
+			this.graderDir = filtered.get(0).getParentFile();
 		}
 	}
 	

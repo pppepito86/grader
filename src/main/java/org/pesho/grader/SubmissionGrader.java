@@ -52,6 +52,7 @@ public class SubmissionGrader {
 		sandboxDir.mkdirs();
 		File sourceFile = new File(sandboxDir, originalSourceFile.getName());
 		File originalCheckerFile = new File(taskDetails.getChecker());
+		File graderDir = new File(taskDetails.getGraderDir());
 		File checkerFile = new File(sandboxDir, originalCheckerFile.getName());
 		try {
 			FileUtils.copyFile(originalSourceFile, sourceFile);
@@ -64,7 +65,7 @@ public class SubmissionGrader {
 			return 0;
 		}
 		
-		if (compile(sourceFile) == 0) {
+		if (compile(sourceFile, graderDir) == 0) {
 			score.addFinalScore("Compilation Failed", 0);
 			if (listener != null) {
 				listener.addFinalScore("Compilation Failed", 0);
@@ -94,8 +95,8 @@ public class SubmissionGrader {
 		return finalScore;
 	}
 
-	private double compile(File sourceFile) {
-		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile);
+	private double compile(File sourceFile, File graderDir) {
+		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile, graderDir);
 		compileStep.execute();
 		score.addScoreStep("Compile", compileStep.getResult());
 		if (listener != null) {

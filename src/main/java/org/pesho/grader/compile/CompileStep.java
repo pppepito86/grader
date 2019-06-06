@@ -14,11 +14,13 @@ import org.pesho.sandbox.SandboxExecutor;
 public abstract class CompileStep implements BaseStep {
 
 	protected final File sourceFile;
+	protected final File graderDir;
 	protected final File sandboxDir;
 	protected StepResult result;
 
-	public CompileStep(File sourceFile) {
+	public CompileStep(File sourceFile, File graderDir) {
 		this.sourceFile = sourceFile.getAbsoluteFile();
+		this.graderDir = graderDir;
 		this.sandboxDir = new File(sourceFile.getParentFile(), "sandbox_compile");
 	}
 
@@ -26,6 +28,7 @@ public abstract class CompileStep implements BaseStep {
 		try {
 			createSandboxDirectory();
 			copySandboxInput();
+			copyGraderFiles();
 
 			StepResult result = Arrays.stream(getCommands())
 				.map(command -> new SandboxExecutor()
@@ -80,6 +83,14 @@ public abstract class CompileStep implements BaseStep {
 
 	protected void copySandboxInput() throws IOException {
 		FileUtils.copyFile(sourceFile, new File(sandboxDir, sourceFile.getName()));
+	}
+
+	protected void copyGraderFiles() throws IOException {
+		if (!graderDir.exists()) return;
+		for (File file: graderDir.listFiles()) {
+			File newFile = new File(sandboxDir, file.getName());
+			FileUtils.copyFile(file, newFile);
+		}
 	}
 	
 	protected void copySandboxOutput() throws IOException {

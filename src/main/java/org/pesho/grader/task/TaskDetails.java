@@ -11,6 +11,7 @@ public class TaskDetails {
 	private double time;
 	private int memory;
 	private String checker;
+	private String graderDir;
 	private String feedback;
 	private String groups;
 	private String weights;
@@ -52,6 +53,7 @@ public class TaskDetails {
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", "groups").trim();
 		this.checker = taskParser.getChecker().getAbsolutePath();
+		this.graderDir = taskParser.getGraderDir().getAbsolutePath();
 		
 		TestCase[] testCases = new TestCase[taskParser.testsCount()];
 		for (int i = 0; i < testCases.length; i++) {
@@ -135,6 +137,10 @@ public class TaskDetails {
 	
 	public String getChecker() {
 		return checker;
+	}
+
+	public String getGraderDir() {
+		return graderDir;
 	}
 	
 	public void setTestGroups(List<TestGroup> testGroups) {

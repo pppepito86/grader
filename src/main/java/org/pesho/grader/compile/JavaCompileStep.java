@@ -8,8 +8,8 @@ public class JavaCompileStep extends CompileStep {
 	public static final String SOURCE_FILE_ENDING = ".java";
 	public static final String BINARY_FILE_ENDING = ".jar";
 
-	public JavaCompileStep(File sourceFile) {
-		super(sourceFile);
+	public JavaCompileStep(File sourceFile, File graderDir) {
+		super(sourceFile, graderDir);
 	}
 
 	@Override
