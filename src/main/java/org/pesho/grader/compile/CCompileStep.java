@@ -6,6 +6,10 @@ public class CCompileStep extends CompileStep {
 	public static final String COMPILE_COMMAND_PATTERN = "gcc -std=c99 -o %s %s";
 	public static final String SOURCE_FILE_ENDING = ".c";
 
+	public CCompileStep(File sourceFile) {
+		this(sourceFile, null);
+	}
+
 	public CCompileStep(File sourceFile, File graderDir) {
 		super(sourceFile, graderDir);
 	}
@@ -19,7 +23,7 @@ public class CCompileStep extends CompileStep {
 	
 	private String getAllFiles() {
 		String files = sourceFile.getName();
-		if (graderDir.exists()) {
+		if (graderDir != null && graderDir.exists()) {
 			for (File file: graderDir.listFiles()) files += " " + file.getName();
 		}
 		return files;

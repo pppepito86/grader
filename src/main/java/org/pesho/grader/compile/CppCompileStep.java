@@ -16,6 +16,10 @@ public class CppCompileStep extends CompileStep {
 	public static final String COMPILE_CPP98_COMMAND_PATTERN = "g++ -O2 -std=c++98 -o %s %s";
 	public static final String SOURCE_FILE_ENDING = ".cpp";
 
+	public CppCompileStep(File sourceFile) {
+		this(sourceFile, null);
+	}
+	
 	public CppCompileStep(File sourceFile, File graderDir) {
 		super(sourceFile, graderDir);
 	}
@@ -78,7 +82,7 @@ public class CppCompileStep extends CompileStep {
 	
 	private String getAllFiles() {
 		String files = sourceFile.getName();
-		if (graderDir.exists()) {
+		if (graderDir != null && graderDir.exists()) {
 			for (File file: graderDir.listFiles()) files += " " + file.getName();
 		}
 		return files;
