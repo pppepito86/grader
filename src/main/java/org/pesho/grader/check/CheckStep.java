@@ -39,6 +39,7 @@ public abstract class CheckStep implements BaseStep {
 					.directory(sandboxDir)
 					.input("/dev/null")
 					.output("grade_" + inputFile.getName())
+					.error("grade_err_" + inputFile.getName())
 					.command(getCommand())
 					.execute().getResult();
 
@@ -58,7 +59,12 @@ public abstract class CheckStep implements BaseStep {
 		File gradeFile = new File(sandboxDir, "grade_" + inputFile.getName());
 		String gradeString = FileUtils.readLines(gradeFile, StandardCharsets.UTF_8.toString()).get(0).trim();
 		double grade = Double.valueOf(gradeString);
-		return getPartialResult(grade, result.getReason());
+
+		File errorFile = new File(sandboxDir, "grade_err_" + inputFile.getName());
+		String errorString = "";
+		if (errorFile.exists()) errorString = FileUtils.readFileToString(gradeFile, StandardCharsets.UTF_8.toString());
+		
+		return getPartialResult(grade, errorString);
 	}
 	
 	protected StepResult getPartialResult(double score, String reason) {
