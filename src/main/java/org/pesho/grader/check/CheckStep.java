@@ -62,7 +62,7 @@ public abstract class CheckStep implements BaseStep {
 
 		File errorFile = new File(sandboxDir, "grade_err_" + inputFile.getName());
 		String errorString = "";
-		if (errorFile.exists()) errorString = FileUtils.readFileToString(gradeFile, StandardCharsets.UTF_8.toString());
+		if (errorFile.exists()) errorString = FileUtils.readFileToString(errorFile, StandardCharsets.UTF_8.toString());
 		
 		return getPartialResult(grade, errorString);
 	}
