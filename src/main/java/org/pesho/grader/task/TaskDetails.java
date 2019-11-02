@@ -69,7 +69,9 @@ public class TaskDetails {
 			String[] groupsSplit = groups.split(",");
 			String[] weightsSplit = weights.split(",");
 			double totalWeight = 0;
-			for (String weight: weightsSplit) totalWeight += Double.valueOf(weight.trim());
+			if (!weights.trim().isEmpty()) {
+				for (String weight: weightsSplit) totalWeight += Double.valueOf(weight.trim());
+			}
 			if (totalWeight == 0) totalWeight = groupsSplit.length;
 			
 			testGroups = new TestGroup[groupsSplit.length];
