@@ -131,6 +131,22 @@ public class TaskDetails {
 		return groups;
 	}
 	
+	public void setWeights(String weights) {
+		this.weights = weights;
+	}
+	
+	public String getWeights() {
+		return weights;
+	}
+	
+	public void setScoring(String scoring) {
+		this.scoring = scoring;
+	}
+	
+	public String getScoring() {
+		return scoring;
+	}
+	
 	public void setChecker(String checker) {
 		this.checker = checker;
 	}
