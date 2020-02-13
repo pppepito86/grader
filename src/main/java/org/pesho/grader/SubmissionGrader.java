@@ -2,6 +2,7 @@ package org.pesho.grader;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
 import org.pesho.grader.check.CheckStep;
@@ -24,17 +25,23 @@ public class SubmissionGrader {
 	private File binaryFile;
 	private SubmissionScore score;
 	private GradeListener listener;
+	private Optional<Double> timeLimit;
 	
 	public SubmissionGrader(String submissionId, TaskDetails taskTests, String sourceFile) {
 		this(submissionId, taskTests, sourceFile, null);
 	}
 	
 	public SubmissionGrader(String submissionId, TaskDetails taskTests, String sourceFile, GradeListener listener) {
+		this(submissionId, taskTests, sourceFile, listener, null);
+	}
+	
+	public SubmissionGrader(String submissionId, TaskDetails taskTests, String sourceFile, GradeListener listener, Double tl) {
 		this.submissionId = submissionId;
 		this.taskDetails = taskTests;
 		this.originalSourceFile = new File(sourceFile).getAbsoluteFile();
 		this.score = new SubmissionScore();
 		this.listener = listener;
+		this.timeLimit = Optional.ofNullable(tl);
 	}
 	
 	public double grade() {
@@ -145,7 +152,8 @@ public class SubmissionGrader {
 		File inputFile = new File(testCase.getInput());
 		File outputFile = new File(testCase.getOutput());
 		File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
-		TestStep testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, taskDetails.getTime(), taskDetails.getMemory());
+		Double tl = timeLimit.orElse(taskDetails.getTime());
+		TestStep testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory());
 		testStep.execute();
 		if (testStep.getVerdict() != Verdict.OK) {
 			score.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
