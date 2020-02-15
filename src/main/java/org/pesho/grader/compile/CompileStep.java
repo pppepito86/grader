@@ -33,6 +33,7 @@ public abstract class CompileStep implements BaseStep {
 			StepResult result = Arrays.stream(getCommands())
 				.map(command -> new SandboxExecutor()
 						.directory(sandboxDir)
+						.timeout(30)
 						.command(command)
 						.execute().getResult())
 				.map(x -> getResult(x))
