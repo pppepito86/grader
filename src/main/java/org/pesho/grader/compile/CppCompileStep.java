@@ -60,6 +60,7 @@ public class CppCompileStep extends CompileStep {
 			CommandResult commandResult = new SandboxExecutor()
 					.directory(sandboxDir)
 					.timeout(30)
+					.memory(1024)
 					.command(command)
 					.execute().getResult();
 			StepResult result = getResult(commandResult);

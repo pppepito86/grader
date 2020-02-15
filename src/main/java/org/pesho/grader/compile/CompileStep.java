@@ -34,6 +34,7 @@ public abstract class CompileStep implements BaseStep {
 				.map(command -> new SandboxExecutor()
 						.directory(sandboxDir)
 						.timeout(30)
+						.memory(1024)
 						.command(command)
 						.execute().getResult())
 				.map(x -> getResult(x))
