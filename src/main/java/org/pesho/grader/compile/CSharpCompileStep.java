@@ -17,8 +17,7 @@ public class CSharpCompileStep extends CompileStep {
 	
 	@Override
 	public String[] getCommands() {
-		String compiledFileName = getBinaryFileName();
-		String command = String.format(COMPILE_COMMAND_PATTERN, compiledFileName, getAllFiles());
+		String command = String.format(COMPILE_COMMAND_PATTERN, getAllFiles());
 		return new String[] { command };
 	}
 	
