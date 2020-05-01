@@ -13,6 +13,9 @@ public class CompileStepFactory {
 		if (sourceFile.getName().endsWith(JavaCompileStep.SOURCE_FILE_ENDING)) {
 			return new JavaCompileStep(sourceFile, graderDir);
 		}
+		if (sourceFile.getName().endsWith(CSharpCompileStep.SOURCE_FILE_ENDING)) {
+			return new CSharpCompileStep(sourceFile, graderDir);
+		}
 		throw new IllegalStateException("source file language is not supported");
 	}
 
