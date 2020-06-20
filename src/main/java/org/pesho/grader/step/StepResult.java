@@ -28,6 +28,7 @@ public class StepResult {
 		this.verdict = verdict;
 		this.reason = reason;
 		this.time = time;
+		this.memory = memory;
 	}
 
 	public StepResult(Verdict verdict, String output, String expectedOutput) {
