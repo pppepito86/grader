@@ -4,7 +4,7 @@ import java.io.File;
 
 public class CppTestStep extends TestStep {
 
-	public static final String EXECUTE_COMMAND_PATTERN = "./%s";
+	public static final String EXECUTE_COMMAND_PATTERN = "/shared/%s";
 
 	public CppTestStep(File binaryFile, File inputFile, File outputFile, double time, int memory) {
 		super(binaryFile, inputFile, outputFile, time, memory);
