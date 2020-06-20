@@ -81,7 +81,7 @@ public abstract class TestStep implements BaseStep {
 	private void copySandboxInput() throws Exception {
 		FileUtils.copyFile(binaryFile, new File(sandboxDir, binaryFile.getName()));
 		new File(sandboxDir, binaryFile.getName()).setExecutable(true);
-		new ProcessExecutor().command("chmod", "+x", binaryFile.getAbsolutePath()).execute();
+		new ProcessExecutor().command("chmod", "+x", new File(sandboxDir, binaryFile.getName()).getAbsolutePath()).execute();
 		FileUtils.copyFile(inputFile, new File(sandboxDir, inputFile.getName()));
 	}
 	
