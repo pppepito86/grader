@@ -38,7 +38,6 @@ public abstract class CheckStep implements BaseStep {
 			copySandboxInput();
 			CommandResult statusResult = new SandboxExecutor()
 					.directory(sandboxDir)
-					.input("/dev/null")
 					.output("grade_" + inputFile.getName())
 					.error("grade_err_" + inputFile.getName())
 					.command(getCommand())

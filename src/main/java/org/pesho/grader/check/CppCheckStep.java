@@ -4,7 +4,7 @@ import java.io.File;
 
 public class CppCheckStep extends CheckStep {
 
-	public static final String GRADE_COMMAND_PATTERN = "/shared/%s %s %s %s";
+	public static final String GRADE_COMMAND_PATTERN = "/shared/%s /shared/%s /shared/%s /shared/%s";
 
 	public CppCheckStep(File binaryFile, File inputFile, File outputFile, File solutionFile) {
 		super(binaryFile, inputFile, outputFile, solutionFile);
