@@ -51,7 +51,7 @@ public class SubmissionGrader {
 			if (score > 0) FileUtils.deleteQuietly(sandboxDir);
 			return score;
 		} finally {
-			FileUtils.deleteQuietly(sandboxDir);
+//			FileUtils.deleteQuietly(sandboxDir);
 		}
 	}
 	

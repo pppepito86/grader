@@ -9,6 +9,7 @@ import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 import org.pesho.sandbox.CommandResult;
 import org.pesho.sandbox.SandboxExecutor;
+import org.zeroturnaround.exec.ProcessExecutor;
 
 public abstract class TestStep implements BaseStep {
 
@@ -47,16 +48,16 @@ public abstract class TestStep implements BaseStep {
 			e.printStackTrace();
 			result = new StepResult(Verdict.SE, result.getReason());
 		} finally {
-			FileUtils.deleteQuietly(sandboxDir);
+//			FileUtils.deleteQuietly(sandboxDir);
 		}
 	}
 
 	private StepResult getResult(CommandResult result) {
 		switch (result.getStatus()) {
-		case SUCCESS: return new StepResult(Verdict.OK, null, result.getTime());
-		case OOM: return new StepResult(Verdict.ML, null, result.getTime());
-		case PROGRAM_ERROR:	return new StepResult(Verdict.RE, result.getReason(), result.getTime());
-		case TIMEOUT: return new StepResult(Verdict.TL, null, result.getTime());
+		case SUCCESS: return new StepResult(Verdict.OK, null, result.getTime(), result.getMemory());
+		case OOM: return new StepResult(Verdict.ML, null, result.getTime(), result.getMemory());
+		case PROGRAM_ERROR:	return new StepResult(Verdict.RE, result.getReason(), result.getTime(), result.getMemory());
+		case TIMEOUT: return new StepResult(Verdict.TL, null, result.getTime(), result.getMemory());
 		default:  return new StepResult(Verdict.SE, result.getReason());
 		}
 	}
@@ -77,9 +78,10 @@ public abstract class TestStep implements BaseStep {
 		sandboxDir.mkdirs();
 	}
 	
-	private void copySandboxInput() throws IOException {
+	private void copySandboxInput() throws Exception {
 		FileUtils.copyFile(binaryFile, new File(sandboxDir, binaryFile.getName()));
 		new File(sandboxDir, binaryFile.getName()).setExecutable(true);
+		new ProcessExecutor().command("chmod", "+x", binaryFile.getAbsolutePath()).execute();
 		FileUtils.copyFile(inputFile, new File(sandboxDir, inputFile.getName()));
 	}
 	

@@ -9,6 +9,7 @@ public class StepResult {
 	private String output;
 	private String expectedOutput;
 	private Double time;
+	private Long memory;
 	private Double checkerOutput;
 	
 	public StepResult() {
@@ -23,7 +24,7 @@ public class StepResult {
 		this.reason = reason;
 	}
 	
-	public StepResult(Verdict verdict, String reason, Double time) {
+	public StepResult(Verdict verdict, String reason, Double time, Long memory) {
 		this.verdict = verdict;
 		this.reason = reason;
 		this.time = time;
@@ -88,6 +89,14 @@ public class StepResult {
 	
 	public void setTime(Double time) {
 		this.time = time;
+	}
+	
+	public Long getMemory() {
+		return memory;
+	}
+	
+	public void setMemory(Long memory) {
+		this.memory = memory;
 	}
 
 	public Double getCheckerOutput() {

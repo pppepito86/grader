@@ -13,6 +13,7 @@ import org.pesho.grader.step.Verdict;
 import org.pesho.sandbox.CommandResult;
 import org.pesho.sandbox.CommandStatus;
 import org.pesho.sandbox.SandboxExecutor;
+import org.zeroturnaround.exec.ProcessExecutor;
 
 public abstract class CheckStep implements BaseStep {
 
@@ -48,7 +49,7 @@ public abstract class CheckStep implements BaseStep {
 			e.printStackTrace();
 			result = new StepResult(Verdict.SE, result.getReason());
 		} finally {
-			FileUtils.deleteQuietly(sandboxDir);
+//			FileUtils.deleteQuietly(sandboxDir);
 		}
 	}
 
@@ -105,9 +106,10 @@ public abstract class CheckStep implements BaseStep {
 		sandboxDir.mkdirs();
 	}
 
-	private void copySandboxInput() throws IOException {
+	private void copySandboxInput() throws Exception {
 		FileUtils.copyFile(binaryFile, new File(sandboxDir, binaryFile.getName()));
 		new File(sandboxDir, binaryFile.getName()).setExecutable(true);
+		new ProcessExecutor().command("chmod", "+x", binaryFile.getAbsolutePath()).execute();
 		FileUtils.copyFile(inputFile, new File(sandboxDir, inputFile.getName()));
 		FileUtils.copyFile(outputFile, new File(sandboxDir, outputFile.getName()));
 		FileUtils.copyFile(solutionFile, new File(sandboxDir, solutionFile.getName()));
