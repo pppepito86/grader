@@ -48,10 +48,10 @@ public class SubmissionGrader {
 		File sandboxDir = new File(originalSourceFile.getParentFile(), "sandbox_"+originalSourceFile.getName());
 		try {
 			double score = gradeInternal(sandboxDir);
-			if (score > 0) FileUtils.deleteQuietly(sandboxDir);
+//			if (score > 0) FileUtils.deleteQuietly(sandboxDir);
 			return score;
 		} finally {
-//			FileUtils.deleteQuietly(sandboxDir);
+			FileUtils.deleteQuietly(sandboxDir);
 		}
 	}
 	
