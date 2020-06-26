@@ -128,7 +128,7 @@ public class SubmissionGrader {
 			for (TestCase testCase: testGroup.getTestCases()) {
 				StepResult result = executeTest(testCase, checkerFile);
 				if (result.getVerdict() == Verdict.TL && !hasFailed) {
-					result = executeTest(testCase, checkerFile);
+//					result = executeTest(testCase, checkerFile);
 				}
 				if (result.getVerdict() != Verdict.OK) {
 					hasFailed = true;	

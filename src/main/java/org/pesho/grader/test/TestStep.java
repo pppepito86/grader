@@ -64,6 +64,7 @@ public abstract class TestStep implements BaseStep {
 	
 	@Override
 	public StepResult getResult() {
+		System.out.println(result.getExitCode());
 		return result;
 	}
 	
