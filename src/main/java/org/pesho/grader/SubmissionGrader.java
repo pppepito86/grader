@@ -122,10 +122,18 @@ public class SubmissionGrader {
 		for (TestGroup testGroup: taskDetails.getTestGroups()) {
 			Verdict groupVerdict = Verdict.OK;
 			double checkerSum = 0.0;
-			
+
 			int okTests = 0;
+			boolean hasFailed = false;
 			for (TestCase testCase: testGroup.getTestCases()) {
 				StepResult result = executeTest(testCase, checkerFile);
+				if (result.getVerdict() == Verdict.TL && !hasFailed) {
+					result = executeTest(testCase, checkerFile);
+				}
+				if (result.getVerdict() != Verdict.OK) {
+					hasFailed = true;	
+				}
+				
 				if (result.getVerdict() == Verdict.OK) {
 					okTests++;
 					checkerSum += result.getCheckerOutput();

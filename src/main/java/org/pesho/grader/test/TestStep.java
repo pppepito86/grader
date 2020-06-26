@@ -46,7 +46,7 @@ public abstract class TestStep implements BaseStep {
 			result = getResult(commandResult);
 		} catch (Exception e) {
 			e.printStackTrace();
-			result = new StepResult(Verdict.SE, result.getReason());
+			result = new StepResult(Verdict.SE, result.getReason(), result.getExitCode());
 		} finally {
 //			FileUtils.deleteQuietly(sandboxDir);
 		}
@@ -54,11 +54,11 @@ public abstract class TestStep implements BaseStep {
 
 	private StepResult getResult(CommandResult result) {
 		switch (result.getStatus()) {
-		case SUCCESS: return new StepResult(Verdict.OK, null, result.getTime(), result.getMemory());
-		case OOM: return new StepResult(Verdict.ML, null, result.getTime(), result.getMemory());
-		case PROGRAM_ERROR:	return new StepResult(Verdict.RE, result.getReason(), result.getTime(), result.getMemory());
-		case TIMEOUT: return new StepResult(Verdict.TL, null, result.getTime(), result.getMemory());
-		default:  return new StepResult(Verdict.SE, result.getReason());
+		case SUCCESS: return new StepResult(Verdict.OK, null, result.getExitCode(), result.getTime(), result.getMemory());
+		case OOM: return new StepResult(Verdict.ML, null, result.getExitCode(), result.getTime(), result.getMemory());
+		case PROGRAM_ERROR:	return new StepResult(Verdict.RE, result.getReason(), result.getExitCode(), result.getTime(), result.getMemory());
+		case TIMEOUT: return new StepResult(Verdict.TL, null, result.getExitCode(), result.getTime(), result.getMemory());
+		default:  return new StepResult(Verdict.SE, result.getReason(), result.getExitCode());
 		}
 	}
 	

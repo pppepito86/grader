@@ -33,8 +33,8 @@ public abstract class CompileStep implements BaseStep {
 			StepResult result = Arrays.stream(getCommands())
 				.map(command -> new SandboxExecutor()
 						.directory(sandboxDir)
-						.timeout(30)
-						.memory(1024)
+						.timeout(10)
+						.memory(256)
 						.command(command)
 						.execute().getResult())
 				.map(x -> getResult(x))
@@ -64,8 +64,8 @@ public abstract class CompileStep implements BaseStep {
 	protected StepResult getResult(CommandResult result) {
 		switch (result.getStatus()) {
 		case SUCCESS: return new StepResult(Verdict.OK);
-		case TIMEOUT: return new StepResult(Verdict.CE, "Compilation timeout");
-		case OOM: return new StepResult(Verdict.CE, "OOM");
+		case TIMEOUT: return new StepResult(Verdict.CE, "Compilation TL");
+		case OOM: return new StepResult(Verdict.CE, "Compilation ML");
 		case SYSTEM_ERROR: return new StepResult(Verdict.SE, result.getReason());
 		default: return new StepResult(Verdict.CE, result.getReason());
 		}

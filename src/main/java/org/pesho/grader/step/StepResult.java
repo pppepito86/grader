@@ -6,6 +6,7 @@ public class StepResult {
 	
 	private Verdict verdict;
 	private String reason;
+	private Integer exitCode;
 	private String output;
 	private String expectedOutput;
 	private Double time;
@@ -16,7 +17,7 @@ public class StepResult {
 	}
 	
 	public StepResult(Verdict verdict) {
-		this(verdict, null);
+		this.verdict = verdict;
 	}
 	
 	public StepResult(Verdict verdict, String reason) {
@@ -24,7 +25,13 @@ public class StepResult {
 		this.reason = reason;
 	}
 	
-	public StepResult(Verdict verdict, String reason, Double time, Long memory) {
+	public StepResult(Verdict verdict, String reason, Integer exitCode) {
+		this.verdict = verdict;
+		this.reason = reason;
+		this.exitCode = exitCode;
+	}
+	
+	public StepResult(Verdict verdict, String reason, Integer exitCode, Double time, Long memory) {
 		this.verdict = verdict;
 		this.reason = reason;
 		this.time = time;
@@ -66,6 +73,14 @@ public class StepResult {
 	
 	public void setReason(String reason) {
 		this.reason = reason;
+	}
+	
+	public Integer getExitCode() {
+		return exitCode;
+	}
+	
+	public void setExitCode(Integer exitCode) {
+		this.exitCode = exitCode;
 	}
 	
 	public String getOutput() {
