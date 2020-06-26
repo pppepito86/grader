@@ -176,6 +176,7 @@ public class SubmissionGrader {
 		StepResult result = checkerStep.getResult();
 		result.setTime(testStep.getResult().getTime());
 		result.setMemory(testStep.getResult().getMemory());
+		result.setExitCode(testStep.getResult().getExitCode());
 
 		if (taskDetails.getPoints() != -1) {
 			if (Double.compare(result.getCheckerOutput(), 1.0) == 0) result.setVerdict(Verdict.OK);
