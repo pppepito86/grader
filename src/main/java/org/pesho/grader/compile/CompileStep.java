@@ -33,6 +33,8 @@ public abstract class CompileStep implements BaseStep {
 			StepResult result = Arrays.stream(getCommands())
 				.map(command -> new SandboxExecutor()
 						.directory(sandboxDir)
+						.allowProcesses()
+						.showError()
 						.timeout(10)
 						.memory(256)
 						.command(command)

@@ -40,9 +40,11 @@ public abstract class CheckStep implements BaseStep {
 					.directory(sandboxDir)
 					.output("grade_" + inputFile.getName())
 					.error("grade_err_" + inputFile.getName())
+					.allowProcesses()
+					.showError()
 					.command(getCommand())
 					.execute().getResult();
-
+			
 			result = getResult(statusResult);
 		} catch (Exception e) {
 			e.printStackTrace();
