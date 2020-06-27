@@ -126,10 +126,7 @@ public class SubmissionGrader {
 			int okTests = 0;
 			boolean hasFailed = false;
 			for (TestCase testCase: testGroup.getTestCases()) {
-				StepResult result = executeTest(testCase, checkerFile);
-				if (result.getVerdict() == Verdict.TL && !hasFailed) {
-//					result = executeTest(testCase, checkerFile);
-				}
+				StepResult result = executeTest(testCase, checkerFile, !hasFailed);
 				if (result.getVerdict() != Verdict.OK) {
 					hasFailed = true;	
 				}
@@ -156,13 +153,18 @@ public class SubmissionGrader {
 		return score;
 	}
 	
-	private StepResult executeTest(TestCase testCase, File checkerFile) {
+	private StepResult executeTest(TestCase testCase, File checkerFile, boolean rerun) {
 		File inputFile = new File(testCase.getInput());
 		File outputFile = new File(testCase.getOutput());
 		File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
 		Double tl = timeLimit.orElse(taskDetails.getTime());
 		TestStep testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory());
 		testStep.execute();
+		if (testStep.getVerdict() == Verdict.TL && rerun) {
+			testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory());
+			testStep.execute();
+		}
+		
 		if (testStep.getVerdict() != Verdict.OK) {
 			score.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
 			if (listener != null) {
