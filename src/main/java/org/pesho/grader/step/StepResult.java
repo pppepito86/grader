@@ -34,6 +34,7 @@ public class StepResult {
 	public StepResult(Verdict verdict, String reason, Integer exitCode, Double time, Long memory) {
 		this.verdict = verdict;
 		this.reason = reason;
+		this.exitCode = exitCode;
 		this.time = time;
 		this.memory = memory;
 	}
