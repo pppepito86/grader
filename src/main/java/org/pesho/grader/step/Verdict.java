@@ -10,6 +10,7 @@ public enum Verdict {
 	ML,
 	WA,
 	SE,
-	HIDDEN
+	HIDDEN,
+	SKIPPED
 	
 }
