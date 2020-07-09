@@ -123,7 +123,6 @@ public class SubmissionGrader {
 			Verdict groupVerdict = Verdict.OK;
 			double checkerSum = 0.0;
 
-			int okTests = 0;
 			boolean allTestsOk = true;
 			for (TestCase testCase: testGroup.getTestCases()) {
 				StepResult result = executeTest(testCase, checkerFile, allTestsOk);
@@ -132,7 +131,6 @@ public class SubmissionGrader {
 				}
 				
 				if (result.getVerdict() == Verdict.OK || result.getVerdict() == Verdict.PARTIAL) {
-					okTests++;
 					checkerSum += result.getCheckerOutput();
 				} else if (groupVerdict == Verdict.OK) {
 					groupVerdict = result.getVerdict();
@@ -190,11 +188,7 @@ public class SubmissionGrader {
 		result.setMemory(testStep.getResult().getMemory());
 		result.setExitCode(testStep.getResult().getExitCode());
 
-		if (taskDetails.getPoints() != -1) {
-			if (Double.compare(result.getCheckerOutput(), 1.0) == 0) result.setVerdict(Verdict.OK);
-			else if (Double.compare(result.getCheckerOutput(), 0.0) == 0) result.setVerdict(Verdict.WA);
-			else result.setVerdict(Verdict.PARTIAL);
-		} else {
+		if (taskDetails.getPoints() == -1) {
 			if (Double.compare(result.getCheckerOutput(), -1.0) == 0) result.setVerdict(Verdict.WA);
 		}
 
