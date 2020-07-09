@@ -131,10 +131,10 @@ public class SubmissionGrader {
 					allTestsOk = false;	
 				}
 				
-				if (result.getVerdict() == Verdict.OK) {
+				if (result.getVerdict() == Verdict.OK || result.getVerdict() == Verdict.PARTIAL) {
 					okTests++;
 					checkerSum += result.getCheckerOutput();
-				} else if(groupVerdict == Verdict.OK) {
+				} else if (groupVerdict == Verdict.OK) {
 					groupVerdict = result.getVerdict();
 				}
 			}
@@ -154,15 +154,15 @@ public class SubmissionGrader {
 	}
 	
 	private StepResult executeTest(TestCase testCase, File checkerFile, boolean allTestsOk) {
-		if (!allTestsOk) {
-			StepResult result = new StepResult(Verdict.SKIPPED);
-			score.addScoreStep("Test" + testCase.getNumber(), result);
-			if (listener != null) {
-				listener.addScoreStep("Test" + testCase.getNumber(), result);
-				listener.scoreUpdated(submissionId, score);
-			}
-			return new StepResult(result.getVerdict());
-		}
+//		if (!allTestsOk) {
+//			StepResult result = new StepResult(Verdict.SKIPPED);
+//			score.addScoreStep("Test" + testCase.getNumber(), result);
+//			if (listener != null) {
+//				listener.addScoreStep("Test" + testCase.getNumber(), result);
+//				listener.scoreUpdated(submissionId, score);
+//			}
+//			return new StepResult(result.getVerdict());
+//		}
 		
 		File inputFile = new File(testCase.getInput());
 		File outputFile = new File(testCase.getOutput());
@@ -192,7 +192,8 @@ public class SubmissionGrader {
 
 		if (taskDetails.getPoints() != -1) {
 			if (Double.compare(result.getCheckerOutput(), 1.0) == 0) result.setVerdict(Verdict.OK);
-			else result.setVerdict(Verdict.WA);
+			else if (Double.compare(result.getCheckerOutput(), 0.0) == 0) result.setVerdict(Verdict.WA);
+			else result.setVerdict(Verdict.PARTIAL);
 		} else {
 			if (Double.compare(result.getCheckerOutput(), -1.0) == 0) result.setVerdict(Verdict.WA);
 		}
