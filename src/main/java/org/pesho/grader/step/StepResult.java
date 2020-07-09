@@ -117,6 +117,7 @@ public class StepResult {
 	}
 
 	public Double getCheckerOutput() {
+		if (verdict == Verdict.OK) return 1.0;
 		return Optional.ofNullable(checkerOutput).orElse(0.0);
 	}
 }
