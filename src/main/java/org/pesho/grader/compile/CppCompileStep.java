@@ -61,8 +61,8 @@ public class CppCompileStep extends CompileStep {
 					.directory(sandboxDir)
 					.allowProcesses()
 					.showError()
-					.timeout(30)
-					.memory(1024)
+					.timeout(10)
+					.memory(256)
 					.command(command)
 					.execute().getResult();
 			StepResult result = getResult(commandResult);
@@ -92,7 +92,7 @@ public class CppCompileStep extends CompileStep {
 	private String getAllFiles() {
 		String files = sourceFile.getName();
 		if (graderDir != null && graderDir.exists()) {
-			for (File file: graderDir.listFiles()) files += " " + file.getName();
+			for (File file: graderDir.listFiles()) files += " /shared/" + file.getName();
 		}
 		return files;
 	}
