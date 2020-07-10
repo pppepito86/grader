@@ -72,9 +72,11 @@ public abstract class CheckStep implements BaseStep {
 	protected StepResult getPartialResult(double score, String reason) {
 		String output = readOutput(outputFile);
 		String solution = readOutput(solutionFile);
-		System.out.println("score is: " + score);
 		if (Double.compare(score, 1.0) == 0) {
 			return new StepResult(Verdict.OK, reason, solution, output, score);
+		}
+		if (Double.compare(score, 0.0) == 0) {
+			return new StepResult(Verdict.WA, reason, solution, output, score);
 		}
 
 		return new StepResult(Verdict.PARTIAL, reason, solution, output, score);
