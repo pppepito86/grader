@@ -12,6 +12,7 @@ public class StepResult {
 	private Double time;
 	private Long memory;
 	private Double checkerOutput;
+	private Double points;
 	
 	public StepResult() {
 	}
@@ -120,4 +121,13 @@ public class StepResult {
 		if (verdict == Verdict.OK) return 1.0;
 		return Optional.ofNullable(checkerOutput).orElse(0.0);
 	}
+	
+	public void setPoints(Double points) {
+		this.points = points;
+	}
+	
+	public Double getPoints() {
+		return points;
+	}
+	
 }

@@ -119,13 +119,17 @@ public class SubmissionGrader {
 	
 	private double executeTests(File checkerFile) {
 		double score = 0.0;
+		double totalWeight = taskDetails.getTestGroups().stream().mapToDouble(g -> g.getWeight()).sum();
 		for (TestGroup testGroup: taskDetails.getTestGroups()) {
+			double testWeight = testGroup.getWeight()/testGroup.getTestCases().size()/totalWeight;
+			double testPoints = testWeight*taskDetails.getPoints();
 			Verdict groupVerdict = Verdict.OK;
 			double checkerSum = 0.0;
 
 			boolean allTestsOk = true;
 			for (TestCase testCase: testGroup.getTestCases()) {
-				StepResult result = executeTest(testCase, checkerFile, allTestsOk);
+				
+				StepResult result = executeTest(testCase, checkerFile, allTestsOk, testPoints);
 				if (result.getVerdict() != Verdict.OK) {
 					allTestsOk = false;	
 				}
@@ -144,6 +148,7 @@ public class SubmissionGrader {
 					score += testGroup.getWeight();
 				}
 				if (!taskDetails.groupsScoring()) {
+//					System.out.println(testGroup.getWeight() + " " + checkerSum + " " + testGroup.getTestCases().size());
 					score += testGroup.getWeight() * checkerSum / testGroup.getTestCases().size();
 				}
 			}
@@ -151,7 +156,7 @@ public class SubmissionGrader {
 		return score;
 	}
 	
-	private StepResult executeTest(TestCase testCase, File checkerFile, boolean allTestsOk) {
+	private StepResult executeTest(TestCase testCase, File checkerFile, boolean allTestsOk, double testPoints) {
 //		if (!allTestsOk) {
 //			StepResult result = new StepResult(Verdict.SKIPPED);
 //			score.addScoreStep("Test" + testCase.getNumber(), result);
@@ -191,6 +196,9 @@ public class SubmissionGrader {
 		if (taskDetails.getPoints() == -1) {
 			if (Double.compare(result.getCheckerOutput(), -1.0) == 0) result.setVerdict(Verdict.WA);
 		}
+		
+		if (result.getVerdict() == Verdict.OK) result.setPoints(testPoints);
+		if (result.getVerdict() == Verdict.PARTIAL) result.setPoints(result.getCheckerOutput() * testPoints);
 
 		score.addScoreStep("Test" + testCase.getNumber(), result);
 		if (listener != null) {
