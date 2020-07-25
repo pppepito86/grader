@@ -174,10 +174,10 @@ public class SubmissionGrader {
 		Double tl = timeLimit.orElse(taskDetails.getTime());
 		TestStep testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory());
 		testStep.execute();
-//		if (testStep.getVerdict() == Verdict.TL && allTestsOk) {
-//			testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory());
-//			testStep.execute();
-//		}
+		if (testStep.getVerdict() == Verdict.TL && tl < 1 && allTestsOk) {
+			testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory());
+			testStep.execute();
+		}
 
 		if (testStep.getVerdict() != Verdict.OK) {
 			score.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
