@@ -19,8 +19,8 @@ public class TaskDetails {
 	private String weights;
 	private String scoring;
 	private List<TestGroup> testGroups;
-	private Optional<String> description;
-	private Optional<String> userZip;
+	private String description;
+	private String userZip;
 	
 	public static TaskDetails create(TaskParser taskParser) {
 		return new TaskDetails(taskParser);
@@ -60,8 +60,8 @@ public class TaskDetails {
 		this.checker = taskParser.getChecker().getAbsolutePath();
 		this.graderDir = taskParser.getGraderDir().getAbsolutePath();
 		
-		this.description = taskParser.getDescription().map(f -> f.getAbsolutePath());
-		this.userZip = taskParser.getUserZip().map(f -> f.getAbsolutePath());
+		this.description = taskParser.getDescription().map(f -> f.getAbsolutePath()).orElse(null);
+		this.userZip = taskParser.getUserZip().map(f -> f.getAbsolutePath()).orElse(null);
 		
 		TestCase[] testCases = new TestCase[taskParser.testsCount()];
 		for (int i = 0; i < testCases.length; i++) {
@@ -192,25 +192,29 @@ public class TaskDetails {
 	public boolean testsScoring() {
 		return !groupsScoring();
 	}
-	
-	public void setDescription(Optional<String> description) {
-		this.description = description;
-	}
-	
-	public Optional<String> getDescription() {
+
+	public String getDescription() {
 		return description;
 	}
 	
-	public void setUserZip(Optional<String> userZip) {
-		this.userZip = userZip;
+	public void setDescription(String description) {
+		this.description = description;
 	}
-	
-	public Optional<String> getUserZip() {
+
+	public String getUserZip() {
 		return userZip;
 	}
 	
+	public void setUserZip(String userZip) {
+		this.userZip = userZip;
+	}
+	
 	public boolean isInteractive() {
-		return userZip.isPresent();
+		return userZip != null;
+	}
+	
+	public boolean isPartial() {
+		return precision != 0;
 	}
 
 }
