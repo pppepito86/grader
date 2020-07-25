@@ -49,8 +49,8 @@ public class TaskDetails {
 				e.printStackTrace();
 			}
 		}
-		this.points = Double.valueOf(props.getProperty("points", "100"));
-		this.points = Integer.valueOf(props.getProperty("precision", "0"));
+		this.points = Double.valueOf(props.getProperty("points", "100.0"));
+		this.precision = Integer.valueOf(props.getProperty("precision", "0"));
 		this.time = Double.valueOf(props.getProperty("time", "1"));
 		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
 		this.feedback = props.getProperty("feedback", "FULL").trim();
@@ -209,7 +209,7 @@ public class TaskDetails {
 		return userZip;
 	}
 	
-	private boolean isInteractive() {
+	public boolean isInteractive() {
 		return userZip.isPresent();
 	}
 
