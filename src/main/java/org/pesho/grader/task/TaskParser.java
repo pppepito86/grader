@@ -22,7 +22,7 @@ public class TaskParser {
 	private File properties = new File("properties");
 	private String prefix;
 	private Optional<File> description = Optional.empty();
-	private Optional<File> userZip = Optional.empty();
+	private Optional<File> contestantZip = Optional.empty();
 
 	public TaskParser(File dir) {
 		prefix = new File(dir, ".").getAbsolutePath();
@@ -37,8 +37,8 @@ public class TaskParser {
 		return description;
 	}
 	
-	public Optional<File> getUserZip() {
-		return userZip;
+	public Optional<File> getContestantZip() {
+		return contestantZip;
 	}
 
 	public List<File> getInput() {
@@ -80,7 +80,7 @@ public class TaskParser {
 		findGrader();
 		findProperties();
 		findDescription();
-		findUserZip();
+		findContestantZip();
 		findTests();
 	}
 
@@ -102,8 +102,8 @@ public class TaskParser {
 		description = filtered.stream().findFirst();
 	}
 	
-	private void findUserZip() {
-		userZip = listAllFiles().stream().filter(x -> x.getName().equals("user.zip"))
+	private void findContestantZip() {
+		contestantZip = listAllFiles().stream().filter(x -> x.getName().equalsIgnoreCase("contestant.zip"))
 				.sorted((a, b) -> a.getAbsolutePath().length() - b.getAbsolutePath().length())
 				.findFirst();
 	}

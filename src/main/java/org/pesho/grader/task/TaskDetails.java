@@ -20,7 +20,7 @@ public class TaskDetails {
 	private String scoring;
 	private List<TestGroup> testGroups;
 	private String description;
-	private String userZip;
+	private String contestantZip;
 	
 	public static TaskDetails create(TaskParser taskParser) {
 		return new TaskDetails(taskParser);
@@ -61,7 +61,7 @@ public class TaskDetails {
 		this.graderDir = taskParser.getGraderDir().getAbsolutePath();
 		
 		this.description = taskParser.getDescription().map(f -> f.getAbsolutePath()).orElse(null);
-		this.userZip = taskParser.getUserZip().map(f -> f.getAbsolutePath()).orElse(null);
+		this.contestantZip = taskParser.getContestantZip().map(f -> f.getAbsolutePath()).orElse(null);
 		
 		TestCase[] testCases = new TestCase[taskParser.testsCount()];
 		for (int i = 0; i < testCases.length; i++) {
@@ -201,16 +201,16 @@ public class TaskDetails {
 		this.description = description;
 	}
 
-	public String getUserZip() {
-		return userZip;
+	public String getContestantZip() {
+		return contestantZip;
 	}
-	
-	public void setUserZip(String userZip) {
-		this.userZip = userZip;
+
+	public void setContestantZip(String contestantZip) {
+		this.contestantZip = contestantZip;
 	}
 	
 	public boolean isInteractive() {
-		return userZip != null;
+		return contestantZip != null;
 	}
 	
 	public boolean isPartial() {
