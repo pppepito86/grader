@@ -3,11 +3,13 @@ package org.pesho.grader.task;
 import java.io.FileInputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 public class TaskDetails {
 
 	private double points;
+	private int precision;
 	private double time;
 	private int memory;
 	private String checker;
@@ -17,6 +19,8 @@ public class TaskDetails {
 	private String weights;
 	private String scoring;
 	private List<TestGroup> testGroups;
+	private Optional<String> description;
+	private Optional<String> userZip;
 	
 	public static TaskDetails create(TaskParser taskParser) {
 		return new TaskDetails(taskParser);
@@ -46,6 +50,7 @@ public class TaskDetails {
 			}
 		}
 		this.points = Double.valueOf(props.getProperty("points", "100"));
+		this.points = Integer.valueOf(props.getProperty("precision", "0"));
 		this.time = Double.valueOf(props.getProperty("time", "1"));
 		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
 		this.feedback = props.getProperty("feedback", "FULL").trim();
@@ -54,6 +59,9 @@ public class TaskDetails {
         this.scoring = props.getProperty("scoring", "groups").trim();
 		this.checker = taskParser.getChecker().getAbsolutePath();
 		this.graderDir = taskParser.getGraderDir().getAbsolutePath();
+		
+		this.description = taskParser.getDescription().map(f -> f.getAbsolutePath());
+		this.userZip = taskParser.getUserZip().map(f -> f.getAbsolutePath());
 		
 		TestCase[] testCases = new TestCase[taskParser.testsCount()];
 		for (int i = 0; i < testCases.length; i++) {
@@ -99,6 +107,14 @@ public class TaskDetails {
 	
 	public double getPoints() {
 		return points;
+	}
+	
+	public void setPrecision(int precision) {
+		this.precision = precision;
+	}
+	
+	public int getPrecision() {
+		return precision;
 	}
 
 	public void setTime(double time) {
@@ -177,4 +193,24 @@ public class TaskDetails {
 		return !groupsScoring();
 	}
 	
+	public void setDescription(Optional<String> description) {
+		this.description = description;
+	}
+	
+	public Optional<String> getDescription() {
+		return description;
+	}
+	
+	public void setUserZip(Optional<String> userZip) {
+		this.userZip = userZip;
+	}
+	
+	public Optional<String> getUserZip() {
+		return userZip;
+	}
+	
+	private boolean isInteractive() {
+		return userZip.isPresent();
+	}
+
 }

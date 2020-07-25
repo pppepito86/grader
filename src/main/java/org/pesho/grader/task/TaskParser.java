@@ -21,7 +21,8 @@ public class TaskParser {
 	private File graderDir = new File("system");
 	private File properties = new File("properties");
 	private String prefix;
-	private Optional<File> taskDescription = Optional.empty();
+	private Optional<File> description = Optional.empty();
+	private Optional<File> userZip = Optional.empty();
 
 	public TaskParser(File dir) {
 		prefix = new File(dir, ".").getAbsolutePath();
@@ -32,8 +33,12 @@ public class TaskParser {
 		parseTestsDir();
 	}
 	
-	public Optional<File> getTaskDescription() {
-		return taskDescription;
+	public Optional<File> getDescription() {
+		return description;
+	}
+	
+	public Optional<File> getUserZip() {
+		return userZip;
 	}
 
 	public List<File> getInput() {
@@ -74,11 +79,12 @@ public class TaskParser {
 		findCppChecker();
 		findGrader();
 		findProperties();
-		findTaskDescription();
+		findDescription();
+		findUserZip();
 		findTests();
 	}
 
-	private void findTaskDescription() {
+	private void findDescription() {
 		List<File> filtered = listAllFiles().stream()
 				.filter(x -> x.getName().toLowerCase().endsWith("pdf"))
 				.collect(Collectors.toList());
@@ -93,8 +99,13 @@ public class TaskParser {
 		}
 		
 		filtered.sort((a, b) -> a.getAbsolutePath().length() - b.getAbsolutePath().length());
-		
-		taskDescription = Optional.of(filtered.get(0));
+		description = filtered.stream().findFirst();
+	}
+	
+	private void findUserZip() {
+		userZip = listAllFiles().stream().filter(x -> x.getName().equals("user.zip"))
+				.sorted((a, b) -> a.getAbsolutePath().length() - b.getAbsolutePath().length())
+				.findFirst();
 	}
 
 	private void findSolutions() {

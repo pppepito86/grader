@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.math3.util.Precision;
 import org.pesho.grader.check.CheckStep;
 import org.pesho.grader.check.CheckStepFactory;
 import org.pesho.grader.compile.CompileStep;
@@ -85,9 +86,10 @@ public class SubmissionGrader {
 		double finalScore = 0;
 		String verdict = "";
 		if (taskDetails.getPoints() == -1) {
-			finalScore = testsScore;
+			finalScore = Precision.round(testsScore, taskDetails.getPrecision());
 		} else {
-			finalScore = testsScore * taskDetails.getPoints();
+			finalScore = Precision.round(testsScore * taskDetails.getPoints(), taskDetails.getPrecision());
+			
 			int percent = (int) (Math.round(100 * finalScore / testsScore) + 0.5);
 			verdict = "Accepted";
 			if (percent < 100) {
