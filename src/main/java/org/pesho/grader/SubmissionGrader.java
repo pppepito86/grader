@@ -128,7 +128,6 @@ public class SubmissionGrader {
 
 			boolean allTestsOk = true;
 			for (TestCase testCase: testGroup.getTestCases()) {
-				
 				StepResult result = executeTest(testCase, checkerFile, allTestsOk, testPoints);
 				if (result.getVerdict() != Verdict.OK) {
 					allTestsOk = false;	
@@ -157,15 +156,15 @@ public class SubmissionGrader {
 	}
 	
 	private StepResult executeTest(TestCase testCase, File checkerFile, boolean allTestsOk, double testPoints) {
-//		if (!allTestsOk) {
-//			StepResult result = new StepResult(Verdict.SKIPPED);
-//			score.addScoreStep("Test" + testCase.getNumber(), result);
-//			if (listener != null) {
-//				listener.addScoreStep("Test" + testCase.getNumber(), result);
-//				listener.scoreUpdated(submissionId, score);
-//			}
-//			return new StepResult(result.getVerdict());
-//		}
+		if (!allTestsOk) {
+			StepResult result = new StepResult(Verdict.SKIPPED);
+			score.addScoreStep("Test" + testCase.getNumber(), result);
+			if (listener != null) {
+				listener.addScoreStep("Test" + testCase.getNumber(), result);
+				listener.scoreUpdated(submissionId, score);
+			}
+			return new StepResult(result.getVerdict());
+		}
 		
 		File inputFile = new File(testCase.getInput());
 		File outputFile = new File(testCase.getOutput());
@@ -173,10 +172,10 @@ public class SubmissionGrader {
 		Double tl = timeLimit.orElse(taskDetails.getTime());
 		TestStep testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory());
 		testStep.execute();
-		if (testStep.getVerdict() == Verdict.TL && allTestsOk) {
-			testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory());
-			testStep.execute();
-		}
+//		if (testStep.getVerdict() == Verdict.TL && allTestsOk) {
+//			testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory());
+//			testStep.execute();
+//		}
 
 		if (testStep.getVerdict() != Verdict.OK) {
 			score.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
