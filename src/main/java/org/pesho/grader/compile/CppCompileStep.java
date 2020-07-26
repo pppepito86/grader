@@ -50,8 +50,7 @@ public class CppCompileStep extends CompileStep {
 	}
 
 	private void tryOther(String pattern) {
-		String compiledFileName = getBinaryFileName();
-		String command = String.format(pattern, compiledFileName, sourceFile.getName());
+		String[] command = getCommands(pattern);
 		
 		try {
 			createSandboxDirectory();
@@ -84,8 +83,12 @@ public class CppCompileStep extends CompileStep {
 
 	@Override
 	public String[] getCommands() {
+		return getCommands(COMPILE_CPP17_COMMAND_PATTERN);
+	}
+	
+	public String[] getCommands(String pattern) {
 		String compiledFileName = getBinaryFileName();
-		String command = String.format(COMPILE_CPP17_COMMAND_PATTERN, compiledFileName, getAllFiles());
+		String command = String.format(pattern, compiledFileName, getAllFiles());
 		return new String[] { command };
 	}
 	
