@@ -131,7 +131,7 @@ public class SubmissionGrader {
 			boolean allTestsOk = true;
 			for (TestCase testCase: testGroup.getTestCases()) {
 				StepResult result = executeTest(testCase, checkerFile, allTestsOk, testPoints);
-				if (result.getVerdict() != Verdict.OK) {
+				if (result.getVerdict() != Verdict.OK && taskDetails.groupsScoring()) {
 					allTestsOk = false;	
 				}
 				

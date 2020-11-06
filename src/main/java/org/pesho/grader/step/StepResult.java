@@ -46,7 +46,7 @@ public class StepResult {
 		this.expectedOutput = expectedOutput;
 	}
 
-	public StepResult(Verdict verdict,  String reason, String output, String expectedOutput, double checkerOutput) {
+	public StepResult(Verdict verdict, String reason, String output, String expectedOutput, double checkerOutput) {
 		this.verdict = verdict;
 		this.reason = reason;
 		this.output = output;
