@@ -49,7 +49,7 @@ public class TaskDetails {
 			}
 		}
 		this.points = Double.valueOf(props.getProperty("points", "100.0"));
-		this.precision = Integer.valueOf(props.getProperty("precision", "0"));
+		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
 		this.time = Double.valueOf(props.getProperty("time", "1"));
 		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
 		this.feedback = props.getProperty("feedback", "FULL").trim();
@@ -113,7 +113,7 @@ public class TaskDetails {
 	}
 	
 	public int getPrecision() {
-		return precision;
+		return precision!=-1?precision:0;
 	}
 
 	public void setTime(double time) {
@@ -213,7 +213,7 @@ public class TaskDetails {
 	}
 	
 	public boolean isPartial() {
-		return precision != 0;
+		return precision != -1;
 	}
 
 }
