@@ -4,6 +4,9 @@ import java.io.File;
 public class CompileStepFactory {
 	
 	public static CompileStep getInstance(File sourceFile, File graderDir) {
+		if (sourceFile.getName().endsWith(TxtCompileStep.SOURCE_FILE_ENDING)) {
+			return new TxtCompileStep(sourceFile, graderDir);
+		}
 		if (sourceFile.getName().endsWith(CCompileStep.SOURCE_FILE_ENDING)) {
 			return new CCompileStep(sourceFile, graderDir);
 		}
