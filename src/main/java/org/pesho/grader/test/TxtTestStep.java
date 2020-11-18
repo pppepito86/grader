@@ -6,7 +6,7 @@ public class TxtTestStep extends TestStep {
 
 	public static final String BINARY_FILE_ENDING = ".txt";
 
-	public static final String EXECUTE_COMMAND_PATTERN = "cp %s %s";
+	public static final String EXECUTE_COMMAND_PATTERN = "/bin/cat /shared/%s";
 
 	public TxtTestStep(File binaryFile, File inputFile, File outputFile, double time, int memory) {
 		super(binaryFile, inputFile, outputFile, time, memory);
@@ -14,7 +14,7 @@ public class TxtTestStep extends TestStep {
 
 	@Override
 	public String getCommand() {
-		return String.format(EXECUTE_COMMAND_PATTERN, binaryFile.getName(), outputFile.getName());
+		return String.format(EXECUTE_COMMAND_PATTERN, binaryFile.getName());
 	}
 
 }
