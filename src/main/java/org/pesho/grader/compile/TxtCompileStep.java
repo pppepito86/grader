@@ -1,6 +1,9 @@
 package org.pesho.grader.compile;
 import java.io.File;
 
+import org.pesho.grader.step.StepResult;
+import org.pesho.grader.step.Verdict;
+
 public class TxtCompileStep extends CompileStep {
 
 	public static final String SOURCE_FILE_ENDING = ".txt";
@@ -15,6 +18,7 @@ public class TxtCompileStep extends CompileStep {
 	
 	@Override
 	public void execute() {
+		this.result = new StepResult(Verdict.OK);
 	}
 
 	@Override
