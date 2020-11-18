@@ -4,6 +4,8 @@ import java.io.FileInputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class TaskDetails {
 
@@ -11,6 +13,7 @@ public class TaskDetails {
 	private int precision;
 	private double time;
 	private int memory;
+	private int rejudgeTimes;
 	private String checker;
 	private String graderDir;
 	private String feedback;
@@ -20,6 +23,8 @@ public class TaskDetails {
 	private List<TestGroup> testGroups;
 	private String description;
 	private String contestantZip;
+	private String extensions;
+	private Set<String> allowedExtensions;
 	
 	public static TaskDetails create(TaskParser taskParser) {
 		return new TaskDetails(taskParser);
@@ -52,15 +57,19 @@ public class TaskDetails {
 		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
 		this.time = Double.valueOf(props.getProperty("time", "1"));
 		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
+		this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "1"));
 		this.feedback = props.getProperty("feedback", "FULL").trim();
 		this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", "groups").trim();
 		this.checker = taskParser.getChecker().getAbsolutePath();
 		this.graderDir = taskParser.getGraderDir().getAbsolutePath();
+        this.extensions = props.getProperty("extensions", "cpp").trim();
 		
 		this.description = taskParser.getDescription().map(f -> f.getAbsolutePath()).orElse(null);
 		this.contestantZip = taskParser.getContestantZip().map(f -> f.getAbsolutePath()).orElse(null);
+		
+		this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
 		
 		TestCase[] testCases = new TestCase[taskParser.testsCount()];
 		for (int i = 0; i < testCases.length; i++) {
@@ -130,6 +139,10 @@ public class TaskDetails {
 	
 	public int getMemory() {
 		return memory;
+	}
+	
+	public int getRejudgeTimes() {
+		return rejudgeTimes;
 	}
 	
 	public void setFeedback(String feedback) {
@@ -215,5 +228,9 @@ public class TaskDetails {
 	public boolean isPartial() {
 		return precision != -1;
 	}
-
+	
+	public Set<String> getAllowedExtensions() {
+		return allowedExtensions;
+	}
+	
 }

@@ -7,6 +7,9 @@ import org.pesho.grader.compile.JavaCompileStep;
 public class TestStepFactory {
 	
 	public static TestStep getInstance(File binaryFile, File inputFile, File outputFile, double time, int memory) {
+		if (binaryFile.getName().endsWith(TxtTestStep.BINARY_FILE_ENDING)) {
+			return new TxtTestStep(binaryFile, inputFile, outputFile, time, memory);
+		}
 		if (binaryFile.getName().endsWith(JavaCompileStep.BINARY_FILE_ENDING)) {
 			return new JavaTestStep(binaryFile, inputFile, outputFile, time, memory);
 		}
