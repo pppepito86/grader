@@ -48,7 +48,7 @@ public abstract class TestStep implements BaseStep {
 			e.printStackTrace();
 			result = new StepResult(Verdict.SE, result.getReason(), result.getExitCode());
 		} finally {
-//			FileUtils.deleteQuietly(sandboxDir);
+			FileUtils.deleteQuietly(sandboxDir);
 		}
 	}
 

@@ -50,7 +50,7 @@ public abstract class CheckStep implements BaseStep {
 			e.printStackTrace();
 			result = new StepResult(Verdict.SE, result.getReason());
 		} finally {
-//			FileUtils.deleteQuietly(sandboxDir);
+			FileUtils.deleteQuietly(sandboxDir);
 		}
 	}
 
