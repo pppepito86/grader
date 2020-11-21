@@ -25,6 +25,7 @@ public class TaskDetails {
 	private String contestantZip;
 	private String extensions;
 	private Set<String> allowedExtensions;
+	private boolean isInteractive;
 	
 	public static TaskDetails create(TaskParser taskParser) {
 		return new TaskDetails(taskParser);
@@ -65,6 +66,7 @@ public class TaskDetails {
 		this.checker = taskParser.getChecker().getAbsolutePath();
 		this.graderDir = taskParser.getGraderDir().getAbsolutePath();
         this.extensions = props.getProperty("extensions", "cpp").trim();
+        this.isInteractive = taskParser.getGraderDir().exists();
 		
 		this.description = taskParser.getDescription().map(f -> f.getAbsolutePath()).orElse(null);
 		this.contestantZip = taskParser.getContestantZip().map(f -> f.getAbsolutePath()).orElse(null);
@@ -222,7 +224,7 @@ public class TaskDetails {
 	}
 	
 	public boolean isInteractive() {
-		return contestantZip != null;
+		return isInteractive;
 	}
 	
 	public boolean isPartial() {
