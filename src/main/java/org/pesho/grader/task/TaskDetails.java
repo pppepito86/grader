@@ -227,6 +227,10 @@ public class TaskDetails {
 		return isInteractive;
 	}
 	
+	public boolean hasFilesToDownload() {
+		return contestantZip != null;
+	}
+	
 	public boolean isPartial() {
 		return precision != -1;
 	}
