@@ -48,17 +48,17 @@ public abstract class CompileStep implements BaseStep {
 	}
 	
 	private SandboxExecutor buildCommand(String command) {
-		SandboxExecutor sandboxExecutor = new SandboxExecutor()
+		Integer memory = 256;
+		if (this instanceof JavaCompileStep) {
+			memory = null;
+		}
+		return new SandboxExecutor()
 				.directory(sandboxDir)
 				.allowProcesses()
 				.showError()
 				.timeout(10)
-				.command(command);
-		
-		if (!(this instanceof JavaCompileStep)) {
-			sandboxExecutor = sandboxExecutor.memory(256);
-		}
-		return sandboxExecutor;
+				.memory(memory)
+				.command(command);		
 	}
 
 	@Override
