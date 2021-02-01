@@ -4,7 +4,7 @@ import java.io.File;
 public class JavaCompileStep extends CompileStep {
 
 	public static final String COMPILE_COMMAND_PATTERN = "/usr/bin/javac -d . /shared/%s";
-	public static final String JAR_COMMAND_PATTERN = "/usr/bin/jar cvfe %s %s \"*.class\"";
+	public static final String JAR_COMMAND_PATTERN = "/usr/bin/jar cvfe %s %s .";
 	public static final String SOURCE_FILE_ENDING = ".java";
 	public static final String BINARY_FILE_ENDING = ".jar";
 
