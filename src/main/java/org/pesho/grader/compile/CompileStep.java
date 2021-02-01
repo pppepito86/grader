@@ -31,13 +31,7 @@ public abstract class CompileStep implements BaseStep {
 			copyGraderFiles();
 
 			StepResult result = Arrays.stream(getCommands())
-				.map(command -> new SandboxExecutor()
-						.directory(sandboxDir)
-						.allowProcesses()
-						.showError()
-						.timeout(10)
-						.memory(256)
-						.command(command)
+				.map(command -> buildCommand(command)
 						.execute().getResult())
 				.map(x -> getResult(x))
 				.filter(x -> x.getVerdict() != Verdict.OK)
@@ -51,6 +45,20 @@ public abstract class CompileStep implements BaseStep {
 		} finally {
 //			FileUtils.deleteQuietly(sandboxDir);
 		}
+	}
+	
+	private SandboxExecutor buildCommand(String command) {
+		SandboxExecutor sandboxExecutor = new SandboxExecutor()
+				.directory(sandboxDir)
+				.allowProcesses()
+				.showError()
+				.timeout(10)
+				.command(command);
+		
+		if (!(this instanceof JavaCompileStep)) {
+			sandboxExecutor = sandboxExecutor.memory(256);
+		}
+		return sandboxExecutor;
 	}
 
 	@Override
