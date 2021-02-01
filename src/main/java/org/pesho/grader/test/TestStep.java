@@ -39,7 +39,7 @@ public abstract class TestStep implements BaseStep {
 					.input(inputFile.getName())
 					.output(outputFile.getName())
 					.timeout(time)
-					.memory(memory)
+					.memory(this instanceof JavaTestStep ? null : memory)
 					.command(getCommand()).execute().getResult();
 			copySandboxOutput();
 			
