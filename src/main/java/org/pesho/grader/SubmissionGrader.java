@@ -125,33 +125,27 @@ public class SubmissionGrader {
 		for (TestGroup testGroup: taskDetails.getTestGroups()) {
 			double testWeight = testGroup.getWeight()/testGroup.getTestCases().size()/totalWeight;
 			double testPoints = testWeight*taskDetails.getPoints();
-			Verdict groupVerdict = Verdict.OK;
 			double checkerSum = 0.0;
+			double checkerMin = testGroup.getTestCases().size() != 0 ? 1.0 : 0.0;
 
 			boolean allTestsOk = true;
 			for (TestCase testCase: testGroup.getTestCases()) {
 				StepResult result = executeTest(testCase, checkerFile, allTestsOk, testPoints);
-				if (result.getVerdict() != Verdict.OK && taskDetails.groupsScoring()) {
+				
+				if (result.getVerdict() != Verdict.OK && taskDetails.stopScoringOnFailure()) {
 					allTestsOk = false;	
 				}
 				
-				if (result.getVerdict() == Verdict.OK || result.getVerdict() == Verdict.PARTIAL) {
-					checkerSum += result.getCheckerOutput();
-				} else if (groupVerdict == Verdict.OK) {
-					groupVerdict = result.getVerdict();
-				}
+				checkerMin = Math.min(checkerMin, result.getCheckerOutput());
+				checkerSum += result.getCheckerOutput();
 			}
 
 			if (taskDetails.getPoints() == -1) {
 				score += checkerSum;
+			} else if (taskDetails.testsScoring() || taskDetails.sumScoring()){
+				score += testGroup.getWeight() * checkerSum / testGroup.getTestCases().size();
 			} else {
-				if (taskDetails.groupsScoring() && groupVerdict == Verdict.OK) {
-					score += testGroup.getWeight();
-				}
-				if (!taskDetails.groupsScoring()) {
-//					System.out.println(testGroup.getWeight() + " " + checkerSum + " " + testGroup.getTestCases().size());
-					score += testGroup.getWeight() * checkerSum / testGroup.getTestCases().size();
-				}
+				score += checkerMin;
 			}
 		}
 		return score;

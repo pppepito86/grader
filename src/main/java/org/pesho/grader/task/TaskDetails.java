@@ -41,7 +41,7 @@ public class TaskDetails {
         this.feedback = props.getProperty("feedback", "FULL").trim();
         this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
-        this.scoring = props.getProperty("scoring", "groups").trim();
+        this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_all").trim();
         this.checker = checker;
 	}
 	
@@ -62,7 +62,7 @@ public class TaskDetails {
 		this.feedback = props.getProperty("feedback", "FULL").trim();
 		this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
-        this.scoring = props.getProperty("scoring", "groups").trim();
+        this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_all").trim();
 		this.checker = taskParser.getChecker().getAbsolutePath();
 		this.graderDir = taskParser.getGraderDir().getAbsolutePath();
         this.extensions = props.getProperty("extensions", "cpp").trim();
@@ -199,14 +199,26 @@ public class TaskDetails {
 		return testGroups;
 	}
 	
-	public boolean groupsScoring() {
-		return scoring.equalsIgnoreCase("groups");
-	}
-	
 	public boolean testsScoring() {
-		return !groupsScoring();
+		return scoring.equalsIgnoreCase("tests");
 	}
 
+	public boolean groupsScoring() {
+		return !testsScoring();
+	}
+
+	public boolean sumScoring() {
+		return scoring.equalsIgnoreCase("sum"); 
+	}
+	
+	public boolean minScoring() {
+		return scoring.equalsIgnoreCase("min") || scoring.equalsIgnoreCase("min_fast");
+	}
+	
+	public boolean stopScoringOnFailure() {
+		return scoring.equalsIgnoreCase("min_fast"); 
+	}
+	
 	public String getDescription() {
 		return description;
 	}
