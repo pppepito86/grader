@@ -145,7 +145,7 @@ public class SubmissionGrader {
 			} else if (taskDetails.testsScoring() || taskDetails.sumScoring()){
 				score += testGroup.getWeight() * checkerSum / testGroup.getTestCases().size();
 			} else {
-				score += checkerMin;
+				score += testGroup.getWeight() * checkerSum / testGroup.getTestCases().size();
 			}
 		}
 		return score;
