@@ -188,7 +188,7 @@ public class SubmissionGrader {
 		result.setMemory(testStep.getResult().getMemory());
 		result.setExitCode(testStep.getResult().getExitCode());
 		
-		if (taskDetails.isPartial() && result.getVerdict() == Verdict.WA) result.setVerdict(Verdict.PARTIAL); 
+//		if (taskDetails.isPartial() && result.getVerdict() == Verdict.WA) result.setVerdict(Verdict.PARTIAL); 
 
 		if (taskDetails.getPoints() == -1) {
 			if (Double.compare(result.getCheckerOutput(), -1.0) == 0) result.setVerdict(Verdict.WA);
