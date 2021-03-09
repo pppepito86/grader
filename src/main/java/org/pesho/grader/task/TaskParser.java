@@ -181,6 +181,13 @@ public class TaskParser {
 	}
 	
 	private void findProperties() {
+		List<File> filtered0 = listAllFiles().stream().filter(x -> x.getAbsolutePath().contains("grade.properties"))
+				.collect(Collectors.toList());
+		if (filtered0.size() == 1) {
+			this.properties = filtered0.get(0);
+			return;
+		}
+		
 		List<File> filtered = listAllFiles().stream().filter(x -> x.getAbsolutePath().contains("props")||x.getAbsolutePath().contains("properties"))
 				.collect(Collectors.toList());
 		if (filtered.size() == 1) {

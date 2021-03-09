@@ -28,25 +28,3 @@ public class TestCase {
 	}
 	
 }
-
-/*
-
-{
-	"points" : 100,
-	"groups" : [
-		{
-			"wight":0.5,
-			"tests":["test01.in, test01.out",""]
-		
-		},
-		{},
-		{}
-	]
-
-
-}
-
-
-
-
-*/

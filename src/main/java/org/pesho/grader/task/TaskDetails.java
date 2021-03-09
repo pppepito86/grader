@@ -5,7 +5,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
+
+import org.apache.commons.math3.util.Precision;
 
 public class TaskDetails {
 
@@ -77,11 +80,14 @@ public class TaskDetails {
 		for (int i = 0; i < testCases.length; i++) {
 			testCases[i] = new TestCase(i+1, taskParser.getInput().get(i).getAbsolutePath(), taskParser.getOutput().get(i).getAbsolutePath());
 		}
+		
+		Set<Integer> feedbackGroups = feedback();
 		TestGroup[] testGroups = null;
 		if (groups.isEmpty()) {
 			testGroups = new TestGroup[testCases.length];
 			for (int i = 0; i < testGroups.length; i++) {
-				testGroups[i] = new TestGroup(1.0/testCases.length, testCases[i]);
+				boolean hasFeedback = isFullFeedback() || feedbackGroups.contains(i+1);
+				testGroups[i] = new TestGroup(1.0/testCases.length, hasFeedback, testCases[i]);
 			}
 		} else {
 			String[] groupsSplit = groups.split(",");
@@ -102,9 +108,9 @@ public class TaskDetails {
 					cases[j-first] = testCases[j-1];
 				}
 				
-				double weight = 1;
-				if (weightsSplit.length == groupsSplit.length) weight = Double.valueOf(weightsSplit[i].trim());
-				testGroups[i] = new TestGroup(weight/totalWeight, cases);
+				double weight = (weightsSplit.length == groupsSplit.length) ? Double.valueOf(weightsSplit[i].trim()) : 1;
+				boolean hasFeedback = isFullFeedback() || feedbackGroups.contains(i+1);
+				testGroups[i] = new TestGroup(weight/totalWeight, hasFeedback, cases);
 			}
 		}
 		
@@ -249,6 +255,36 @@ public class TaskDetails {
 	
 	public Set<String> getAllowedExtensions() {
 		return allowedExtensions;
+	}
+	
+	public boolean isFullFeedback() {
+		return feedback.trim().equalsIgnoreCase("full");
+	}
+	
+	public double getPublicScore() {
+		if (isFullFeedback()) return Precision.round(getPoints(), getPrecision());
+		
+		TreeSet<Integer> feedback = feedback();
+		double publicWeight = 0.0;
+		for (int i = 0; i < getTestGroups().size(); i++) {
+			if (feedback.contains(i+1)) {
+				publicWeight += getTestGroups().get(i).getWeight();
+			}
+		}
+		return Precision.round(getPoints()*publicWeight, getPrecision());
+	}
+	
+	public TreeSet<Integer> feedback() {
+		TreeSet<Integer> set = new TreeSet<>();
+		if (isFullFeedback()) return set;
+		
+		String[] split = getFeedback().split(",");
+		for (String s: split) set.add(Integer.valueOf(s.trim()));
+		return set;
+	}
+	
+	public double getTotalWeight() {
+		return getTestGroups().stream().mapToDouble(g -> g.getWeight()).sum();
 	}
 	
 }
