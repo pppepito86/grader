@@ -122,14 +122,21 @@ public class SubmissionGrader {
 	private double executeTests(File checkerFile) {
 		double score = 0.0;
 		double totalWeight = taskDetails.getTestGroups().stream().mapToDouble(g -> g.getWeight()).sum();
-		for (TestGroup testGroup: taskDetails.getTestGroups()) {
+		for (int i = 0; i < taskDetails.getTestGroups().size(); i++) {
+			TestGroup testGroup = taskDetails.getTestGroups().get(i);
 			double testWeight = testGroup.getWeight()/testGroup.getTestCases().size()/totalWeight;
 			double testPoints = testWeight*taskDetails.getPoints();
 			double checkerSum = 0.0;
 			double checkerMin = testGroup.getTestCases().size() != 0 ? 1.0 : 0.0;
+			
+			Verdict groupVerdict = Verdict.OK;
+			Double groupTime = null;
+			Long groupMemory = null;
+			Integer testInError = null;
 
 			boolean allTestsOk = true;
-			for (TestCase testCase: testGroup.getTestCases()) {
+			for (int j = 0; j < testGroup.getTestCases().size(); j++) {
+				TestCase testCase = testGroup.getTestCases().get(j);
 				StepResult result = executeTest(testCase, checkerFile, allTestsOk, testPoints);
 				
 				if (result.getVerdict() != Verdict.OK && taskDetails.stopScoringOnFailure()) {
@@ -138,15 +145,37 @@ public class SubmissionGrader {
 				
 				checkerMin = Math.min(checkerMin, result.getCheckerOutput());
 				checkerSum += result.getCheckerOutput();
+				
+				if (groupVerdict == Verdict.OK || groupVerdict == Verdict.PARTIAL) {
+					if (result.getVerdict() != Verdict.TL && result.getTime() != null) {
+						if (groupTime == null) groupTime = result.getTime();
+						else groupTime = Math.max(groupTime, result.getTime());
+					}
+					if (result.getMemory() != null) {
+						if (groupMemory == null) groupMemory = result.getMemory();
+						else groupMemory = Math.max(groupMemory, result.getMemory());
+					}
+				} else if (testInError == null) {
+					testInError = j+1;
+				}
+				if (groupVerdict == Verdict.OK) {
+					groupVerdict = result.getVerdict();
+				} else if (groupVerdict == Verdict.PARTIAL && result.getVerdict() != Verdict.OK) {
+					groupVerdict = result.getVerdict();
+				}
 			}
 
+			double groupScore = 0;
 			if (taskDetails.getPoints() == -1) {
+				groupScore = checkerSum;
 				score += checkerSum;
 			} else if (taskDetails.testsScoring() || taskDetails.sumScoring()){
-				score += testGroup.getWeight() * checkerSum / testGroup.getTestCases().size();
+				groupScore = testGroup.getWeight() * checkerSum / testGroup.getTestCases().size();
 			} else {
-				score += testGroup.getWeight() * checkerMin;
+				groupScore = testGroup.getWeight() * checkerMin;
 			}
+			score += groupScore;
+			this.score.addGroupResult(i+1, new StepResult(groupVerdict, ""+testInError, groupTime, groupMemory, groupScore));
 		}
 		return score;
 	}
