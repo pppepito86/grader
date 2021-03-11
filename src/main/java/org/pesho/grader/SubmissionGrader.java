@@ -175,7 +175,7 @@ public class SubmissionGrader {
 				groupScore = testGroup.getWeight() * checkerMin;
 			}
 			score += groupScore;
-			this.score.addGroupResult(i+1, new StepResult(groupVerdict, ""+testInError, groupTime, groupMemory, groupScore));
+			this.score.addGroupResult(i+1, new StepResult(groupVerdict, ""+testInError, groupTime, groupMemory, groupScore*taskDetails.getPoints()));
 		}
 		return score;
 	}
