@@ -41,7 +41,7 @@ public class ScoreParser {
 					long points = Math.round(result.getPoints());
 					if (result.getVerdict() == Verdict.OK) return ""+points;
 					if (result.getVerdict() == Verdict.PARTIAL) return "("+points+")";
-					return result.getVerdict().name();
+					return "-";
 				})
 				.collect(Collectors.joining(","));
 	}
