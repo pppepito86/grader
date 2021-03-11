@@ -107,9 +107,9 @@ public class SubmissionGrader {
 	private double compile(File sourceFile, File graderDir) {
 		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile, graderDir);
 		compileStep.execute();
-		score.addScoreStep("Compile", compileStep.getResult());
+		score.setCompileResult(compileStep.getResult());
 		if (listener != null) {
-			listener.addScoreStep("Compile", compileStep.getResult());
+			listener.setCompileResult(compileStep.getResult());
 			listener.scoreUpdated(submissionId, score);
 		}
 		if (compileStep.getVerdict() == Verdict.OK) {
@@ -154,9 +154,9 @@ public class SubmissionGrader {
 	private StepResult executeTest(TestCase testCase, File checkerFile, boolean allTestsOk, double testPoints) {
 		if (!allTestsOk) {
 			StepResult result = new StepResult(Verdict.SKIPPED);
-			score.addScoreStep("Test" + testCase.getNumber(), result);
+			score.addTestResult(testCase.getNumber(), result);
 			if (listener != null) {
-				listener.addScoreStep("Test" + testCase.getNumber(), result);
+				listener.addTestResult(testCase.getNumber(), result);
 				listener.scoreUpdated(submissionId, score);
 			}
 			return new StepResult(result.getVerdict());
@@ -174,9 +174,9 @@ public class SubmissionGrader {
 		}
 
 		if (testStep.getVerdict() != Verdict.OK) {
-			score.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
+			score.addTestResult(testCase.getNumber(), testStep.getResult());
 			if (listener != null) {
-				listener.addScoreStep("Test" + testCase.getNumber(), testStep.getResult());
+				listener.addTestResult(testCase.getNumber(), testStep.getResult());
 				listener.scoreUpdated(submissionId, score);
 			}
 			return new StepResult(testStep.getVerdict());
@@ -197,9 +197,9 @@ public class SubmissionGrader {
 		if (result.getVerdict() == Verdict.OK) result.setPoints(testPoints);
 		if (result.getVerdict() == Verdict.PARTIAL) result.setPoints(result.getCheckerOutput() * testPoints);
 
-		score.addScoreStep("Test" + testCase.getNumber(), result);
+		score.addTestResult(testCase.getNumber(), result);
 		if (listener != null) {
-			listener.addScoreStep("Test" + testCase.getNumber(), result);
+			listener.addTestResult(testCase.getNumber(), result);
 			listener.scoreUpdated(submissionId, score);
 		}
 		return result;

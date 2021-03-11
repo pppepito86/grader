@@ -4,10 +4,14 @@ import org.pesho.grader.step.StepResult;
 
 public interface GradeListener {
 	
-	void addScoreStep(String step, StepResult result);	
+	void setCompileResult(StepResult compileResult);	
+	
+	void addTestResult(int testNumber, StepResult testResult);	
+	
+	void addGroupResult(int groupNumber, StepResult groupResult);
 	
 	void addFinalScore(String verdict, double score);
 
-	void scoreUpdated(String submissionId, SubmissionScore score);
+	default void scoreUpdated(String submissionId, SubmissionScore score) {}
 
 }
