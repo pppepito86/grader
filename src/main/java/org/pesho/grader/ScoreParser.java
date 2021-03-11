@@ -39,8 +39,9 @@ public class ScoreParser {
 		return score.getGroupResults().stream()
 				.map(result -> {
 					long points = Math.round(result.getPoints());
+					if (result.getVerdict() == Verdict.OK) return ""+points;
 					if (result.getVerdict() == Verdict.PARTIAL) return "("+points+")";
-					return ""+points;
+					return result.getVerdict().name();
 				})
 				.collect(Collectors.joining(","));
 	}
