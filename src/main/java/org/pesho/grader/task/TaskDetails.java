@@ -44,7 +44,7 @@ public class TaskDetails {
         this.feedback = props.getProperty("feedback", "FULL").trim();
         this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
-        this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_all").trim();
+        this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
         this.checker = checker;
 	}
 	
@@ -65,7 +65,7 @@ public class TaskDetails {
 		this.feedback = props.getProperty("feedback", "FULL").trim();
 		this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
-        this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_all").trim();
+        this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
 		this.checker = taskParser.getChecker().getAbsolutePath();
 		this.graderDir = taskParser.getGraderDir().getAbsolutePath();
         this.extensions = props.getProperty("extensions", "cpp").trim();
