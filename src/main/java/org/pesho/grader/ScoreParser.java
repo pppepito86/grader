@@ -39,7 +39,8 @@ public class ScoreParser {
 	public String getGroupsScore() {
 		return score.getGroupResults().stream()
 				.map(result -> {
-					double points = Precision.round(result.getPoints(), 1);
+					String points = ""+Precision.round(result.getPoints(), 1);
+					points = points.replace(".0", "");
 					if (result.getVerdict() == Verdict.OK) return ""+points;
 					if (result.getVerdict() == Verdict.PARTIAL) return "("+points+")";
 					return "-";
