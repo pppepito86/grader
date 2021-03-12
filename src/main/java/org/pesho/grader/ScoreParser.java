@@ -2,6 +2,7 @@ package org.pesho.grader;
 
 import java.util.stream.Collectors;
 
+import org.apache.commons.math3.util.Precision;
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 import org.pesho.grader.task.TaskDetails;
@@ -21,7 +22,7 @@ public class ScoreParser {
 		
 		if (score.getTestResults().isEmpty()) return score.getCompileResult().getVerdict().toString();
 		
-		if (details.getWeights().isEmpty()) {
+		if (details.testsScoring()) {
 			return getTestsScore();
 		} else {
 			return getGroupsScore();
@@ -38,7 +39,7 @@ public class ScoreParser {
 	public String getGroupsScore() {
 		return score.getGroupResults().stream()
 				.map(result -> {
-					long points = Math.round(result.getPoints());
+					double points = Precision.round(result.getPoints(), 1);
 					if (result.getVerdict() == Verdict.OK) return ""+points;
 					if (result.getVerdict() == Verdict.PARTIAL) return "("+points+")";
 					return "-";
