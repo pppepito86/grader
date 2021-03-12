@@ -139,7 +139,7 @@ public class SubmissionGrader {
 				TestCase testCase = testGroup.getTestCases().get(j);
 				StepResult result = executeTest(testCase, checkerFile, allTestsOk, testPoints);
 				
-				if (result.getVerdict() != Verdict.OK && taskDetails.stopScoringOnFailure()) {
+				if (result.getVerdict() != Verdict.OK && result.getVerdict() != Verdict.PARTIAL && taskDetails.stopScoringOnFailure()) {
 					allTestsOk = false;	
 				}
 				
