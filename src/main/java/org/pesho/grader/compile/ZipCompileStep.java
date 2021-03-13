@@ -8,7 +8,6 @@ import org.pesho.sandbox.CommandResult;
 public class ZipCompileStep extends CompileStep {
 
 	public static final String VALIDATE_COMMAND_PATTERN = "/usr/bin/unzip -t /shared/%s";
-	public static final String COPY_COMMAND_PATTERN = "/bin/cp /shared/%s %s";
 
 	public static final String SOURCE_FILE_ENDING = ".zip";
 
@@ -19,8 +18,7 @@ public class ZipCompileStep extends CompileStep {
 	@Override
 	public String[] getCommands() {
 		String validateCommand = String.format(VALIDATE_COMMAND_PATTERN, sourceFile.getName());
-		String copyCommand = String.format(COPY_COMMAND_PATTERN, sourceFile.getName(), sourceFile.getName());
-		return new String[] { validateCommand, copyCommand };
+		return new String[] { validateCommand };
 	}
 	
 	public String getBinaryFileName() {
