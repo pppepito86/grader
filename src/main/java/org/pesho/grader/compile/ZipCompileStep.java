@@ -1,6 +1,5 @@
 package org.pesho.grader.compile;
 import java.io.File;
-import java.io.IOException;
 
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
@@ -9,6 +8,7 @@ import org.pesho.sandbox.CommandResult;
 public class ZipCompileStep extends CompileStep {
 
 	public static final String VALIDATE_COMMAND_PATTERN = "/usr/bin/unzip -t /shared/%s";
+	public static final String COPY_COMMAND_PATTERN = "/bin/cp %s /shared/%s";
 
 	public static final String SOURCE_FILE_ENDING = ".zip";
 
@@ -19,7 +19,8 @@ public class ZipCompileStep extends CompileStep {
 	@Override
 	public String[] getCommands() {
 		String validateCommand = String.format(VALIDATE_COMMAND_PATTERN, sourceFile.getName());
-		return new String[] { validateCommand };
+		String copyCommand = String.format(COPY_COMMAND_PATTERN, sourceFile.getName(), sourceFile.getName());
+		return new String[] { validateCommand, copyCommand };
 	}
 	
 	public String getBinaryFileName() {
