@@ -4,15 +4,13 @@ import java.io.File;
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 
-public class TxtCompileStep extends CompileStep {
+public class NoCompileStep extends CompileStep {
 
-	public static final String SOURCE_FILE_ENDING = ".txt";
-
-	public TxtCompileStep(File sourceFile) {
+	public NoCompileStep(File sourceFile) {
 		this(sourceFile, null);
 	}
 
-	public TxtCompileStep(File sourceFile, File graderDir) {
+	public NoCompileStep(File sourceFile, File graderDir) {
 		super(sourceFile, graderDir);
 	}
 	
