@@ -8,7 +8,7 @@ import org.pesho.sandbox.CommandResult;
 
 public class ZipCompileStep extends CompileStep {
 
-	public static final String VALIDATE_COMMAND_PATTERN = "/usr/bin/unzip -T ./shared/%s";
+	public static final String VALIDATE_COMMAND_PATTERN = "/usr/bin/unzip -T /shared/%s";
 
 	public static final String SOURCE_FILE_ENDING = ".zip";
 
