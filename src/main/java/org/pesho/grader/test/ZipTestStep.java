@@ -23,7 +23,7 @@ public class ZipTestStep extends TestStep {
 	}
 	
 	protected StepResult getResult(CommandResult result) {
-		if (result.getStatus() == CommandStatus.PROGRAM_ERROR) return super.getResult(result);
+		if (result.getStatus() != CommandStatus.PROGRAM_ERROR) return super.getResult(result);
 		return new StepResult(Verdict.SKIPPED, "File not found");
 	}
 
