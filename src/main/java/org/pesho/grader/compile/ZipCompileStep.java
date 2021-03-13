@@ -22,10 +22,6 @@ public class ZipCompileStep extends CompileStep {
 		return new String[] { validateCommand };
 	}
 	
-	@Override
-	protected void copySandboxOutput() throws IOException {
-	}
-	
 	public String getBinaryFileName() {
 		return sourceFile.getName();
 	}
