@@ -14,7 +14,7 @@ public class ZipTestStep extends TestStep {
 
 	@Override
 	public String getCommand() {
-		return String.format(EXECUTE_COMMAND_PATTERN, binaryFile.getName(), inputFile.getName().replace("in", "out"));
+		return String.format(EXECUTE_COMMAND_PATTERN, binaryFile.getName(), inputFile.getName().replace(".in", ".out"));
 	}
 
 }
