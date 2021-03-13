@@ -16,6 +16,9 @@ public class CompileStepFactory {
 		if (sourceFile.getName().endsWith(CSharpCompileStep.SOURCE_FILE_ENDING)) {
 			return new CSharpCompileStep(sourceFile, graderDir);
 		}
+		if (sourceFile.getName().endsWith(ZipCompileStep.SOURCE_FILE_ENDING)) {
+			return new ZipCompileStep(sourceFile, graderDir);
+		}
 		
 		return new NoCompileStep(sourceFile, graderDir);
 	}

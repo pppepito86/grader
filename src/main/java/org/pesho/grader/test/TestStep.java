@@ -52,7 +52,7 @@ public abstract class TestStep implements BaseStep {
 		}
 	}
 
-	private StepResult getResult(CommandResult result) {
+	protected StepResult getResult(CommandResult result) {
 		switch (result.getStatus()) {
 			case SUCCESS: return new StepResult(Verdict.OK, null, result.getExitCode(), result.getTime(), result.getMemory());
 			case OOM: return new StepResult(Verdict.ML, null, result.getExitCode(), result.getTime(), result.getMemory());
