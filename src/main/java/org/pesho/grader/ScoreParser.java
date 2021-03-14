@@ -40,8 +40,8 @@ public class ScoreParser {
 		return score.getGroupResults().stream()
 				.map(result -> {
 					String points = ""+Precision.round(result.getPoints(), 2);
-					points = points.replace(".00", "");
-					points = points.replace(".0", "");
+					if (points.endsWith(".00")) points = points.replace(".00", "");
+					if (points.endsWith(".0")) points = points.replace(".0", "");
 					if (result.getVerdict() == Verdict.OK) return ""+points;
 					if (result.getVerdict() == Verdict.PARTIAL) return "("+points+")";
 					return "-";
