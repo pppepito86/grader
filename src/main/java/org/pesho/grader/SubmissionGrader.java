@@ -40,7 +40,9 @@ public class SubmissionGrader {
 		this.submissionId = submissionId;
 		this.taskDetails = taskTests;
 		this.originalSourceFile = new File(sourceFile).getAbsoluteFile();
-		this.score = new SubmissionScore();
+		int groupsCount = taskDetails.getTestGroups().size();
+		int testsCount = taskDetails.getTestGroups().stream().mapToInt(g -> g.getTestCases().size()).sum();
+		this.score = new SubmissionScore(groupsCount, testsCount);
 		this.listener = listener;
 		this.timeLimit = Optional.ofNullable(tl);
 	}

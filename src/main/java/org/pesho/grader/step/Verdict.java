@@ -11,6 +11,7 @@ public enum Verdict {
 	WA,
 	SE,
 	HIDDEN,
-	SKIPPED
+	SKIPPED,
+	WAITING
 	
 }
