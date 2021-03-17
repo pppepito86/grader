@@ -36,7 +36,8 @@ public class SubmissionScore implements GradeListener {
 	}
 	
 	public void addGroupResult(int groupNumber, StepResult stepResult) {
-		this.groupResults.add(stepResult);
+		if (groupResults.size() < groupNumber) groupResults.add(stepResult);
+		else groupResults.set(groupNumber-1, stepResult);
 	}
 	
 	public void addFinalScore(String verdict, double score) {
