@@ -36,9 +36,9 @@ public class SubmissionGrader {
 		this(submissionId, taskTests, sourceFile, listener, null);
 	}
 	
-	public SubmissionGrader(String submissionId, TaskDetails taskTests, String sourceFile, GradeListener listener, Double tl) {
+	public SubmissionGrader(String submissionId, TaskDetails taskDetails, String sourceFile, GradeListener listener, Double tl) {
 		this.submissionId = submissionId;
-		this.taskDetails = taskTests;
+		this.taskDetails = taskDetails;
 		this.originalSourceFile = new File(sourceFile).getAbsoluteFile();
 		int groupsCount = taskDetails.getTestGroups().size();
 		int testsCount = taskDetails.getTestGroups().stream().mapToInt(g -> g.getTestCases().size()).sum();
