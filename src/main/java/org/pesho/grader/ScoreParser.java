@@ -19,8 +19,7 @@ public class ScoreParser {
 
 	public String getVerdict() {
 		if (score.getCompileResult() == null) return "";
-		
-		if (score.getTestResults().isEmpty()) return score.getCompileResult().getVerdict().toString();
+		if (score.getCompileResult().getVerdict() == Verdict.CE) return Verdict.CE.toString();
 		
 		if (details.testsScoring()) {
 			return getTestsScore();
@@ -33,12 +32,15 @@ public class ScoreParser {
 		return score.getTestResults().stream()
 				.map(StepResult::getVerdict)
 				.map(Verdict::name)
+				.map(v -> v.equals(Verdict.WAITING.name())?"wait": v)
 				.collect(Collectors.joining(","));
 	}
 
 	public String getGroupsScore() {
 		return score.getGroupResults().stream()
 				.map(result -> {
+					if (result.getVerdict() == Verdict.WAITING) return "wait";
+					
 					String points = ""+Precision.round(result.getPoints(), 2);
 					if (points.endsWith(".00")) points = points.replace(".00", "");
 					if (points.endsWith(".0")) points = points.replace(".0", "");
