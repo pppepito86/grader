@@ -19,15 +19,13 @@ public class SubmissionScore implements GradeListener {
 		this.groupResults = new ArrayList<>();
 	}
 	
-	public SubmissionScore(int groupsCount, int testsCount) {
-		this.groupResults = new ArrayList<>();
-		for (int i = 0; i < groupsCount; i++) this.groupResults.add(new StepResult(Verdict.WAITING));
-		this.testResults = new ArrayList<>();
-		for (int i = 0; i < testsCount; i++) this.testResults.add(new StepResult(Verdict.WAITING));
-	}
-	
 	public void setCompileResult(StepResult stepResult) {
 		this.compileResult = stepResult;
+	}
+
+	public void startingTests(int groupsCount, int testsCount) {
+		for (int i = 0; i < groupsCount; i++) this.groupResults.add(new StepResult(Verdict.WAITING));
+		for (int i = 0; i < testsCount; i++) this.testResults.add(new StepResult(Verdict.WAITING));
 	}
 	
 	public void addTestResult(int testNumber, StepResult stepResult) {

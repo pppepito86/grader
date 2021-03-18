@@ -40,9 +40,7 @@ public class SubmissionGrader {
 		this.submissionId = submissionId;
 		this.taskDetails = taskDetails;
 		this.originalSourceFile = new File(sourceFile).getAbsoluteFile();
-		int groupsCount = taskDetails.getTestGroups().size();
-		int testsCount = taskDetails.getTestGroups().stream().mapToInt(g -> g.getTestCases().size()).sum();
-		this.score = new SubmissionScore(groupsCount, testsCount);
+		this.score = new SubmissionScore();
 		this.listener = listener;
 		this.timeLimit = Optional.ofNullable(tl);
 	}
@@ -122,6 +120,10 @@ public class SubmissionGrader {
 	}
 	
 	private double executeTests(File checkerFile) {
+		int groupsCount = taskDetails.getTestGroups().size();
+		int testsCount = taskDetails.getTestGroups().stream().mapToInt(g -> g.getTestCases().size()).sum();
+		score.startingTests(groupsCount, testsCount);
+		
 		double score = 0.0;
 		double totalWeight = taskDetails.getTestGroups().stream().mapToDouble(g -> g.getWeight()).sum();
 		for (int i = 0; i < taskDetails.getTestGroups().size(); i++) {
