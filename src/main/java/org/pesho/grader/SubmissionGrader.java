@@ -175,7 +175,7 @@ public class SubmissionGrader {
 				score += checkerSum;
 			} else if (taskDetails.testsScoring() || taskDetails.sumScoring()){
 				groupScore = testGroup.getWeight() * checkerSum / testGroup.getTestCases().size();
-				if (taskDetails.sumScoring() && groupVerdict != Verdict.OK && Double.compare(groupsCount, 0.0) != 0) groupVerdict = Verdict.PARTIAL;
+				if (taskDetails.sumScoring() && groupVerdict != Verdict.OK && Double.compare(groupScore, 0.0) != 0) groupVerdict = Verdict.PARTIAL;
 			} else {
 				groupScore = testGroup.getWeight() * checkerMin;
 			}
