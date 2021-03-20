@@ -203,16 +203,26 @@ public class TaskParser {
 	}
 	
 	private void findTests() {
-		List<String> files = listAllFiles().stream().filter(x -> x.isFile()).map(File::getAbsolutePath)
-				.filter(x -> !x.endsWith(".cpp") && !x.endsWith(".java") && !x.endsWith(".jar"))
-				.collect(Collectors.toList());
-
-		int numberOfTests = countTests(files);
-		String bestInputCandidate = findBestInputCandidate(files, numberOfTests);
-
-		for (int i = 1; i <= numberOfTests; i++) {
-			findTestCases(i, files, bestInputCandidate);
+		try {
+			List<TestCase> tests = new TaskTestsFinderv2().findTests(taskDir.toPath());
+			for (TestCase test: tests) {
+				input.add(new File(taskDir, test.getInput()));
+				output.add(new File(taskDir, test.getInput()));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+		
+//		List<String> files = listAllFiles().stream().filter(x -> x.isFile()).map(File::getAbsolutePath)
+//				.filter(x -> !x.endsWith(".cpp") && !x.endsWith(".java") && !x.endsWith(".jar"))
+//				.collect(Collectors.toList());
+//
+//		int numberOfTests = countTests(files);
+//		String bestInputCandidate = findBestInputCandidate(files, numberOfTests);
+//
+//		for (int i = 1; i <= numberOfTests; i++) {
+//			findTestCases(i, files, bestInputCandidate);
+//		}
 	}
 
 	private int countTests(List<String> files) {
