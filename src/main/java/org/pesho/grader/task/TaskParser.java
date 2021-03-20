@@ -207,7 +207,7 @@ public class TaskParser {
 			List<TestCase> tests = new TaskTestsFinderv2().findTests(taskDir.toPath());
 			for (TestCase test: tests) {
 				input.add(new File(taskDir, test.getInput()));
-				output.add(new File(taskDir, test.getInput()));
+				output.add(new File(taskDir, test.getOutput()));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
