@@ -1,6 +1,7 @@
 package org.pesho.grader.task;
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -30,6 +31,8 @@ public class TaskDetails {
 	private Set<String> allowedExtensions;
 	private boolean isInteractive;
 	
+	public static final TaskDetails EMPTY = new TaskDetails(new Properties(), null);
+	
 	public static TaskDetails create(TaskParser taskParser) {
 		return new TaskDetails(taskParser);
 	}
@@ -39,13 +42,18 @@ public class TaskDetails {
 	
 	public TaskDetails(Properties props, String checker, TestGroup... testGroups) {
         this.points = Double.valueOf(props.getProperty("points", "100"));
+		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
         this.time = Double.valueOf(props.getProperty("time", "1"));
         this.memory = Integer.valueOf(props.getProperty("memory", "256"));
+		this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "1"));
         this.feedback = props.getProperty("feedback", "FULL").trim();
         this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
+        this.extensions = props.getProperty("extensions", "cpp").trim();
+		this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
         this.checker = checker;
+        this.testGroups = new ArrayList<>();
 	}
 	
 	public TaskDetails(TaskParser taskParser) {

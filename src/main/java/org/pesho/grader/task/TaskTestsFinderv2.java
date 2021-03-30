@@ -60,7 +60,7 @@ public class TaskTestsFinderv2 {
 				.lastEntry()
 				.getValue();
 		
-		System.out.println(patternCandidates);
+//		System.out.println(patternCandidates);
 		
 		List<PathPattern> patterns = patternCandidates.stream()
 				.sorted(Comparator.comparing(PathPattern::getPath))
@@ -72,7 +72,7 @@ public class TaskTestsFinderv2 {
 		
 		for (PathPattern pattern: patterns) {
 			int matches = countMatches(pattern, paths);
-			System.out.println(pattern.getPath() + " " + pattern.getReplacements() + " " + matches);
+//			System.out.println(pattern.getPath() + " " + pattern.getReplacements() + " " + matches);
 		}
 		return patterns;
 	}
