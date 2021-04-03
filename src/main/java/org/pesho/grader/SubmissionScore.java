@@ -1,18 +1,22 @@
 package org.pesho.grader;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 
 public class SubmissionScore implements GradeListener {
-	
+
 	private boolean finished;
 	private StepResult compileResult;
 	private List<StepResult> groupResults;
 	private List<StepResult> testResults;
 	private double score;
+	
+	// DO NOT REMOVE for backward compatibility
+	private LinkedHashMap<String, StepResult> scoreSteps;
 	
 	public SubmissionScore() {
 		this.testResults = new ArrayList<>();
@@ -61,6 +65,15 @@ public class SubmissionScore implements GradeListener {
 	
 	public boolean isFinished() {
 		return finished;
+	}
+	
+	public LinkedHashMap<String, StepResult> getScoreSteps() {
+		if (scoreSteps != null) return scoreSteps;
+		
+		LinkedHashMap<String, StepResult> scoreSteps = new LinkedHashMap<>();
+		if (compileResult != null) scoreSteps.put("Compile", compileResult);
+		for (int i = 0; i < testResults.size(); i++) scoreSteps.put("Test"+i, testResults.get(i));
+		return scoreSteps;
 	}
 	
 }
