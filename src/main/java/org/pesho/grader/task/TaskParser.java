@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -103,7 +104,8 @@ public class TaskParser {
 	}
 	
 	private void findContestantZip() {
-		contestantZip = listAllFiles().stream().filter(x -> x.getName().equalsIgnoreCase("contestant.zip"))
+		contestantZip = listAllFiles().stream()
+				.filter(x -> x.getName().equalsIgnoreCase("contestant.zip"))
 				.sorted((a, b) -> a.getAbsolutePath().length() - b.getAbsolutePath().length())
 				.findFirst();
 	}
@@ -114,7 +116,8 @@ public class TaskParser {
 	}
 
 	private void findChecker() {
-		List<File> filtered = listAllFiles().stream().filter(x -> x.getAbsolutePath().contains("checker"))
+		List<File> filtered = listAllFiles().stream()
+				.filter(x -> x.getAbsolutePath().contains("checker"))
 				.filter(x -> x.getName().endsWith(".jar") || x.getName().endsWith(".sh") || !x.getName().contains("."))
 				.collect(Collectors.toList());
 		if (filtered.size() == 1) {
@@ -149,7 +152,8 @@ public class TaskParser {
 	}
 	
 	private void findCppChecker() {
-		List<File> filtered = listAllFiles().stream().filter(x -> x.getAbsolutePath().contains("checker"))
+		List<File> filtered = listAllFiles().stream()
+				.filter(x -> x.getAbsolutePath().contains("checker"))
 				.filter(x -> x.getName().endsWith(".cpp"))
 				.collect(Collectors.toList());
 		if (filtered.size() == 1) {
@@ -181,14 +185,16 @@ public class TaskParser {
 	}
 	
 	private void findProperties() {
-		List<File> filtered0 = listAllFiles().stream().filter(x -> x.getAbsolutePath().contains("grade.properties"))
+		List<File> filtered0 = listAllFiles().stream()
+				.filter(x -> x.getAbsolutePath().contains("grade.properties"))
 				.collect(Collectors.toList());
 		if (filtered0.size() == 1) {
 			this.properties = filtered0.get(0);
 			return;
 		}
 		
-		List<File> filtered = listAllFiles().stream().filter(x -> x.getAbsolutePath().contains("props")||x.getAbsolutePath().contains("properties"))
+		List<File> filtered = listAllFiles().stream()
+				.filter(x -> x.getAbsolutePath().contains("props")||x.getAbsolutePath().contains("properties"))
 				.collect(Collectors.toList());
 		if (filtered.size() == 1) {
 			this.properties = filtered.get(0);
@@ -274,8 +280,8 @@ public class TaskParser {
 
 	private void listAllFiles(File dir, List<File> allFiles) {
 		if (!dir.getName().startsWith("sandbox_")) {
-			Arrays.stream(dir.listFiles()).filter(File::isFile).forEach(allFiles::add);
-			Arrays.stream(dir.listFiles()).filter(File::isDirectory).forEach(x -> listAllFiles(x, allFiles));
+			Arrays.stream(dir.listFiles()).filter(Objects::nonNull).filter(d -> !d.toString().contains("__MACOSX")).filter(File::isFile).forEach(allFiles::add);
+			Arrays.stream(dir.listFiles()).filter(Objects::nonNull).filter(d -> !d.toString().contains("__MACOSX")).filter(File::isDirectory).forEach(x -> listAllFiles(x, allFiles));
 		}
 	}
 

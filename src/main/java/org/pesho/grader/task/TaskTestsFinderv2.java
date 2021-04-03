@@ -31,6 +31,7 @@ public class TaskTestsFinderv2 {
 	
 	public List<TestCase> findTests(Path dir) throws IOException {
 		Set<String> paths = Files.walk(dir)
+				.filter(p -> !p.toString().contains("__MACOSX"))
 				.filter(Files::isRegularFile)
 				.map(p -> dir.relativize(p))
 				.map(Path::toString)
@@ -49,6 +50,7 @@ public class TaskTestsFinderv2 {
 	
 	public List<PathPattern> getTestPatterns(Path dir) throws IOException {
 		Set<String> paths = Files.walk(dir)
+				.filter(p -> !p.toString().contains("__MACOSX"))
 				.filter(Files::isRegularFile)
 				.map(p -> dir.relativize(p))
 				.map(Path::toString)
@@ -70,10 +72,10 @@ public class TaskTestsFinderv2 {
 						.sum()))
 				.collect(Collectors.toList());
 		
-		for (PathPattern pattern: patterns) {
-			int matches = countMatches(pattern, paths);
+//		for (PathPattern pattern: patterns) {
+//			int matches = countMatches(pattern, paths);
 //			System.out.println(pattern.getPath() + " " + pattern.getReplacements() + " " + matches);
-		}
+//		}
 		return patterns;
 	}
 
