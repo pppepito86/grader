@@ -72,7 +72,7 @@ public class SubmissionScore implements GradeListener {
 		
 		LinkedHashMap<String, StepResult> scoreSteps = new LinkedHashMap<>();
 		if (compileResult != null) scoreSteps.put("Compile", compileResult);
-		for (int i = 0; i < testResults.size(); i++) scoreSteps.put("Test"+i, testResults.get(i));
+		for (int i = 0; i < testResults.size(); i++) scoreSteps.put("Test"+(i+1), testResults.get(i));
 		return scoreSteps;
 	}
 	
