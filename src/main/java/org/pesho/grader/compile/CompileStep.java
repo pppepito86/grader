@@ -54,7 +54,7 @@ public abstract class CompileStep implements BaseStep {
 		}
 		return new SandboxExecutor()
 				.directory(sandboxDir)
-				.allowProcesses()
+				.trusted(true)
 				.showError()
 				.timeout(10)
 				.memory(memory)

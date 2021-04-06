@@ -9,11 +9,11 @@ import org.pesho.sandbox.SandboxExecutor;
 
 public class CppCompileStep extends CompileStep {
 
-	public static final String COMPILE_NO_CPP11_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -O2 -pipe -static -s -o %s /shared/%s";
-	public static final String COMPILE_CPP_11_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++11 -O2 -pipe -static -s -o %s /shared/%s";
-	public static final String COMPILE_CPP14_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++14 -O2 -pipe -static -s -o %s /shared/%s";
-	public static final String COMPILE_CPP17_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++17 -O2 -pipe -static -s -o %s /shared/%s";
-	public static final String COMPILE_CPP98_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++98 -O2 -pipe -static -s -o %s /shared/%s";
+	public static final String COMPILE_NO_CPP11_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -O2 -pipe -static -s -o %s ./%s";
+	public static final String COMPILE_CPP_11_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++11 -O2 -pipe -static -s -o %s ./%s";
+	public static final String COMPILE_CPP14_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++14 -O2 -pipe -static -s -o %s ./%s";
+	public static final String COMPILE_CPP17_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++17 -O2 -pipe -static -s -o %s ./%s";
+	public static final String COMPILE_CPP98_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++98 -O2 -pipe -static -s -o %s ./%s";
 	public static final String SOURCE_FILE_ENDING = ".cpp";
 
 	public CppCompileStep(File sourceFile) {
@@ -58,7 +58,7 @@ public class CppCompileStep extends CompileStep {
 	
 			CommandResult commandResult = new SandboxExecutor()
 					.directory(sandboxDir)
-					.allowProcesses()
+					.trusted(true)
 					.showError()
 					.timeout(10)
 					.memory(256)
@@ -95,7 +95,7 @@ public class CppCompileStep extends CompileStep {
 	private String getAllFiles() {
 		String files = sourceFile.getName();
 		if (graderDir != null && graderDir.exists()) {
-			for (File file: graderDir.listFiles()) files += " /shared/" + file.getName();
+			for (File file: graderDir.listFiles()) files += " " + file.getName();
 		}
 		return files;
 	}

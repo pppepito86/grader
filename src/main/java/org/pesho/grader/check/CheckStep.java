@@ -40,7 +40,7 @@ public abstract class CheckStep implements BaseStep {
 					.directory(sandboxDir)
 					.output("grade_" + inputFile.getName())
 					.error("grade_err_" + inputFile.getName())
-					.allowProcesses()
+					.trusted(true)
 					.showError()
 					.command(getCommand())
 					.execute().getResult();

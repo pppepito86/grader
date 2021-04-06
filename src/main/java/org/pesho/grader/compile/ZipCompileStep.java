@@ -7,14 +7,14 @@ import org.pesho.sandbox.CommandResult;
 
 public class ZipCompileStep extends CompileStep {
 
-	public static final String VALIDATE_COMMAND_PATTERN = "/usr/bin/unzip -t /shared/%s";
+	public static final String VALIDATE_COMMAND_PATTERN = "/usr/bin/unzip -t %s";
 
 	public static final String SOURCE_FILE_ENDING = ".zip";
 
 	public ZipCompileStep(File sourceFile, File graderDir) {
 		super(sourceFile, graderDir);
 	}
-
+	
 	@Override
 	public String[] getCommands() {
 		String validateCommand = String.format(VALIDATE_COMMAND_PATTERN, sourceFile.getName());
