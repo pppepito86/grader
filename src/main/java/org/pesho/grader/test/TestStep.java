@@ -39,6 +39,7 @@ public abstract class TestStep implements BaseStep {
 					.input(inputFile.getName())
 					.output(outputFile.getName())
 					.timeout(time)
+					.useExtraMetadata(useExtraMetadata())
 					.memory(this instanceof JavaTestStep ? null : memory)
 					.command(getCommand()).execute().getResult();
 			copySandboxOutput();
@@ -87,6 +88,10 @@ public abstract class TestStep implements BaseStep {
 	
 	private void copySandboxOutput() throws IOException {
 		FileUtils.copyFile(new File(sandboxDir, outputFile.getName()), outputFile);
+	}
+	
+	public boolean useExtraMetadata() {
+		return false;
 	}
 	
 }
