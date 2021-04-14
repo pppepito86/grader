@@ -302,7 +302,7 @@ public class TaskParser {
 	private void listAllDirs(File dir, List<File> allDirs) {
 		if (!dir.getName().startsWith("sandbox_")) {
 			Arrays.stream(dir.listFiles()).filter(Objects::nonNull).filter(d -> !d.toString().contains("__MACOSX")).filter(File::isDirectory).forEach(allDirs::add);
-			Arrays.stream(dir.listFiles()).filter(Objects::nonNull).filter(d -> !d.toString().contains("__MACOSX")).filter(File::isDirectory).forEach(x -> listAllFiles(x, allDirs));
+			Arrays.stream(dir.listFiles()).filter(Objects::nonNull).filter(d -> !d.toString().contains("__MACOSX")).filter(File::isDirectory).forEach(x -> listAllDirs(x, allDirs));
 		}
 	}
 
