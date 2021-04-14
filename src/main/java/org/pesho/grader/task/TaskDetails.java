@@ -251,11 +251,11 @@ public class TaskDetails {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-
+	
 	public String getContestantZip() {
 		return contestantZip;
 	}
-
+	
 	public void setContestantZip(String contestantZip) {
 		this.contestantZip = contestantZip;
 	}

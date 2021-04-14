@@ -41,7 +41,7 @@ public class TaskParser {
 	public Optional<File> getContestantZip() {
 		return contestantZip;
 	}
-
+	
 	public List<File> getInput() {
 		return input;
 	}
@@ -108,8 +108,16 @@ public class TaskParser {
 				.filter(x -> x.getName().equalsIgnoreCase("contestant.zip"))
 				.sorted((a, b) -> a.getAbsolutePath().length() - b.getAbsolutePath().length())
 				.findFirst();
+		
+		if (!contestantZip.isPresent()) {
+			contestantZip = listAllDirs().stream()
+					.filter(x -> x.getName().equalsIgnoreCase("contestant"))
+					.sorted((a, b) -> b.getAbsolutePath().length() - a.getAbsolutePath().length())
+					.map(f -> new File(f, "contestant.zip"))
+					.findFirst();
+		}
 	}
-
+	
 	private void findSolutions() {
 		solutions = listAllFiles().stream().filter(x -> x.getName().endsWith(".cpp") || x.getName().endsWith(".java"))
 				.collect(Collectors.toList());
@@ -282,6 +290,19 @@ public class TaskParser {
 		if (!dir.getName().startsWith("sandbox_")) {
 			Arrays.stream(dir.listFiles()).filter(Objects::nonNull).filter(d -> !d.toString().contains("__MACOSX")).filter(File::isFile).forEach(allFiles::add);
 			Arrays.stream(dir.listFiles()).filter(Objects::nonNull).filter(d -> !d.toString().contains("__MACOSX")).filter(File::isDirectory).forEach(x -> listAllFiles(x, allFiles));
+		}
+	}
+
+	private List<File> listAllDirs() {
+		List<File> allDirs = new ArrayList<>();
+		listAllDirs(taskDir, allDirs);
+		return allDirs;
+	}
+	
+	private void listAllDirs(File dir, List<File> allDirs) {
+		if (!dir.getName().startsWith("sandbox_")) {
+			Arrays.stream(dir.listFiles()).filter(Objects::nonNull).filter(d -> !d.toString().contains("__MACOSX")).filter(File::isDirectory).forEach(allDirs::add);
+			Arrays.stream(dir.listFiles()).filter(Objects::nonNull).filter(d -> !d.toString().contains("__MACOSX")).filter(File::isDirectory).forEach(x -> listAllFiles(x, allDirs));
 		}
 	}
 
