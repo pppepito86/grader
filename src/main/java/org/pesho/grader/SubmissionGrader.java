@@ -200,10 +200,10 @@ public class SubmissionGrader {
 		File outputFile = new File(testCase.getOutput());
 		File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
 		Double tl = timeLimit.orElse(taskDetails.getTime());
-		TestStep testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.isInteractive());
+		TestStep testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getIoTime());
 		testStep.execute();
 		if (testStep.getVerdict() == Verdict.TL && tl < 1 && allTestsOk) {
-			testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.isInteractive());
+			testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getIoTime());
 			testStep.execute();
 		}
 

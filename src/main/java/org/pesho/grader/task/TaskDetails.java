@@ -16,6 +16,7 @@ public class TaskDetails {
 	private double points;
 	private int precision;
 	private double time;
+	private double ioTime;
 	private int memory;
 	private int rejudgeTimes;
 	private String checker;
@@ -44,6 +45,7 @@ public class TaskDetails {
         this.points = Double.valueOf(props.getProperty("points", "100"));
 		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
         this.time = Double.valueOf(props.getProperty("time", "1"));
+        this.ioTime = Double.valueOf(props.getProperty("io_time", "0"));
         this.memory = Integer.valueOf(props.getProperty("memory", "256"));
 		this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "1"));
         this.feedback = props.getProperty("feedback", "FULL").trim();
@@ -147,6 +149,10 @@ public class TaskDetails {
 	
 	public double getTime() {
 		return time;
+	}
+	
+	public double getIoTime() {
+		return ioTime;
 	}
 	
 	public void setMemory(int memory) {

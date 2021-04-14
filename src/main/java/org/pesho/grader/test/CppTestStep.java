@@ -6,11 +6,11 @@ public class CppTestStep extends TestStep {
 
 	public static final String EXECUTE_COMMAND_PATTERN = "./%s";
 	
-	private boolean isInteractive;
+	private double ioTime;
 
-	public CppTestStep(File binaryFile, File inputFile, File outputFile, double time, int memory, boolean isInteractive) {
+	public CppTestStep(File binaryFile, File inputFile, File outputFile, double time, int memory, double ioTime) {
 		super(binaryFile, inputFile, outputFile, time, memory);
-		this.isInteractive = isInteractive;
+		this.ioTime = ioTime;
 	}
 
 	@Override
@@ -19,8 +19,8 @@ public class CppTestStep extends TestStep {
 	}
 	
 	@Override
-	public boolean useExtraMetadata() {
-		return isInteractive;
+	public double getIoTimeout() {
+		return ioTime;
 	}
 
 }
