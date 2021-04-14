@@ -50,7 +50,7 @@ public abstract class CompileStep implements BaseStep {
 	private SandboxExecutor buildCommand(String command) {
 		Integer memory = 256;
 		if (this instanceof JavaCompileStep) {
-			memory = null;
+//			memory = null;
 		}
 		return new SandboxExecutor()
 				.directory(sandboxDir)
