@@ -49,15 +49,15 @@ public abstract class CompileStep implements BaseStep {
 	
 	private SandboxExecutor buildCommand(String command) {
 		int timeout = 10;
-		if (this instanceof JavaCompileStep) {
-			timeout = 60;
-		}
+		int memory = 256;
+		if (this instanceof JavaCompileStep) timeout = 300;
+		if (this instanceof JavaCompileStep) memory = 1024;
 		return new SandboxExecutor()
 				.directory(sandboxDir)
 				.trusted(true)
 				.showError()
 				.timeout(timeout)
-				.memory(256)
+				.memory(memory)
 				.command(command);		
 	}
 
