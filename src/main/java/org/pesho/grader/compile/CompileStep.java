@@ -51,7 +51,7 @@ public abstract class CompileStep implements BaseStep {
 		int timeout = 10;
 		int memory = 256;
 		if (this instanceof JavaCompileStep) timeout = 300;
-		if (this instanceof JavaCompileStep) memory = 1024;
+		if (this instanceof JavaCompileStep) memory = 1536;
 		return new SandboxExecutor()
 				.directory(sandboxDir)
 				.trusted(true)
