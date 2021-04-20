@@ -125,6 +125,7 @@ public class SubmissionGrader {
 		score.startingTests(groupsCount, testsCount);
 		
 		double score = 0.0;
+		boolean accepted = true;
 		double totalWeight = taskDetails.getTestGroups().stream().mapToDouble(g -> g.getWeight()).sum();
 		for (int i = 0; i < taskDetails.getTestGroups().size(); i++) {
 			TestGroup testGroup = taskDetails.getTestGroups().get(i);
@@ -170,6 +171,7 @@ public class SubmissionGrader {
 			}
 
 			double groupScore = 0;
+			if (groupVerdict == Verdict.OK) accepted = false;
 			if (taskDetails.getPoints() == -1) {
 				groupScore = checkerSum;
 				score += checkerSum;
@@ -182,6 +184,7 @@ public class SubmissionGrader {
 			score += groupScore;
 			this.score.addGroupResult(i+1, new StepResult(groupVerdict, ""+testInError, groupTime, groupMemory, groupScore*taskDetails.getPoints()));
 		}
+		if (taskDetails.icpcScoring() && !accepted) return 0;
 		return score;
 	}
 	

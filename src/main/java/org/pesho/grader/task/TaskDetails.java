@@ -225,13 +225,17 @@ public class TaskDetails {
 	}
 	
 	public boolean testsScoring() {
-		return scoring.equalsIgnoreCase("tests");
+		return scoring.equalsIgnoreCase("tests") || scoring.equalsIgnoreCase("icpc");
 	}
 
 	public boolean groupsScoring() {
 		return !testsScoring();
 	}
 
+	public boolean icpcScoring() {
+		return scoring.equalsIgnoreCase("icpc"); 
+	}
+	
 	public boolean sumScoring() {
 		return scoring.equalsIgnoreCase("sum"); 
 	}

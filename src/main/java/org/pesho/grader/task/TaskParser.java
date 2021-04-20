@@ -288,6 +288,7 @@ public class TaskParser {
 
 	private void listAllFiles(File dir, List<File> allFiles) {
 		if (!dir.getName().startsWith("sandbox_")) {
+			// TODO fix empty folder
 			Arrays.stream(dir.listFiles()).filter(Objects::nonNull).filter(d -> !d.toString().contains("__MACOSX")).filter(File::isFile).forEach(allFiles::add);
 			Arrays.stream(dir.listFiles()).filter(Objects::nonNull).filter(d -> !d.toString().contains("__MACOSX")).filter(File::isDirectory).forEach(x -> listAllFiles(x, allFiles));
 		}
