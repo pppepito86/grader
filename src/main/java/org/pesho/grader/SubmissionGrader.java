@@ -171,7 +171,7 @@ public class SubmissionGrader {
 			}
 
 			double groupScore = 0;
-			if (groupVerdict == Verdict.OK) accepted = false;
+			if (groupVerdict != Verdict.OK) accepted = false;
 			if (taskDetails.getPoints() == -1) {
 				groupScore = checkerSum;
 				score += checkerSum;
