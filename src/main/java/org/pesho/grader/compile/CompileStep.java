@@ -43,7 +43,7 @@ public abstract class CompileStep implements BaseStep {
 			e.printStackTrace();
 			this.result = new StepResult(Verdict.SE, e.getMessage());
 		} finally {
-//			FileUtils.deleteQuietly(sandboxDir);
+			FileUtils.deleteQuietly(sandboxDir);
 		}
 	}
 	

@@ -62,7 +62,7 @@ public class CppCompileStep extends CompileStep {
 					.showError()
 					.timeout(10)
 					.memory(256)
-					.command(command)
+					.command(command[0])
 					.execute().getResult();
 			StepResult result = getResult(commandResult);
 			if (result.getVerdict() == Verdict.OK) {
