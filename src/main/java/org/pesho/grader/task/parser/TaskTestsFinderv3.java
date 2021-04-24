@@ -1,30 +1,22 @@
-package org.pesho.grader.task;
+package org.pesho.grader.task.parser;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.pesho.grader.task.TestCase;
+
 public class TaskTestsFinderv3 {
 	
-	public static void main(String[] args) throws Exception {
-		File f = new File("C:\\Users\\Petar\\Downloads\\АК2_ctree");
-		new TaskTestsFinderv3().findTests(f.toPath(), "^tests\\\\input.[0-9]+.*$", "^tests\\\\output.[0-9]+.*$");
-	}
-	
-	public List<TestCase> findTests(Path dir, String inputString, String outputString) throws IOException {
+	public List<TestCase> find(List<Path> paths, String inputString, String outputString) throws IOException {
 		Pattern inputPattern = Pattern.compile(inputString);
 		Pattern outputPattern = Pattern.compile(outputString);
 		List<String> inputs = new ArrayList<>();
 		List<String> outputs = new ArrayList<>();
-		Files.walk(dir)
-				.filter(p -> !p.toString().contains("__MACOSX"))
-				.filter(Files::isRegularFile)
-				.map(p -> dir.relativize(p))
+		paths.stream()
 				.map(Path::toString)
 				.forEach(path -> {
 					if (inputPattern.matcher(path).matches()) inputs.add(path);

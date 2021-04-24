@@ -1,7 +1,6 @@
 package org.pesho.grader.task;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -9,11 +8,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class TaskParser {
+public class TaskParserv2 {
 
 	private final File taskDir;
 	private List<File> input = new ArrayList<>();
@@ -27,7 +25,7 @@ public class TaskParser {
 	private Optional<File> description = Optional.empty();
 	private Optional<File> contestantZip = Optional.empty();
 
-	public TaskParser(File dir) {
+	public TaskParserv2(File dir) {
 		prefix = new File(dir, ".").getAbsolutePath();
 		if (prefix.endsWith(".")) {
 			prefix = prefix.substring(0, prefix.length() - 1);
@@ -219,24 +217,6 @@ public class TaskParser {
 	}
 	
 	private void findTests() {
-		Properties props = new Properties();
-		if (getProperties().exists()) {
-			try (FileInputStream fileInputStream = new FileInputStream(getProperties())) {
-				props.load(fileInputStream);
-				if (props.containsKey("input") && props.containsKey("output")) {
-					List<TestCase> tests = new TaskTestsFinderv3().findTests(taskDir.toPath(), props.getProperty("input"), props.getProperty("output"));
-					for (TestCase test: tests) {
-						input.add(new File(taskDir, test.getInput()));
-						output.add(new File(taskDir, test.getOutput()));
-					}
-					return;
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		
-		
 		try {
 			List<TestCase> tests = new TaskTestsFinderv2().findTests(taskDir.toPath());
 			for (TestCase test: tests) {

@@ -1,18 +1,39 @@
+
 package org.pesho.grader.task;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.util.Precision;
+import org.pesho.grader.task.parser.CheckerFinder;
+import org.pesho.grader.task.parser.ContestantFinder;
+import org.pesho.grader.task.parser.GraderFinder;
+import org.pesho.grader.task.parser.PropertiesFinder;
+import org.pesho.grader.task.parser.SolutionsFinder;
+import org.pesho.grader.task.parser.StatementFinder;
+import org.pesho.grader.task.parser.TaskFilesFinder;
+import org.pesho.grader.task.parser.TaskTestsFinderv2;
+import org.pesho.grader.task.parser.TaskTestsFinderv3;
 
 public class TaskDetails {
 
+	private String taskName;
+	private String taskDir;
+	
+	private Map<String, Object> files;
+	
 	private double points;
 	private int precision;
 	private double time;
@@ -31,17 +52,15 @@ public class TaskDetails {
 	private String extensions;
 	private Set<String> allowedExtensions;
 	private boolean isInteractive;
+	private String error;
 	
-	public static final TaskDetails EMPTY = new TaskDetails(new Properties(), null);
-	
-	public static TaskDetails create(TaskParser taskParser) {
-		return new TaskDetails(taskParser);
-	}
+	public static final TaskDetails EMPTY = new TaskDetails();
 	
 	public TaskDetails() {
+		setProps(new Properties(), null);
 	}
 	
-	public TaskDetails(Properties props, String checker, TestGroup... testGroups) {
+	private void setProps(Properties props, String checker, TestGroup... testGroups) {
         this.points = Double.valueOf(props.getProperty("points", "100"));
 		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
         this.time = Double.valueOf(props.getProperty("time", "1"));
@@ -58,15 +77,46 @@ public class TaskDetails {
         this.testGroups = new ArrayList<>();
 	}
 	
-	public TaskDetails(TaskParser taskParser) {
+
+	public TaskDetails(String taskName, File taskFile) {
+		this(taskName, taskFile.toPath());
+	}
+	
+	public TaskDetails(String taskName, Path taskPath) {
+		try {
+			parseTask(taskName, taskPath);
+		} catch (Exception e) {
+			error = e.getMessage();
+			setProps(new Properties(), null);
+			try {
+				files = TaskFilesFinder.find(taskName, taskPath, Files.walk(taskPath).map(p -> taskPath.relativize(p)).collect(Collectors.toList()));
+			} catch (Exception e2) {
+				e2.printStackTrace();
+			}
+		}
+	}
+	
+	public void parseTask(String taskName, Path taskPath) throws IOException {
+		this.taskName = taskName != null ? taskName : taskPath.getFileName().toString();
+		this.taskDir = taskPath.toAbsolutePath().toString();
+		
+		List<Path> paths = Files.walk(taskPath)
+				.filter(p -> !p.toString().contains("__MACOSX"))
+//				.filter(Files::isRegularFile)
+				.map(p -> taskPath.relativize(p))
+//				.map(Path::toString)
+				.collect(Collectors.toList());
+		
 		Properties props = new Properties();
-		if (taskParser.getProperties().exists()) {
-			try (FileInputStream fileInputStream = new FileInputStream(taskParser.getProperties())) {
+		
+		PropertiesFinder.find(paths).ifPresent(path -> {
+			try (FileInputStream fileInputStream = new FileInputStream(taskPath.resolve(path).toString())) {
 				props.load(fileInputStream);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}
+		});
+		
 		this.points = Double.valueOf(props.getProperty("points", "100.0"));
 		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
 		this.time = Double.valueOf(props.getProperty("time", "1"));
@@ -77,28 +127,29 @@ public class TaskDetails {
 		this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
-		this.checker = taskParser.getChecker().getAbsolutePath();
-		this.graderDir = taskParser.getGraderDir().getAbsolutePath();
         this.extensions = props.getProperty("extensions", "cpp").trim();
-        this.isInteractive = taskParser.getGraderDir().exists();
+        this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
+
+        this.checker = CheckerFinder.find(paths).map(Path::toString).orElse(null);
+		this.graderDir = GraderFinder.find(paths).map(Path::toString).orElse(null);
+        this.isInteractive = graderDir != null;
+		this.description = StatementFinder.find(paths).map(Path::toString).orElse(null);
+		this.contestantZip = ContestantFinder.find(paths).map(Path::toString).orElse(null);
 		
-		this.description = taskParser.getDescription().map(f -> f.getAbsolutePath()).orElse(null);
-		this.contestantZip = taskParser.getContestantZip().map(f -> f.getAbsolutePath()).orElse(null);
-		
-		this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
-		
-		TestCase[] testCases = new TestCase[taskParser.testsCount()];
-		for (int i = 0; i < testCases.length; i++) {
-			testCases[i] = new TestCase(i+1, taskParser.getInput().get(i).getAbsolutePath(), taskParser.getOutput().get(i).getAbsolutePath());
+		List<TestCase> testCases;
+		if (props.containsKey("input") && props.containsKey("output")) {
+			testCases = new TaskTestsFinderv3().find(paths, props.getProperty("input"), props.getProperty("output"));
+		} else {
+			testCases = TaskTestsFinderv2.find(paths);
 		}
 		
 		Set<Integer> feedbackGroups = feedback();
 		TestGroup[] testGroups = null;
 		if (groups.isEmpty()) {
-			testGroups = new TestGroup[testCases.length];
+			testGroups = new TestGroup[testCases.size()];
 			for (int i = 0; i < testGroups.length; i++) {
 				boolean hasFeedback = isFullFeedback() || feedbackGroups.contains(i+1);
-				testGroups[i] = new TestGroup(1.0/testCases.length, hasFeedback, testCases[i]);
+				testGroups[i] = new TestGroup(1.0/testCases.size(), hasFeedback, testCases.get(i));
 			}
 		} else {
 			String[] groupsSplit = groups.split(",");
@@ -116,7 +167,7 @@ public class TaskDetails {
 				int last = Integer.valueOf(s[1]);
 				TestCase[] cases = new TestCase[last-first+1];
 				for (int j = first; j <= last; j++) {
-					cases[j-first] = testCases[j-1];
+					cases[j-first] = testCases.get(j-1);
 				}
 				
 				double weight = (weightsSplit.length == groupsSplit.length) ? Double.valueOf(weightsSplit[i].trim()) : 1;
@@ -124,8 +175,36 @@ public class TaskDetails {
 				testGroups[i] = new TestGroup(weight/totalWeight, hasFeedback, cases);
 			}
 		}
-		
 		this.testGroups = Arrays.asList(testGroups);
+
+		this.files = TaskFilesFinder.find(taskName, taskPath, Files.walk(taskPath).map(p -> taskPath.relativize(p)).collect(Collectors.toList()));
+		
+        if (checker != null) ((Map<String, Object>) files.get(checker)).put("type", "checker");
+        if (graderDir != null) ((Map<String, Object>) files.get(graderDir)).put("type", "grader");
+        if (description != null) ((Map<String, Object>) files.get(description)).put("type", "statement");
+        PropertiesFinder.find(paths).map(Path::toString).ifPresent(path -> 
+        	((Map<String, Object>) files.get(path)).put("type", "props")
+        );
+        
+        SolutionsFinder.find(paths, allowedExtensions).stream().map(Path::toString).forEach(path -> 
+        	((Map<String, Object>) files.get(path)).put("type", "solution")
+        );
+        
+//		ContestantFinder.find(paths).map(Path::toString).orElse(null);
+		
+        for (TestCase testCase: testCases) {
+        	((Map<String, Object>) files.get(testCase.getInput())).put("type", "test_in");
+        	((Map<String, Object>) files.get(testCase.getOutput())).put("type", "test_out");
+        }
+        
+        if (checker != null) checker = taskPath.resolve(checker).toString();
+        if (graderDir != null) graderDir = taskPath.resolve(graderDir).toString();
+        if (contestantZip != null) contestantZip = taskPath.resolve(contestantZip).toString();
+        if (description != null) description = taskPath.resolve(description).toString();
+        for (TestCase testCase: testCases) {
+        	testCase.setInput(taskPath.resolve(testCase.getInput()).toString());
+        	testCase.setOutput(taskPath.resolve(testCase.getOutput()).toString());
+        }
 	}
 
 	public void setPoints(double points) {
@@ -209,7 +288,8 @@ public class TaskDetails {
 	}
 	
 	public String getChecker() {
-		return checker;
+		if (checker == null) return null;
+		return Paths.get(taskDir, checker).toAbsolutePath().toString();
 	}
 
 	public String getGraderDir() {
@@ -257,7 +337,8 @@ public class TaskDetails {
 	}
 	
 	public String getContestantZip() {
-		return contestantZip;
+		if (contestantZip == null) return null;
+		return Paths.get(taskDir, contestantZip).toString();
 	}
 	
 	public void setContestantZip(String contestantZip) {
@@ -308,6 +389,22 @@ public class TaskDetails {
 	
 	public double getTotalWeight() {
 		return getTestGroups().stream().mapToDouble(g -> g.getWeight()).sum();
+	}
+	
+	public void setFiles(Map<String, Object> files) {
+		this.files = files;
+	}
+	
+	public Map<String, Object> getFiles() {
+		return files;
+	}
+	
+	public String getTaskName() {
+		return taskName;
+	}
+	
+	public String getError() {
+		return error;
 	}
 	
 }

@@ -59,14 +59,18 @@ public class SubmissionGrader {
 	public double gradeInternal(File sandboxDir) {
 		sandboxDir.mkdirs();
 		File sourceFile = new File(sandboxDir, originalSourceFile.getName());
-		File originalCheckerFile = new File(taskDetails.getChecker());
 		File graderDir = new File(taskDetails.getGraderDir());
-		File checkerFile = new File(sandboxDir, originalCheckerFile.getName());
+		File checkerFile = null;
 		try {
 			FileUtils.copyFile(originalSourceFile, sourceFile);
-			if (originalCheckerFile.exists()) {
-				FileUtils.copyFile(originalCheckerFile, checkerFile);
-				checkerFile.setExecutable(true);
+			
+			if (taskDetails.getChecker() != null) {
+				File originalCheckerFile = new File(taskDetails.getChecker());
+				if (originalCheckerFile.exists()) {
+					checkerFile = new File(sandboxDir, originalCheckerFile.getName());
+					FileUtils.copyFile(originalCheckerFile, checkerFile);
+					checkerFile.setExecutable(true);
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
