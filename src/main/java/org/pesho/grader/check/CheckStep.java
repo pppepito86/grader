@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.BaseStep;
@@ -29,7 +30,7 @@ public abstract class CheckStep implements BaseStep {
 		this.inputFile = inputFile;
 		this.outputFile = outputFile;
 		this.solutionFile = solutionFile;
-		this.sandboxDir = new File(binaryFile.getParentFile(), "sandbox_" + outputFile.getName());
+		this.sandboxDir = new File(binaryFile != null ? binaryFile.getParentFile() : solutionFile.getParentFile(), "sandbox_" + outputFile.getName());
 	}
 
 	public void execute() {

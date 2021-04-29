@@ -213,7 +213,7 @@ public class SubmissionGrader {
 			testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getIoTime());
 			testStep.execute();
 		}
-
+		
 		if (testStep.getVerdict() != Verdict.OK) {
 			score.addTestResult(testCase.getNumber(), testStep.getResult());
 			if (listener != null) {
@@ -222,13 +222,14 @@ public class SubmissionGrader {
 			}
 			return new StepResult(testStep.getVerdict());
 		}
+		
 		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
 		checkerStep.execute();
 		StepResult result = checkerStep.getResult();
 		result.setTime(testStep.getResult().getTime());
 		result.setMemory(testStep.getResult().getMemory());
 		result.setExitCode(testStep.getResult().getExitCode());
-		
+				
 //		if (taskDetails.isPartial() && result.getVerdict() == Verdict.WA) result.setVerdict(Verdict.PARTIAL); 
 
 		if (taskDetails.getPoints() == -1) {
