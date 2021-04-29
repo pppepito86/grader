@@ -288,8 +288,7 @@ public class TaskDetails {
 	}
 	
 	public String getChecker() {
-		if (checker == null) return null;
-		return Paths.get(taskDir, checker).toAbsolutePath().toString();
+		return checker;
 	}
 
 	public String getGraderDir() {
@@ -337,8 +336,7 @@ public class TaskDetails {
 	}
 	
 	public String getContestantZip() {
-		if (contestantZip == null) return null;
-		return Paths.get(taskDir, contestantZip).toString();
+		return contestantZip;
 	}
 	
 	public void setContestantZip(String contestantZip) {
