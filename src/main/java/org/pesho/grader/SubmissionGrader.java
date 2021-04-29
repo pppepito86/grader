@@ -59,7 +59,7 @@ public class SubmissionGrader {
 	public double gradeInternal(File sandboxDir) {
 		sandboxDir.mkdirs();
 		File sourceFile = new File(sandboxDir, originalSourceFile.getName());
-		File graderDir = new File(taskDetails.getGraderDir());
+		File graderDir = taskDetails.getGraderDir() != null ?new File(taskDetails.getGraderDir()) : null;
 		File checkerFile = null;
 		try {
 			FileUtils.copyFile(originalSourceFile, sourceFile);
