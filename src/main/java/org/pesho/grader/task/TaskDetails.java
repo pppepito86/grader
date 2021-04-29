@@ -41,6 +41,7 @@ public class TaskDetails {
 	private int memory;
 	private int rejudgeTimes;
 	private String checker;
+	private String cppChecker;
 	private String graderDir;
 	private String feedback;
 	private String groups;
@@ -198,6 +199,11 @@ public class TaskDetails {
         }
         
         if (checker != null) checker = taskPath.resolve(checker).toString();
+        if (checker != null && this.checker.toLowerCase().endsWith(".cpp")) {
+        	cppChecker = checker;
+        	checker = checker.substring(0, this.checker.length()-4);
+        }
+        
         if (graderDir != null) graderDir = taskPath.resolve(graderDir).toString();
         if (contestantZip != null) contestantZip = taskPath.resolve(contestantZip).toString();
         if (description != null) description = taskPath.resolve(description).toString();
@@ -290,7 +296,11 @@ public class TaskDetails {
 	public String getChecker() {
 		return checker;
 	}
-
+	
+	public String getCppChecker() {
+		return cppChecker;
+	}
+	
 	public String getGraderDir() {
 		return graderDir;
 	}
