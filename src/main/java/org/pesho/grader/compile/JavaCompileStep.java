@@ -38,7 +38,7 @@ public class JavaCompileStep extends CompileStep {
 					.execute()
 					.outputString()
 					.trim();
-			return fullPath.replaceAll(SOURCE_FILE_ENDING + "$", "").replace("/", ".").substring(2);
+			return fullPath.replaceAll(fullPath + "$", ".class").replace("/", ".").substring(2);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", "");
