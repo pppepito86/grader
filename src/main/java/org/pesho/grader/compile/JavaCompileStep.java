@@ -1,5 +1,8 @@
 package org.pesho.grader.compile;
 import java.io.File;
+import java.util.Arrays;
+
+import org.zeroturnaround.exec.ProcessExecutor;
 
 public class JavaCompileStep extends CompileStep {
 
@@ -16,8 +19,8 @@ public class JavaCompileStep extends CompileStep {
 	public String[] getCommands() {
 		String compileCommand = String.format(COMPILE_COMMAND_PATTERN, sourceFile.getName());
 		String mainClass = sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", "");
-		String jarCommand = String.format(JAR_COMMAND_PATTERN, getBinaryFileName(), mainClass);
-		return new String[] { compileCommand, jarCommand };
+//		String jarCommand = String.format(JAR_COMMAND_PATTERN, getBinaryFileName(), mainClass);
+		return new String[] { compileCommand, JAR_COMMAND_PATTERN };
 	}
 	
 	@Override
@@ -25,4 +28,21 @@ public class JavaCompileStep extends CompileStep {
 		return sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", BINARY_FILE_ENDING);
 	}
 
+	public String getMainClassName() {
+		try {
+			String mainClass = sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", ".class");
+			String fullPath = new ProcessExecutor()
+					.command(Arrays.asList("find", ".", "-name", mainClass))
+					.directory(sandboxDir)
+					.readOutput(true)
+					.execute()
+					.outputString()
+					.trim();
+			return fullPath.replaceAll(SOURCE_FILE_ENDING + "$", "");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", "");
+		}
+	}
+	
 }

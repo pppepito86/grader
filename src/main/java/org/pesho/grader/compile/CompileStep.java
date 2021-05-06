@@ -48,6 +48,10 @@ public abstract class CompileStep implements BaseStep {
 	}
 	
 	private SandboxExecutor buildCommand(String command) {
+		if (command.equals(JavaCompileStep.JAR_COMMAND_PATTERN)) {
+			command = String.format(JavaCompileStep.JAR_COMMAND_PATTERN, getBinaryFileName(), ((JavaCompileStep) this).getMainClassName());
+		}
+		
 		int timeout = 10;
 		int memory = 256;
 		if (this instanceof JavaNativeImageCompileStep) timeout = 300;
