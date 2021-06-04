@@ -416,6 +416,8 @@ public class TaskDetails {
 	
 	public TreeSet<Integer> sampleTests() {
 		TreeSet<Integer> set = new TreeSet<>();
+		if (getSample().trim().isEmpty()) return set;
+		
 		String[] split = getSample().split(",");
 		for (String s: split) set.add(Integer.valueOf(s.trim()));
 		return set;
