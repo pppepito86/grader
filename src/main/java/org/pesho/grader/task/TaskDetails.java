@@ -44,6 +44,7 @@ public class TaskDetails {
 	private String cppChecker;
 	private String graderDir;
 	private String feedback;
+	private String sample;
 	private String groups;
 	private String weights;
 	private String scoring;
@@ -69,6 +70,7 @@ public class TaskDetails {
         this.memory = Integer.valueOf(props.getProperty("memory", "256"));
 		this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "1"));
         this.feedback = props.getProperty("feedback", "FULL").trim();
+        this.sample = props.getProperty("sample", "").trim();
         this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
@@ -125,6 +127,7 @@ public class TaskDetails {
 		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
 		this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "1"));
 		this.feedback = props.getProperty("feedback", "FULL").trim();
+        this.sample = props.getProperty("sample", "").trim();
 		this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
@@ -147,10 +150,14 @@ public class TaskDetails {
 		Set<Integer> feedbackGroups = feedback();
 		TestGroup[] testGroups = null;
 		if (groups.isEmpty()) {
+			Set<Integer> sampleTests = sampleTests();
 			testGroups = new TestGroup[testCases.size()];
+			
+			double testWeight = 1.0/(testCases.size()-sampleTests.size());
 			for (int i = 0; i < testGroups.length; i++) {
 				boolean hasFeedback = isFullFeedback() || feedbackGroups.contains(i+1);
-				testGroups[i] = new TestGroup(1.0/testCases.size(), hasFeedback, testCases.get(i));
+				boolean isSample = sampleTests.contains(i+1);
+				testGroups[i] = new TestGroup(isSample?0:testWeight, hasFeedback, testCases.get(i));
 			}
 		} else {
 			String[] groupsSplit = groups.split(",");
@@ -265,6 +272,14 @@ public class TaskDetails {
 		return feedback;
 	}
 	
+	public void setSample(String sample) {
+		this.sample = sample;
+	}
+	
+	public String getSample() {
+		return sample;
+	}
+	
 	public void setGroups(String groups) {
 		this.groups = groups;
 	}
@@ -373,6 +388,10 @@ public class TaskDetails {
 		return feedback.trim().equalsIgnoreCase("full");
 	}
 	
+	public boolean hasSampleTests() {
+		return !sample.isEmpty();
+	}
+	
 	public double getPublicScore() {
 		if (isFullFeedback()) return Precision.round(getPoints(), getPrecision());
 		
@@ -391,6 +410,13 @@ public class TaskDetails {
 		if (isFullFeedback()) return set;
 		
 		String[] split = getFeedback().split(",");
+		for (String s: split) set.add(Integer.valueOf(s.trim()));
+		return set;
+	}
+	
+	public TreeSet<Integer> sampleTests() {
+		TreeSet<Integer> set = new TreeSet<>();
+		String[] split = getSample().split(",");
 		for (String s: split) set.add(Integer.valueOf(s.trim()));
 		return set;
 	}

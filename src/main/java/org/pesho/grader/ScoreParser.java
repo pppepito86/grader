@@ -1,6 +1,7 @@
 package org.pesho.grader;
 
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.commons.math3.util.Precision;
 import org.pesho.grader.step.StepResult;
@@ -29,13 +30,16 @@ public class ScoreParser {
 	}
 	
 	public String getTestsScore() {
-		return score.getTestResults().stream()
-				.map(StepResult::getVerdict)
-				.map(Verdict::name)
-				.map(v -> v.equals(Verdict.WAITING.name())?"wait": v)
+		return IntStream.range(0, score.getTestResults().size())
+				.mapToObj(i -> {
+					Verdict verdict = score.getTestResults().get(i).getVerdict();
+					if (verdict == Verdict.WAITING) return "wait";
+					if (details.getTestGroups().get(i).getWeight() == 0) return "["+verdict.name()+"]";
+					return verdict.name();
+				})
 				.collect(Collectors.joining(","));
 	}
-
+	
 	public String getGroupsScore() {
 		return score.getGroupResults().stream()
 				.map(result -> {
