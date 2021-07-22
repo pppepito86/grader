@@ -95,7 +95,11 @@ public class CppCompileStep extends CompileStep {
 	private String getAllFiles() {
 		String files = sourceFile.getName();
 		if (graderDir != null && graderDir.exists()) {
-			for (File file: graderDir.listFiles()) files += " " + file.getName();
+			for (File file: graderDir.listFiles()) {
+				if (!file.isFile()) continue;
+				
+				files += " " + file.getName();
+			}
 		}
 		return files;
 	}
