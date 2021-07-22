@@ -104,7 +104,10 @@ public abstract class CompileStep implements BaseStep {
 	protected void copyGraderFiles() throws IOException {
 		if (graderDir == null || !graderDir.exists()) return;
 		for (File file: graderDir.listFiles()) {
+			if (!file.isFile()) continue;
+			
 			File newFile = new File(sandboxDir, file.getName());
+			if (newFile.exists()) continue;
 			FileUtils.copyFile(file, newFile);
 		}
 	}

@@ -55,6 +55,7 @@ public class CppCompileStep extends CompileStep {
 		try {
 			createSandboxDirectory();
 			copySandboxInput();
+			copyGraderFiles();
 	
 			CommandResult commandResult = new SandboxExecutor()
 					.directory(sandboxDir)
@@ -97,6 +98,7 @@ public class CppCompileStep extends CompileStep {
 		if (graderDir != null && graderDir.exists()) {
 			for (File file: graderDir.listFiles()) {
 				if (!file.isFile()) continue;
+				if (file.getName().equals(sourceFile.getName())) continue;
 				
 				files += " " + file.getName();
 			}
