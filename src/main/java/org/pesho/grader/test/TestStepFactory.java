@@ -6,11 +6,11 @@ import org.pesho.grader.compile.JavaCompileStep;
 
 public class TestStepFactory {
 	
-	public static TestStep getInstance(File binaryFile, File inputFile, File outputFile, double time, int memory) {
-		return getInstance(binaryFile, inputFile, outputFile, time, memory, 0);
+	public static TestStep getInstance(File binaryFile, File graderFile, File inputFile, File outputFile, double time, int memory) {
+		return getInstance(binaryFile, graderFile, inputFile, outputFile, time, memory, 0);
 	}
 	
-	public static TestStep getInstance(File binaryFile, File inputFile, File outputFile, double time, int memory, double ioTime) {
+	public static TestStep getInstance(File binaryFile, File graderFile, File inputFile, File outputFile, double time, int memory, double ioTime) {
 		if (binaryFile.getName().endsWith(ZipTestStep.BINARY_FILE_ENDING)) {
 			return new ZipTestStep(binaryFile, inputFile, outputFile, time, memory);
 		}
@@ -22,6 +22,9 @@ public class TestStepFactory {
 		}
 		if (binaryFile.getName().endsWith(CSharpCompileStep.BINARY_FILE_ENDING)) {
 			return new CSharpTestStep(binaryFile, inputFile, outputFile, time, memory);
+		}
+		if (graderFile != null) {
+			return new CppPipeTestStep(binaryFile, graderFile, inputFile, outputFile, time, memory, ioTime);
 		}
 		return new CppTestStep(binaryFile, inputFile, outputFile, time, memory, ioTime);
 	}

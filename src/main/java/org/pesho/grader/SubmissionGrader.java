@@ -59,7 +59,7 @@ public class SubmissionGrader {
 	public double gradeInternal(File sandboxDir) {
 		sandboxDir.mkdirs();
 		File sourceFile = new File(sandboxDir, originalSourceFile.getName());
-		File graderDir = taskDetails.getGraderDir() != null ?new File(taskDetails.getGraderDir()) : null;
+		File graderDir = taskDetails.getGraderDir() != null && !new File(taskDetails.getGraderDir(), "grader").exists() ?new File(taskDetails.getGraderDir()) : null;
 		File checkerFile = null;
 		try {
 			FileUtils.copyFile(originalSourceFile, sourceFile);
@@ -143,10 +143,12 @@ public class SubmissionGrader {
 			Long groupMemory = null;
 			Integer testInError = null;
 
+			File graderFile = taskDetails.getGraderDir() != null ? new File(taskDetails.getGraderDir(), "grader") : null;			
+			
 			boolean allTestsOk = true;
 			for (int j = 0; j < testGroup.getTestCases().size(); j++) {
 				TestCase testCase = testGroup.getTestCases().get(j);
-				StepResult result = executeTest(testCase, checkerFile, allTestsOk, testPoints);
+				StepResult result = executeTest(testCase, graderFile, checkerFile, allTestsOk, testPoints);
 				
 				if (result.getVerdict() != Verdict.OK && result.getVerdict() != Verdict.PARTIAL && taskDetails.stopScoringOnFailure()) {
 					allTestsOk = false;	
@@ -192,7 +194,7 @@ public class SubmissionGrader {
 		return score;
 	}
 	
-	private StepResult executeTest(TestCase testCase, File checkerFile, boolean allTestsOk, double testPoints) {
+	private StepResult executeTest(TestCase testCase, File graderFile, File checkerFile, boolean allTestsOk, double testPoints) {
 		if (!allTestsOk) {
 			StepResult result = new StepResult(Verdict.SKIPPED);
 			score.addTestResult(testCase.getNumber(), result);
@@ -207,10 +209,10 @@ public class SubmissionGrader {
 		File outputFile = new File(testCase.getOutput());
 		File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
 		Double tl = timeLimit.orElse(taskDetails.getTime());
-		TestStep testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getIoTime());
+		TestStep testStep = TestStepFactory.getInstance(binaryFile, graderFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getIoTime());
 		testStep.execute();
 		if (testStep.getVerdict() == Verdict.TL && tl < 1 && allTestsOk) {
-			testStep = TestStepFactory.getInstance(binaryFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getIoTime());
+			testStep = TestStepFactory.getInstance(binaryFile, graderFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getIoTime());
 			testStep.execute();
 		}
 		

@@ -77,18 +77,18 @@ public abstract class TestStep implements BaseStep {
 
 	protected abstract String getCommand();
 	
-	private void createSandboxDirectory() {
+	protected void createSandboxDirectory() {
 		sandboxDir.mkdirs();
 	}
 	
-	private void copySandboxInput() throws Exception {
+	protected void copySandboxInput() throws Exception {
 		FileUtils.copyFile(binaryFile, new File(sandboxDir, binaryFile.getName()));
 		new File(sandboxDir, binaryFile.getName()).setExecutable(true);
 		new ProcessExecutor().command("chmod", "+x", new File(sandboxDir, binaryFile.getName()).getAbsolutePath()).execute();
 		FileUtils.copyFile(inputFile, new File(sandboxDir, inputFile.getName()));
 	}
 	
-	private void copySandboxOutput() throws IOException {
+	protected void copySandboxOutput() throws IOException {
 		FileUtils.copyFile(new File(sandboxDir, outputFile.getName()), outputFile);
 	}
 	
