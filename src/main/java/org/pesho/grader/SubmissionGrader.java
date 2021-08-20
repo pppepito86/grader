@@ -143,7 +143,7 @@ public class SubmissionGrader {
 			Long groupMemory = null;
 			Integer testInError = null;
 
-			File graderFile = taskDetails.getGraderDir() != null ? new File(taskDetails.getGraderDir(), "grader") : null;			
+			File graderFile = taskDetails.getGraderDir() != null && new File(taskDetails.getGraderDir(), "grader").exists() ? new File(taskDetails.getGraderDir(), "grader") : null;			
 			
 			boolean allTestsOk = true;
 			for (int j = 0; j < testGroup.getTestCases().size(); j++) {
