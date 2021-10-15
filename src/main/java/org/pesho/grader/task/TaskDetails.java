@@ -135,7 +135,7 @@ public class TaskDetails {
         this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
 
         this.checker = CheckerFinder.find(paths).map(Path::toString).orElse(null);
-		this.graderDir = GraderFinder.find(paths).map(p -> p.getParent()).map(Path::toString).orElse(null);
+		this.graderDir = GraderFinder.find(paths, allowedExtensions).map(p -> p.getParent()).map(Path::toString).orElse(null);
         this.isInteractive = graderDir != null;
 		this.description = StatementFinder.find(paths).map(Path::toString).orElse(null);
 		this.contestantZip = ContestantFinder.find(paths).map(Path::toString).orElse(null);

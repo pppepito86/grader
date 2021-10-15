@@ -109,6 +109,10 @@ public class SubmissionGrader {
 	}
 
 	private double compile(File sourceFile, File graderDir) {
+		if (taskDetails.getAllowedExtensions().size() > 1) {
+			if (sourceFile.getName().toLowerCase().endsWith(".java")) graderDir = new File(graderDir, "java");
+			else graderDir = new File(graderDir, "cpp");
+		}
 		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile, graderDir);
 		compileStep.execute();
 		score.setCompileResult(compileStep.getResult());

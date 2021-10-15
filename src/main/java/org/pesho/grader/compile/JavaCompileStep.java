@@ -17,8 +17,8 @@ public class JavaCompileStep extends CompileStep {
 
 	@Override
 	public String[] getCommands() {
-		String compileCommand = String.format(COMPILE_COMMAND_PATTERN, sourceFile.getName());
-		String mainClass = sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", "");
+		String compileCommand = String.format(COMPILE_COMMAND_PATTERN, getAllFiles());
+//		String mainClass = sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", "");
 //		String jarCommand = String.format(JAR_COMMAND_PATTERN, getBinaryFileName(), mainClass);
 		return new String[] { compileCommand, JAR_COMMAND_PATTERN };
 	}
@@ -31,6 +31,9 @@ public class JavaCompileStep extends CompileStep {
 	public String getMainClassName() {
 		try {
 			String mainClass = sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", ".class");
+			if (graderDir != null) {
+				mainClass = new File(sourceFile.getParentFile(), "grader.java").getName().replaceAll(SOURCE_FILE_ENDING + "$", ".class");
+			}
 			String fullPath = new ProcessExecutor()
 					.command(Arrays.asList("find", ".", "-name", mainClass))
 					.directory(sandboxDir)
@@ -41,8 +44,21 @@ public class JavaCompileStep extends CompileStep {
 			return fullPath.replaceAll(".class$", "").replace("/", ".").substring(2);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", "");
+			return new File(sourceFile.getParentFile(), "grader.java").getName().replaceAll(SOURCE_FILE_ENDING + "$", ".class");
 		}
+	}
+	
+	private String getAllFiles() {
+		String files = sourceFile.getName();
+		if (graderDir != null && graderDir.exists()) {
+			for (File file: graderDir.listFiles()) {
+				if (!file.isFile()) continue;
+				if (file.getName().equals(sourceFile.getName())) continue;
+				
+				files += " " + file.getName();
+			}
+		}
+		return files;
 	}
 	
 }
