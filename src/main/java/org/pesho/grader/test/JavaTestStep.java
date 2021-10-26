@@ -6,8 +6,8 @@ public class JavaTestStep extends TestStep {
 
 	public static final String EXECUTE_COMMAND_PATTERN = "/usr/bin/java -jar %s";
 
-	public JavaTestStep(File binaryFile, File inputFile, File outputFile, double time, int memory) {
-		super(binaryFile, inputFile, outputFile, time, memory);
+	public JavaTestStep(File binaryFile, File graderFile, File inputFile, File outputFile, double time, int memory) {
+		super(binaryFile, graderFile, inputFile, outputFile, time, memory);
 	}
 
 	@Override

@@ -10,11 +10,11 @@ public class CppPipeTestStep extends CppTestStep {
 	private File graderFile;
 
 	public CppPipeTestStep(File binaryFile, File graderFile, File inputFile, File outputFile, double time, int memory, double ioTime) {
-		super(binaryFile, inputFile, outputFile, time, memory, ioTime);
+		super(binaryFile, graderFile, inputFile, outputFile, time, memory, ioTime);
 		this.graderFile = graderFile;
 	}
 	
-	private void createPipes(File pipeIn, File pipeOut) {
+	protected void createPipes(File pipeIn, File pipeOut) {
 		try {
 			new ProcessExecutor("mkfifo", pipeIn.getAbsolutePath()).execute();
 			new ProcessExecutor("mkfifo", pipeOut.getAbsolutePath()).execute();

@@ -6,8 +6,8 @@ public class CSharpTestStep extends TestStep {
 
 	public static final String EXECUTE_COMMAND_PATTERN = "mono %s";
 
-	public CSharpTestStep(File binaryFile, File inputFile, File outputFile, double time, int memory) {
-		super(binaryFile, inputFile, outputFile, time, memory);
+	public CSharpTestStep(File binaryFile, File graderFile, File inputFile, File outputFile, double time, int memory) {
+		super(binaryFile, graderFile, inputFile, outputFile, time, memory);
 	}
 
 	@Override

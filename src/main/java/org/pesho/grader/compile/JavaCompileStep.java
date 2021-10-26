@@ -18,9 +18,8 @@ public class JavaCompileStep extends CompileStep {
 	@Override
 	public String[] getCommands() {
 		String compileCommand = String.format(COMPILE_COMMAND_PATTERN, getAllFiles());
-//		String mainClass = sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", "");
-//		String jarCommand = String.format(JAR_COMMAND_PATTERN, getBinaryFileName(), mainClass);
-		return new String[] { compileCommand, JAR_COMMAND_PATTERN };
+		String jarCommand = String.format(JAR_COMMAND_PATTERN, getBinaryFileName(), getMainClassName());
+		return new String[] { compileCommand, jarCommand };
 	}
 	
 	@Override
@@ -29,23 +28,24 @@ public class JavaCompileStep extends CompileStep {
 	}
 
 	public String getMainClassName() {
-		try {
-			String mainClass = sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", ".class");
-			if (graderDir != null) {
-				mainClass = new File(sourceFile.getParentFile(), "grader.java").getName().replaceAll(SOURCE_FILE_ENDING + "$", ".class");
-			}
-			String fullPath = new ProcessExecutor()
-					.command(Arrays.asList("find", ".", "-name", mainClass))
-					.directory(sandboxDir)
-					.readOutput(true)
-					.execute()
-					.outputString()
-					.trim();
-			return fullPath.replaceAll(".class$", "").replace("/", ".").substring(2);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return new File(sourceFile.getParentFile(), "grader.java").getName().replaceAll(SOURCE_FILE_ENDING + "$", ".class");
-		}
+		return graderDir == null ? sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", ""):"grader";
+//		try {
+//			String mainClass = sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", ".class");
+//			if (graderDir != null) {
+//				mainClass = new File(sourceFile.getParentFile(), "grader.java").getName().replaceAll(SOURCE_FILE_ENDING + "$", ".class");
+//			}
+//			String fullPath = new ProcessExecutor()
+//					.command(Arrays.asList("find", ".", "-name", mainClass))
+//					.directory(sandboxDir)
+//					.readOutput(true)
+//					.execute()
+//					.outputString()
+//					.trim();
+//			return fullPath.replaceAll(".class$", "").replace("/", ".").substring(2);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//			return new File(sourceFile.getParentFile(), "grader.java").getName().replaceAll(SOURCE_FILE_ENDING + "$", ".class");
+//		}
 	}
 	
 	private String getAllFiles() {

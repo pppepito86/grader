@@ -14,6 +14,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 public abstract class TestStep implements BaseStep {
 
 	protected final File binaryFile;
+	protected final File graderFile;
 	protected final File inputFile;
 	protected final File outputFile;
 	protected final File sandboxDir;
@@ -21,8 +22,9 @@ public abstract class TestStep implements BaseStep {
 	protected final int memory;
 	protected StepResult result;
 
-	public TestStep(File binaryFile, File inputFile, File outputFile, double time, int memory) {
+	public TestStep(File binaryFile, File graderFile, File inputFile, File outputFile, double time, int memory) {
 		this.binaryFile = binaryFile.getAbsoluteFile();
+		this.graderFile = graderFile != null ? graderFile.getAbsoluteFile():null;
 		this.inputFile = inputFile.getAbsoluteFile();
 		this.outputFile = outputFile.getAbsoluteFile();
 		this.time = time;
@@ -33,20 +35,33 @@ public abstract class TestStep implements BaseStep {
 	public void execute() {
 		try {
 			createSandboxDirectory();
+			createPipes();
 			copySandboxInput();
+			
+			GraderRun graderRun = null;
+			if (graderFile != null) {
+				graderRun = new GraderRun(graderFile, inputFile, outputFile, time+1, memory, sandboxDir);
+				graderRun.start();
+			}
+			
 			CommandResult commandResult = new SandboxExecutor()
 					.directory(sandboxDir)
-					.input(inputFile.getName())
-					.output(outputFile.getName())
+					.input((graderFile == null)?inputFile.getName():"pipe_in")
+					.output((graderFile == null)?outputFile.getName():"pipe_out")
 					.timeout(time)
 					.ioTimeout(getIoTimeout())
 					.trusted(this instanceof JavaTestStep)
 					.memory(memory)
 					.extraMemory((this instanceof JavaTestStep)?0:5)
 					.command(getCommand()).execute().getResult();
-			copySandboxOutput();
-			
 			result = getResult(commandResult);
+			
+			if (graderRun != null) {
+				graderRun.join();
+				if (result.getVerdict() == Verdict.OK) result = graderRun.getResult();
+			}
+			
+			copySandboxOutput();
 		} catch (Exception e) {
 			e.printStackTrace();
 			result = new StepResult(Verdict.SE, result.getReason(), result.getExitCode());
@@ -86,6 +101,25 @@ public abstract class TestStep implements BaseStep {
 		new File(sandboxDir, binaryFile.getName()).setExecutable(true);
 		new ProcessExecutor().command("chmod", "+x", new File(sandboxDir, binaryFile.getName()).getAbsolutePath()).execute();
 		FileUtils.copyFile(inputFile, new File(sandboxDir, inputFile.getName()));
+		
+		if (graderFile != null) {
+			FileUtils.copyFile(graderFile, new File(sandboxDir, graderFile.getName()));
+			new File(sandboxDir, graderFile.getName()).setExecutable(true);
+			new ProcessExecutor().command("chmod", "+x", new File(sandboxDir, graderFile.getName()).getAbsolutePath()).execute();
+		}
+	}
+	
+	protected void createPipes() {
+		if (graderFile == null) return;
+
+		File pipeIn = new File(sandboxDir, "pipe_in");
+		File pipeOut = new File(sandboxDir, "pipe_out");
+		try {
+			new ProcessExecutor("mkfifo", pipeIn.getAbsolutePath()).execute();
+			new ProcessExecutor("mkfifo", pipeOut.getAbsolutePath()).execute();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	protected void copySandboxOutput() throws IOException {
