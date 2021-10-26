@@ -56,10 +56,24 @@ public class SubmissionGrader {
 		}
 	}
 	
+	public File getGrader(boolean compile) {
+		if (taskDetails.getGraderDir() == null) return null;
+
+		File graderDir = new File(taskDetails.getGraderDir());
+		if (taskDetails.getAllowedExtensions().size() > 1) {
+			if (originalSourceFile.getName().toLowerCase().endsWith(".java")) graderDir = new File(graderDir, "java");
+			else graderDir = new File(graderDir, "cpp");
+		}
+		
+		boolean isCompile = !new File(graderDir, "grader").exists();
+		if (compile == isCompile) return graderDir;
+		
+		return null;
+	}
+	
 	public double gradeInternal(File sandboxDir) {
 		sandboxDir.mkdirs();
 		File sourceFile = new File(sandboxDir, originalSourceFile.getName());
-		File graderDir = taskDetails.getGraderDir() != null && !new File(taskDetails.getGraderDir(), "grader").exists() ?new File(taskDetails.getGraderDir()) : null;
 		File checkerFile = null;
 		try {
 			FileUtils.copyFile(originalSourceFile, sourceFile);
@@ -77,7 +91,7 @@ public class SubmissionGrader {
 			return 0;
 		}
 		
-		if (compile(sourceFile, graderDir) == 0) {
+		if (compile(sourceFile) == 0) {
 			score.addFinalScore("Compilation Failed", 0);
 			if (listener != null) {
 				listener.addFinalScore("Compilation Failed", 0);
@@ -108,11 +122,8 @@ public class SubmissionGrader {
 		return finalScore;
 	}
 
-	private double compile(File sourceFile, File graderDir) {
-		if (taskDetails.getAllowedExtensions().size() > 1) {
-			if (sourceFile.getName().toLowerCase().endsWith(".java")) graderDir = new File(graderDir, "java");
-			else graderDir = new File(graderDir, "cpp");
-		}
+	private double compile(File sourceFile) {
+		File graderDir = getGrader(true);
 		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile, graderDir);
 		compileStep.execute();
 		score.setCompileResult(compileStep.getResult());
@@ -147,7 +158,8 @@ public class SubmissionGrader {
 			Long groupMemory = null;
 			Integer testInError = null;
 
-			File graderFile = taskDetails.getGraderDir() != null && new File(taskDetails.getGraderDir(), "grader").exists() ? new File(taskDetails.getGraderDir(), "grader") : null;			
+			File graderDir = getGrader(false);
+			File graderFile = graderDir != null?new File(graderDir, "grader") : null;
 			
 			boolean allTestsOk = true;
 			for (int j = 0; j < testGroup.getTestCases().size(); j++) {

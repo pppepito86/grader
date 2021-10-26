@@ -12,9 +12,9 @@ public class GraderFinder {
 		paths = paths.stream()
 				.filter(x -> x.getFileName().toString().equalsIgnoreCase("grader.cpp"))
 				.collect(Collectors.toList());
-		if (paths.size() != 1) return Optional.empty();
-		
 		if (extensions.size() > 1) return paths.stream().findFirst().map(p -> p.getParent());
+
+		if (paths.size() != 1) return Optional.empty();
 
 		return paths.stream().findFirst();
 	}
