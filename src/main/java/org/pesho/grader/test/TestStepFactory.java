@@ -14,6 +14,9 @@ public class TestStepFactory {
 		if (binaryFile.getName().endsWith(ZipTestStep.BINARY_FILE_ENDING)) {
 			return new ZipTestStep(binaryFile, graderFile, inputFile, outputFile, time, memory);
 		}
+		if (binaryFile.getName().endsWith(PdfTestStep.BINARY_FILE_ENDING)) {
+			return new PdfTestStep(binaryFile, graderFile, inputFile, outputFile, time, memory);
+		}
 		if (binaryFile.getName().endsWith(TxtTestStep.BINARY_FILE_ENDING)) {
 			return new TxtTestStep(binaryFile, graderFile, inputFile, outputFile, time, memory);
 		}
