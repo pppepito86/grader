@@ -123,7 +123,8 @@ public class SubmissionGrader {
 	}
 
 	private double compile(File sourceFile) {
-		File graderDir = getGrader(true);
+//		File graderDir = getGrader(true);
+		File graderDir = taskDetails.getGraderDir() != null ? new File(taskDetails.getGraderDir()):null;
 		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile, graderDir);
 		compileStep.execute();
 		score.setCompileResult(compileStep.getResult());

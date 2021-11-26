@@ -44,10 +44,13 @@ public abstract class TestStep implements BaseStep {
 				graderRun.start();
 			}
 			
+			SolutionRun solutionRun = new SolutionRun(getCommand(), time, memory, sandboxDir);
+			solutionRun.start();
+			
 			CommandResult commandResult = new SandboxExecutor()
 					.directory(sandboxDir)
-					.input((graderFile == null)?inputFile.getName():"pipe_in")
-					.output((graderFile == null)?outputFile.getName():"pipe_out")
+					.input((graderFile == null)?inputFile.getName():"pipe_in1")
+					.output((graderFile == null)?outputFile.getName():"pipe_out1")
 					.timeout(time)
 					.ioTimeout(getIoTimeout())
 					.trusted(this instanceof JavaTestStep)
@@ -59,6 +62,7 @@ public abstract class TestStep implements BaseStep {
 			if (graderRun != null) {
 				graderRun.join();
 				if (result.getVerdict() == Verdict.OK) result = graderRun.getResult();
+//				result = graderRun.getResult();
 			}
 			
 			copySandboxOutput();
@@ -111,14 +115,16 @@ public abstract class TestStep implements BaseStep {
 	
 	protected void createPipes() {
 		if (graderFile == null) return;
-
-		File pipeIn = new File(sandboxDir, "pipe_in");
-		File pipeOut = new File(sandboxDir, "pipe_out");
-		try {
-			new ProcessExecutor("mkfifo", pipeIn.getAbsolutePath()).execute();
-			new ProcessExecutor("mkfifo", pipeOut.getAbsolutePath()).execute();
-		} catch (Exception e) {
-			e.printStackTrace();
+		
+		for (int i = 1; i <= 2; i++) {
+			File pipeIn = new File(sandboxDir, "pipe_in"+i);
+			File pipeOut = new File(sandboxDir, "pipe_out"+i);
+			try {
+				new ProcessExecutor("mkfifo", pipeIn.getAbsolutePath()).execute();
+				new ProcessExecutor("mkfifo", pipeOut.getAbsolutePath()).execute();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
