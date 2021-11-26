@@ -66,13 +66,17 @@ public abstract class TestStep implements BaseStep {
 				if (result.getVerdict() == Verdict.OK) result = graderRun.getResult();
 				
 				if (result.getVerdict() == Verdict.TL) result = new StepResult(Verdict.TL);
-				if (result.getVerdict() == Verdict.OK) {		
+				if (result.getVerdict() == Verdict.OK) {
 					double time1 = commandResult.getTime()!=null?commandResult.getTime():0;
 					double time2 = solutionRun.getResult().getTime()!=null?solutionRun.getResult().getTime():0;
 					double time3 = graderRun.getResult().getTime()!=null?graderRun.getResult().getTime():0;
 					double totalTime = time1+time2+time3;
 					if (totalTime > time) result = new StepResult(Verdict.TL);
+					else result.setTime(totalTime);
+				} else {
+					result.setTime(null);
 				}
+				result.setMemory(null);
 			}
 			
 			copySandboxOutput();
