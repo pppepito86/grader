@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.math3.util.Precision;
 import org.pesho.grader.step.BaseStep;
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
@@ -70,8 +71,8 @@ public abstract class TestStep implements BaseStep {
 					double time1 = commandResult.getTime()!=null?commandResult.getTime():0;
 					double time2 = solutionRun.getResult().getTime()!=null?solutionRun.getResult().getTime():0;
 					double time3 = graderRun.getResult().getTime()!=null?graderRun.getResult().getTime():0;
-					double totalTime = time1+time2+time3;
-					if (totalTime > time) result = new StepResult(Verdict.TL);
+					double totalTime = Precision.round(time1+time2+time3, 3);
+					if (totalTime > time) result = new StepResult(Verdict.TL);					
 					else result.setTime(totalTime);
 				} else {
 					result.setTime(null);
