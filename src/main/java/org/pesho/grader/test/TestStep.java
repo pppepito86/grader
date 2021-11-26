@@ -77,7 +77,10 @@ public abstract class TestStep implements BaseStep {
 				} else {
 					result.setTime(null);
 				}
-				result.setMemory(null);
+				long memory1 = commandResult.getMemory()!=null?commandResult.getMemory():0;
+				long memory2 = solutionRun.getResult().getMemory()!=null?solutionRun.getResult().getMemory():0;
+				long memory3 = graderRun.getResult().getMemory()!=null?graderRun.getResult().getMemory():0;
+				result.setMemory(Math.max(memory1, Math.max(memory2, memory3)));
 			}
 			
 			copySandboxOutput();
