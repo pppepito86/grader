@@ -54,6 +54,7 @@ public class TaskDetails {
 	private String extensions;
 	private Set<String> allowedExtensions;
 	private boolean isInteractive;
+	private String info;
 	private String error;
 	
 	public static final TaskDetails EMPTY = new TaskDetails();
@@ -75,6 +76,7 @@ public class TaskDetails {
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
+        this.info = props.getProperty("info", "").trim();
 		this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
         this.checker = checker;
         this.testGroups = new ArrayList<>();
@@ -132,6 +134,7 @@ public class TaskDetails {
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
+        this.info = props.getProperty("info", "").trim();
         this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
 
         this.checker = CheckerFinder.find(paths).map(Path::toString).orElse(null);
@@ -437,6 +440,10 @@ public class TaskDetails {
 	
 	public String getTaskName() {
 		return taskName;
+	}
+	
+	public String getInfo() {
+		return info;
 	}
 	
 	public String getError() {
