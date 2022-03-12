@@ -48,6 +48,7 @@ public class TaskDetails {
 	private String groups;
 	private String weights;
 	private String scoring;
+	private String dependencies;
 	private List<TestGroup> testGroups;
 	private String description;
 	private String contestantZip;
@@ -77,6 +78,7 @@ public class TaskDetails {
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
         this.info = props.getProperty("info", "").trim();
+        this.dependencies = props.getProperty("dependencies", "").trim();
 		this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
         this.checker = checker;
         this.testGroups = new ArrayList<>();
@@ -135,6 +137,7 @@ public class TaskDetails {
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
         this.info = props.getProperty("info", "").trim();
+        this.dependencies = props.getProperty("dependencies", "").trim();
         this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
 
         this.checker = CheckerFinder.find(paths).map(Path::toString).orElse(null);
@@ -305,6 +308,18 @@ public class TaskDetails {
 	
 	public String getScoring() {
 		return scoring;
+	}
+	
+	public String getDependencies() {
+		return dependencies;
+	}
+	
+	public List<Integer> dependsOn(int groupNumber) {
+		if (dependencies.isBlank()) return List.of();
+		
+		String group = dependencies.split(",")[groupNumber-1];
+		if (group.isBlank()) return List.of();
+		return Arrays.stream(group.split(";")).map(String::trim).map(Integer::parseInt).collect(Collectors.toList());
 	}
 	
 	public void setChecker(String checker) {

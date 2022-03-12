@@ -163,6 +163,12 @@ public class SubmissionGrader {
 			File graderFile = graderDir != null?new File(graderDir, "grader") : null;
 			
 			boolean allTestsOk = true;
+			for (int dependencyGroup: taskDetails.dependsOn(i+1)) {
+				if (this.score.getGroupResults().get(dependencyGroup-1).getVerdict() != Verdict.OK) {
+					allTestsOk = false;
+				}
+			}
+			
 			for (int j = 0; j < testGroup.getTestCases().size(); j++) {
 				TestCase testCase = testGroup.getTestCases().get(j);
 				StepResult result = executeTest(testCase, graderFile, checkerFile, allTestsOk, testPoints);

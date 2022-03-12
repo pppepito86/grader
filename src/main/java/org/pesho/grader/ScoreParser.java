@@ -4,7 +4,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.math3.util.Precision;
-import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 import org.pesho.grader.task.TaskDetails;
 
