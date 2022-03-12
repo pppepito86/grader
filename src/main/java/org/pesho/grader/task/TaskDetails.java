@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -315,10 +316,10 @@ public class TaskDetails {
 	}
 	
 	public List<Integer> dependsOn(int groupNumber) {
-		if (dependencies.isBlank()) return List.of();
+		if (dependencies.isEmpty()) return new LinkedList<>();
 		
-		String group = dependencies.split(",")[groupNumber-1];
-		if (group.isBlank()) return List.of();
+		String group = dependencies.split(",")[groupNumber-1].trim();
+		if (group.isEmpty()) return new LinkedList<>();
 		return Arrays.stream(group.split(";")).map(String::trim).map(Integer::parseInt).collect(Collectors.toList());
 	}
 	
