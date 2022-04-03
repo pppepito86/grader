@@ -27,6 +27,7 @@ import org.pesho.grader.task.parser.StatementFinder;
 import org.pesho.grader.task.parser.TaskFilesFinder;
 import org.pesho.grader.task.parser.TaskTestsFinderv2;
 import org.pesho.grader.task.parser.TaskTestsFinderv3;
+import org.pesho.grader.task.parser.TaskTestsFinderv4;
 
 public class TaskDetails {
 
@@ -84,7 +85,6 @@ public class TaskDetails {
         this.checker = checker;
         this.testGroups = new ArrayList<>();
 	}
-	
 
 	public TaskDetails(String taskName, File taskFile) {
 		this(taskName, taskFile.toPath());
@@ -147,16 +147,35 @@ public class TaskDetails {
 		this.description = StatementFinder.find(paths).map(Path::toString).orElse(null);
 		this.contestantZip = ContestantFinder.find(paths).map(Path::toString).orElse(null);
 		
-		List<TestCase> testCases;
-		if (props.containsKey("input") && props.containsKey("output")) {
+		List<TestCase> testCases = null;
+		if ("manual".equals(scoring)) {
+			testCases = new ArrayList<>();
+		} else if (props.containsKey("patterns")) {
+			testCases = TaskTestsFinderv4.find(paths, props.getProperty("patterns"));
+			if (this.groups == "") {
+				String[] patternsSplit = props.getProperty("patterns").split(",");
+				int total = 0;
+				for (String patternSplit: patternsSplit) {
+					int br = 0;
+					for (TestCase testCase: testCases) {
+						if (testCase.getInput().contains(patternSplit)) br++;
+					}
+					total+=br;
+					groups += (total-br+1)+"-"+total+ ",";
+				}
+				groups = groups.substring(0, groups.length()-1);
+			}
+		} else if (props.containsKey("input") && props.containsKey("output")) {
 			testCases = new TaskTestsFinderv3().find(paths, props.getProperty("input"), props.getProperty("output"));
 		} else {
 			testCases = TaskTestsFinderv2.find(paths);
 		}
-		
+
 		Set<Integer> feedbackGroups = feedback();
 		TestGroup[] testGroups = null;
-		if (groups.isEmpty()) {
+		if (testCases.isEmpty()) {
+			testGroups = new TestGroup[testCases.size()];
+		} else if (groups.isEmpty()) {
 			Set<Integer> sampleTests = sampleTests();
 			testGroups = new TestGroup[testCases.size()];
 			
@@ -221,6 +240,7 @@ public class TaskDetails {
         if (graderDir != null) graderDir = taskPath.resolve(graderDir).toString();
         if (contestantZip != null) contestantZip = taskPath.resolve(contestantZip).toString();
         if (description != null) description = taskPath.resolve(description).toString();
+        
         for (TestCase testCase: testCases) {
         	testCase.setInput(taskPath.resolve(testCase.getInput()).toString());
         	testCase.setOutput(taskPath.resolve(testCase.getOutput()).toString());
@@ -465,5 +485,16 @@ public class TaskDetails {
 	public String getError() {
 		return error;
 	}
+	
+	public boolean isManualScoring() {
+		return "manual".equals(scoring);
+	}
+	
+	public static void main(String[] args) throws Exception {
+		File file = new File("C:\\Users\\pppep\\OneDrive\\Documents\\workspace\\sts\\workdir\\sti15112021\\problems\\16\\task");
+		TaskDetails details = new TaskDetails("excel", file);
+		System.out.println(details.getContestantZip());
+	}
+	
 	
 }
