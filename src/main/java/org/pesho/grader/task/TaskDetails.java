@@ -135,7 +135,7 @@ public class TaskDetails {
         this.sample = props.getProperty("sample", "").trim();
 		this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
-        this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
+        this.scoring = props.getProperty("scoring", this.groups.isEmpty()&&!props.containsKey("patterns")?"tests":"min_fast").trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
         this.info = props.getProperty("info", "").trim();
         this.dependencies = props.getProperty("dependencies", "").trim();

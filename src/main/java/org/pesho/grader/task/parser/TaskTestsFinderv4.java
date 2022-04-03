@@ -108,7 +108,7 @@ public class TaskTestsFinderv4 {
 					.findFirst().orElse(null);
 			if (output == null) continue;
 			possibleOutputs.remove(output);
-			testCases.add(new TestCase(testCases.size()+1, input.toAbsolutePath().toString(), output.toAbsolutePath().toString()));
+			testCases.add(new TestCase(testCases.size()+1, input.toString(), output.toString()));
 		}
 		
 		return testCases;
