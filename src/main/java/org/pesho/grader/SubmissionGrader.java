@@ -80,7 +80,7 @@ public class SubmissionGrader {
 			
 			if (taskDetails.getChecker() != null) {
 				File originalCheckerFile = new File(taskDetails.getChecker());
-				if (originalCheckerFile.exists()) {
+				if (originalCheckerFile.exists() && originalCheckerFile.isFile()) {
 					checkerFile = new File(sandboxDir, originalCheckerFile.getName());
 					FileUtils.copyFile(originalCheckerFile, checkerFile);
 					checkerFile.setExecutable(true);
