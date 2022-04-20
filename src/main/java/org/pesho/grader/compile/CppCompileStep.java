@@ -100,6 +100,7 @@ public class CppCompileStep extends CompileStep {
 				if (!file.isFile()) continue;
 				if (file.getName().equalsIgnoreCase("grader")) continue;
 				if (file.getName().equals(sourceFile.getName())) continue;
+				if (file.getName().equalsIgnoreCase(".DS_Store")) continue;
 				
 				files += " " + file.getName();
 			}

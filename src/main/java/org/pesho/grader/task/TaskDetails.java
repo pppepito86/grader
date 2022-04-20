@@ -152,7 +152,6 @@ public class TaskDetails {
 			testCases = new ArrayList<>();
 		} else if (props.containsKey("patterns")) {
 			testCases = TaskTestsFinderv4.find(paths, props.getProperty("patterns"));
-			System.out.println("ro tests parsed: " + testCases.size());
 			if (this.groups == "") {
 				String[] patternsSplit = props.getProperty("patterns").split(",");
 				int total = 0;
@@ -166,7 +165,6 @@ public class TaskDetails {
 				}
 				groups = groups.substring(0, groups.length()-1);
 			}
-			System.out.println("groups are: " + groups);
 		} else if (props.containsKey("input") && props.containsKey("output")) {
 			testCases = new TaskTestsFinderv3().find(paths, props.getProperty("input"), props.getProperty("output"));
 		} else {
