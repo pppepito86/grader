@@ -4,9 +4,9 @@ package org.pesho.grader.task;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -17,9 +17,11 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.util.Precision;
 import org.pesho.grader.task.parser.CheckerFinder;
 import org.pesho.grader.task.parser.ContestantFinder;
+import org.pesho.grader.task.parser.CriteriaFinder;
 import org.pesho.grader.task.parser.GraderFinder;
 import org.pesho.grader.task.parser.PropertiesFinder;
 import org.pesho.grader.task.parser.SolutionsFinder;
@@ -28,6 +30,8 @@ import org.pesho.grader.task.parser.TaskFilesFinder;
 import org.pesho.grader.task.parser.TaskTestsFinderv2;
 import org.pesho.grader.task.parser.TaskTestsFinderv3;
 import org.pesho.grader.task.parser.TaskTestsFinderv4;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TaskDetails {
 
@@ -53,6 +57,7 @@ public class TaskDetails {
 	private String dependencies;
 	private List<TestGroup> testGroups;
 	private String description;
+	private String criteria;
 	private String contestantZip;
 	private String extensions;
 	private Set<String> allowedExtensions;
@@ -120,6 +125,16 @@ public class TaskDetails {
 		PropertiesFinder.find(paths).ifPresent(path -> {
 			try (FileInputStream fileInputStream = new FileInputStream(taskPath.resolve(path).toString())) {
 				props.load(fileInputStream);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
+		
+		CriteriaFinder.find(paths).ifPresent(path -> {
+			try {
+				File file = new File(taskPath.resolve(path).toString());
+				Criteria[] criterias = new ObjectMapper().readValue(file, Criteria[].class);
+				this.criteria = new ObjectMapper().writeValueAsString(criterias);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -397,6 +412,10 @@ public class TaskDetails {
 	
 	public void setDescription(String description) {
 		this.description = description;
+	}
+	
+	public String getCriteria() {
+		return criteria;
 	}
 	
 	public String getContestantZip() {
