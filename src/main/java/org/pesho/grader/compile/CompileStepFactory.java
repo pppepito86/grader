@@ -8,7 +8,7 @@ public class CompileStepFactory {
 			return new CCompileStep(sourceFile, graderDir);
 		}
 		if (sourceFile.getName().endsWith(HCompileStep.SOURCE_FILE_ENDING)) {
-			return new CCompileStep(sourceFile, graderDir);
+			return new HCompileStep(sourceFile, graderDir);
 		}
 		if (sourceFile.getName().endsWith(CppCompileStep.SOURCE_FILE_ENDING)) {
 			return new CppCompileStep(sourceFile, graderDir);
