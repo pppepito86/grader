@@ -9,11 +9,11 @@ import org.pesho.sandbox.SandboxExecutor;
 
 public class HCompileStep extends CompileStep {
 
-	public static final String COMPILE_NO_CPP11_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -O2 -pipe -static -s -o %s ./%s";
-	public static final String COMPILE_CPP_11_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++11 -O2 -pipe -static -s -o %s ./%s";
-	public static final String COMPILE_CPP14_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++14 -O2 -pipe -static -s -o %s ./%s";
-	public static final String COMPILE_CPP17_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++17 -O2 -pipe -static -s -o %s ./%s";
-	public static final String COMPILE_CPP98_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++98 -O2 -pipe -static -s -o %s ./%s";
+	public static final String COMPILE_NO_CPP11_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -O2 -pipe -static -s -o %s grader.cpp";
+	public static final String COMPILE_CPP_11_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++11 -O2 -pipe -static -s -o %s grader.cpp";
+	public static final String COMPILE_CPP14_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++14 -O2 -pipe -static -s -o %s grader.cpp";
+	public static final String COMPILE_CPP17_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++17 -O2 -pipe -static -s -o %s grader.cpp";
+	public static final String COMPILE_CPP98_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++98 -O2 -pipe -static -s -o %s grader.cpp";
 	public static final String SOURCE_FILE_ENDING = ".h";
 
 	public HCompileStep(File sourceFile) {
