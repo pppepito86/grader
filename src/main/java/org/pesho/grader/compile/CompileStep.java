@@ -53,7 +53,7 @@ public abstract class CompileStep implements BaseStep {
 		}
 		
 		int timeout = 10;
-		int memory = 256;
+		int memory = 512;
 		if (this instanceof JavaNativeImageCompileStep) timeout = 300;
 		if (this instanceof JavaNativeImageCompileStep) memory = 1536;
 		return new SandboxExecutor()
