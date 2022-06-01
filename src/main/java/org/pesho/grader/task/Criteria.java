@@ -5,7 +5,7 @@ public class Criteria {
 	private String reason;
 	private Double score;
 	private Double step;
-	private Boolean indent;
+	private Integer indent;
 	
 	public String getReason() {
 		return reason;
@@ -31,11 +31,11 @@ public class Criteria {
 		this.step = step;
 	}
 	
-	public Boolean isIndent() {
+	public Integer getIndent() {
 		return indent;
 	}
 	
-	public void setIndent(boolean indent) {
+	public void setIndent(Integer indent) {
 		this.indent = indent;
 	}
 	
