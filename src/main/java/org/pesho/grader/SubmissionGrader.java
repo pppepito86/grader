@@ -152,7 +152,6 @@ public class SubmissionGrader {
 			double testWeight = testGroup.getWeight()/testGroup.getTestCases().size()/totalWeight;
 			double testPoints = testWeight*taskDetails.getPoints();
 			double checkerSum = 0.0;
-			double checkerMin = testGroup.getTestCases().size() != 0 ? 1.0 : 0.0;
 			
 			Verdict groupVerdict = Verdict.OK;
 			Double groupTime = null;
@@ -163,11 +162,17 @@ public class SubmissionGrader {
 			File graderFile = graderDir != null?new File(graderDir, "grader") : null;
 			
 			boolean allTestsOk = true;
+			double dependencyScore = 1;
 			for (int dependencyGroup: taskDetails.dependsOn(i+1)) {
-				if (this.score.getGroupResults().get(dependencyGroup-1).getVerdict() != Verdict.OK) {
+				StepResult dependencyResult = this.score.getGroupResults().get(dependencyGroup-1);
+				if (dependencyResult.getVerdict() != Verdict.OK && dependencyResult.getVerdict() != Verdict.PARTIAL) {
 					allTestsOk = false;
 				}
+				if (dependencyResult.getVerdict() == Verdict.PARTIAL && dependencyResult.getCheckerOutput() !=  null) {
+					dependencyScore = Math.min(dependencyScore, dependencyResult.getCheckerOutput());
+				}
 			}
+			double checkerMin = testGroup.getTestCases().size() != 0 ? dependencyScore : 0.0;
 			
 			for (int j = 0; j < testGroup.getTestCases().size(); j++) {
 				TestCase testCase = testGroup.getTestCases().get(j);
