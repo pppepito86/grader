@@ -47,6 +47,15 @@ public class StepResult {
 		this.memory = memory;
 		this.points = points;
 	}
+	
+	public StepResult(Verdict verdict, String reason, Double time, Long memory, Double points, Double checkerOutput) {
+		this.verdict = verdict;
+		this.reason = reason;
+		this.time = time;
+		this.memory = memory;
+		this.points = points;
+		this.checkerOutput = checkerOutput;
+	}
 
 	public StepResult(Verdict verdict, String output, String expectedOutput) {
 		this.verdict = verdict;
