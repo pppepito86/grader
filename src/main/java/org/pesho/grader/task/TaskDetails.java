@@ -23,13 +23,16 @@ import org.pesho.grader.task.parser.CheckerFinder;
 import org.pesho.grader.task.parser.ContestantFinder;
 import org.pesho.grader.task.parser.CriteriaFinder;
 import org.pesho.grader.task.parser.GraderFinder;
+import org.pesho.grader.task.parser.ImagesFinder;
 import org.pesho.grader.task.parser.PropertiesFinder;
+import org.pesho.grader.task.parser.QuizFinder;
 import org.pesho.grader.task.parser.SolutionsFinder;
 import org.pesho.grader.task.parser.StatementFinder;
 import org.pesho.grader.task.parser.TaskFilesFinder;
 import org.pesho.grader.task.parser.TaskTestsFinderv2;
 import org.pesho.grader.task.parser.TaskTestsFinderv3;
 import org.pesho.grader.task.parser.TaskTestsFinderv4;
+import org.pesho.grader.task.quiz.Quiz;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -49,6 +52,7 @@ public class TaskDetails {
 	private String checker;
 	private String cppChecker;
 	private String graderDir;
+	private String imagesDir;
 	private String feedback;
 	private String sample;
 	private String groups;
@@ -63,6 +67,7 @@ public class TaskDetails {
 	private Set<String> allowedExtensions;
 	private boolean isInteractive;
 	private String info;
+	private Quiz quiz;
 	private String error;
 	
 	public static final TaskDetails EMPTY = new TaskDetails();
@@ -158,12 +163,25 @@ public class TaskDetails {
 
         this.checker = CheckerFinder.find(paths).map(Path::toString).orElse(null);
 		this.graderDir = GraderFinder.find(paths, allowedExtensions).map(p -> p.getParent()).map(Path::toString).orElse(null);
+		this.imagesDir = ImagesFinder.find(paths).map(Path::toString).orElse(null);
         this.isInteractive = graderDir != null;
 		this.description = StatementFinder.find(paths).map(Path::toString).orElse(null);
 		this.contestantZip = ContestantFinder.find(paths).map(Path::toString).orElse(null);
 		
+		if ("quiz".equals(scoring)) {
+			QuizFinder.find(paths).ifPresent(path -> {
+				try {
+					File file = new File(taskPath.resolve(path).toString());
+					quiz = new ObjectMapper().readValue(file, Quiz.class);
+					System.out.println("quiz: " + quiz + " " + quiz.getTasks().length);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
+		}
+		
 		List<TestCase> testCases = null;
-		if ("manual".equals(scoring)) {
+		if ("manual".equals(scoring) || "quiz".equals(scoring)) {
 			testCases = new ArrayList<>();
 		} else if (props.containsKey("patterns")) {
 			testCases = TaskTestsFinderv4.find(paths, props.getProperty("patterns"));
@@ -230,6 +248,7 @@ public class TaskDetails {
 		
         if (checker != null) ((Map<String, Object>) files.get(checker)).put("type", "checker");
         if (graderDir != null) ((Map<String, Object>) files.get(graderDir)).put("type", "grader");
+        if (imagesDir != null) ((Map<String, Object>) files.get(imagesDir)).put("type", "images");
         if (description != null) ((Map<String, Object>) files.get(description)).put("type", "statement");
         PropertiesFinder.find(paths).map(Path::toString).ifPresent(path -> 
         	((Map<String, Object>) files.get(path)).put("type", "props")
@@ -255,6 +274,7 @@ public class TaskDetails {
         if (graderDir != null) graderDir = taskPath.resolve(graderDir).toString();
         if (contestantZip != null) contestantZip = taskPath.resolve(contestantZip).toString();
         if (description != null) description = taskPath.resolve(description).toString();
+        if (imagesDir != null) imagesDir = taskPath.resolve(imagesDir).toString();
         
         for (TestCase testCase: testCases) {
         	testCase.setInput(taskPath.resolve(testCase.getInput()).toString());
@@ -412,6 +432,10 @@ public class TaskDetails {
 	
 	public void setDescription(String description) {
 		this.description = description;
+	}
+	
+	public String getImagesDir() {
+		return imagesDir;
 	}
 	
 	public String getCriteria() {
