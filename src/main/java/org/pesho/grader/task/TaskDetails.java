@@ -532,6 +532,14 @@ public class TaskDetails {
 	public boolean isManualScoring() {
 		return "manual".equals(scoring);
 	}
+
+	public boolean isQuiz() {
+		return "quiz".equals(scoring);
+	}
+	
+	public Quiz getQuiz() {
+		return quiz;
+	}
 	
 	public static void main(String[] args) throws Exception {
 		File file = new File("C:\\Users\\pppep\\OneDrive\\Documents\\workspace\\sts\\workdir\\sti15112021\\problems\\16\\task");
