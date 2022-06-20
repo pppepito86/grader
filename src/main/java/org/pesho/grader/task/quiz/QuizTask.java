@@ -6,6 +6,7 @@ public class QuizTask {
 	private String description;
 	private String[] answers;
 	private String[] correctAnswers;
+	private double points;
 	
 	public QuizType getType() {
 		return type;
@@ -37,6 +38,14 @@ public class QuizTask {
 	
 	public void setCorrectAnswers(String[] correctAnswers) {
 		this.correctAnswers = correctAnswers;
+	}
+	
+	public double getPoints() {
+		return points;
+	}
+	
+	public void setPoints(double points) {
+		this.points = points;
 	}
 
 }
