@@ -184,17 +184,17 @@ public class SubmissionGrader {
 				
 				checkerMin = Math.min(checkerMin, result.getCheckerOutput());
 				checkerSum += result.getCheckerOutput();
-				
-				if (groupVerdict == Verdict.OK || groupVerdict == Verdict.PARTIAL) {
-					if (result.getVerdict() != Verdict.TL && result.getTime() != null) {
-						if (groupTime == null) groupTime = result.getTime();
-						else groupTime = Math.max(groupTime, result.getTime());
-					}
-					if (result.getMemory() != null) {
-						if (groupMemory == null) groupMemory = result.getMemory();
-						else groupMemory = Math.max(groupMemory, result.getMemory());
-					}
-				} else if (testInError == null) {
+			
+				if (result.getTime() != null) {
+					if (groupTime == null) groupTime = result.getTime();
+					else groupTime = Math.max(groupTime, result.getTime());
+				}
+				if (result.getMemory() != null) {
+					if (groupMemory == null) groupMemory = result.getMemory();
+					else groupMemory = Math.max(groupMemory, result.getMemory());
+				}
+
+				if (groupVerdict != Verdict.OK && groupVerdict != Verdict.PARTIAL && testInError == null) {
 					testInError = j+1;
 				}
 				if (groupVerdict == Verdict.OK) {
@@ -250,7 +250,11 @@ public class SubmissionGrader {
 				listener.addTestResult(testCase.getNumber(), testStep.getResult());
 				listener.scoreUpdated(submissionId, score);
 			}
-			return new StepResult(testStep.getVerdict());
+			StepResult result = new StepResult(testStep.getVerdict());
+			result.setTime(testStep.getResult().getTime());
+			result.setMemory(testStep.getResult().getMemory());
+			result.setExitCode(testStep.getResult().getExitCode());
+			return result;
 		}
 		
 		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
