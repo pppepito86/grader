@@ -17,6 +17,7 @@ import org.pesho.grader.task.TestCase;
 import org.pesho.grader.task.TestGroup;
 import org.pesho.grader.test.TestStep;
 import org.pesho.grader.test.TestStepFactory;
+import org.pesho.sandbox.Messages;
 
 public class SubmissionGrader {
 	
@@ -251,7 +252,7 @@ public class SubmissionGrader {
 				listener.scoreUpdated(submissionId, score);
 			}
 			StepResult result = new StepResult(testStep.getVerdict());
-			result.setTime(testStep.getResult().getTime());
+			if (!Messages.WALL_CLOCK_TIMEOUT.equals(testStep.getResult().getReason())) result.setTime(testStep.getResult().getTime());
 			result.setMemory(testStep.getResult().getMemory());
 			result.setExitCode(testStep.getResult().getExitCode());
 			return result;
