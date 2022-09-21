@@ -40,18 +40,18 @@ public abstract class TestStep implements BaseStep {
 			copySandboxInput();
 			
 			GraderRun graderRun = null;
-			SolutionRun solutionRun = null;
+//			SolutionRun solutionRun = null;
 			if (graderFile != null) {
 				graderRun = new GraderRun(graderFile, inputFile, outputFile, 3*time+1, memory, sandboxDir);
 				graderRun.start();
-				solutionRun = new SolutionRun(getCommand(), 3*time+1, memory, sandboxDir);
-				solutionRun.start();
+				//solutionRun = new SolutionRun(getCommand(), 3*time+1, memory, sandboxDir);
+				//solutionRun.start();
 			}
 			
 			CommandResult commandResult = new SandboxExecutor()
 					.directory(sandboxDir)
-					.input((graderFile == null)?inputFile.getName():"pipe_in1")
-					.output((graderFile == null)?outputFile.getName():"pipe_out1")
+					.input((graderFile == null)?inputFile.getName():"pipe_in")
+					.output((graderFile == null)?outputFile.getName():"pipe_out")
 					.timeout(graderFile == null?time:3*time+1)
 					.ioTimeout(getIoTimeout())
 					.trusted(this instanceof JavaTestStep)
@@ -61,15 +61,15 @@ public abstract class TestStep implements BaseStep {
 			result = getResult(commandResult);
 			
 			if (graderRun != null) {
-				solutionRun.join();
+//				solutionRun.join();
 				graderRun.join();
-				if (result.getVerdict() == Verdict.OK) result = solutionRun.getResult();
+//				if (result.getVerdict() == Verdict.OK) result = solutionRun.getResult();
 				if (result.getVerdict() == Verdict.OK) result = graderRun.getResult();
 				
 				if (result.getVerdict() == Verdict.TL) result = new StepResult(Verdict.TL);
 				if (result.getVerdict() == Verdict.OK) {
 					double time1 = commandResult.getTime()!=null?commandResult.getTime():0;
-					double time2 = solutionRun.getResult().getTime()!=null?solutionRun.getResult().getTime():0;
+					double time2 = 0; //solutionRun.getResult().getTime()!=null?solutionRun.getResult().getTime():0;
 					double time3 = graderRun.getResult().getTime()!=null?graderRun.getResult().getTime():0;
 					double totalTime = Precision.round(time1+time2+time3, 3);
 					if (totalTime > time) result = new StepResult(Verdict.TL);					
@@ -78,7 +78,7 @@ public abstract class TestStep implements BaseStep {
 					result.setTime(null);
 				}
 				long memory1 = commandResult.getMemory()!=null?commandResult.getMemory():0;
-				long memory2 = solutionRun.getResult().getMemory()!=null?solutionRun.getResult().getMemory():0;
+				long memory2 = 0; //solutionRun.getResult().getMemory()!=null?solutionRun.getResult().getMemory():0;
 				long memory3 = graderRun.getResult().getMemory()!=null?graderRun.getResult().getMemory():0;
 				result.setMemory(Math.max(memory1, Math.max(memory2, memory3)));
 			}
@@ -134,16 +134,16 @@ public abstract class TestStep implements BaseStep {
 	protected void createPipes() {
 		if (graderFile == null) return;
 		
-		for (int i = 1; i <= 2; i++) {
-			File pipeIn = new File(sandboxDir, "pipe_in"+i);
-			File pipeOut = new File(sandboxDir, "pipe_out"+i);
+//		for (int i = 1; i <= 2; i++) {
+			File pipeIn = new File(sandboxDir, "pipe_in");
+			File pipeOut = new File(sandboxDir, "pipe_out");
 			try {
 				new ProcessExecutor("mkfifo", pipeIn.getAbsolutePath()).execute();
 				new ProcessExecutor("mkfifo", pipeOut.getAbsolutePath()).execute();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}
+//		}
 	}
 	
 	protected void copySandboxOutput() throws IOException {
