@@ -58,6 +58,7 @@ public class TaskDetails {
 	private String groups;
 	private String weights;
 	private String scoring;
+	private String scoringType;
 	private String dependencies;
 	private List<TestGroup> testGroups;
 	private String description;
@@ -88,6 +89,7 @@ public class TaskDetails {
         this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
+	this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
         this.info = props.getProperty("info", "").trim();
         this.dependencies = props.getProperty("dependencies", "").trim();
@@ -156,6 +158,7 @@ public class TaskDetails {
 		this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()&&!props.containsKey("patterns")?"tests":"min_fast").trim();
+	this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
         this.info = props.getProperty("info", "").trim();
         this.dependencies = props.getProperty("dependencies", "").trim();
@@ -365,6 +368,15 @@ public class TaskDetails {
 	public String getScoring() {
 		return scoring;
 	}
+
+	public void setScoringType(String scoringType) {
+                this.scoringType = scoringType;
+        }
+
+        public String getScoringType() {
+                return scoringType;
+        }
+
 	
 	public String getDependencies() {
 		return dependencies;
