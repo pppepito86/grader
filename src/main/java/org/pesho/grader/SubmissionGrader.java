@@ -10,6 +10,7 @@ import org.pesho.grader.check.CheckStep;
 import org.pesho.grader.check.CheckStepFactory;
 import org.pesho.grader.compile.CompileStep;
 import org.pesho.grader.compile.CompileStepFactory;
+import org.pesho.grader.compile.SourceStep;
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 import org.pesho.grader.task.TaskDetails;
@@ -123,16 +124,23 @@ public class SubmissionGrader {
 	}
 
 	private double compile(File sourceFile) {
-//		File graderDir = getGrader(true);
+		SourceStep sourceStep = new SourceStep(sourceFile, taskDetails.getBlacklistedWords());
 		File graderDir = taskDetails.getGraderDir() != null ? new File(taskDetails.getGraderDir()):null;
 		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile, graderDir);
-		compileStep.execute();
-		score.setCompileResult(compileStep.getResult());
+		
+		sourceStep.execute();
+		StepResult result = sourceStep.getResult();
+		if (result.getVerdict() == Verdict.OK) {
+			compileStep.execute();
+			result = compileStep.getResult();
+		}
+		
+		score.setCompileResult(result);
 		if (listener != null) {
-			listener.setCompileResult(compileStep.getResult());
+			listener.setCompileResult(result);
 			listener.scoreUpdated(submissionId, score);
 		}
-		if (compileStep.getVerdict() == Verdict.OK) {
+		if (result.getVerdict() == Verdict.OK) {
 			binaryFile = compileStep.getBinaryFile();
 			return 1;
 		}

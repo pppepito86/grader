@@ -524,6 +524,10 @@ public class TaskDetails {
 		return allowedExtensions;
 	}
 	
+	public Set<String> getBlacklistedWords() {
+		return blacklistedWords;
+	}
+	
 	public boolean isFullFeedback() {
 		return feedback.trim().equalsIgnoreCase("full");
 	}
