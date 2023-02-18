@@ -4,7 +4,6 @@ package org.pesho.grader.task;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -17,13 +16,13 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.util.Precision;
 import org.pesho.grader.task.parser.CheckerFinder;
 import org.pesho.grader.task.parser.ContestantFinder;
 import org.pesho.grader.task.parser.CriteriaFinder;
 import org.pesho.grader.task.parser.GraderFinder;
 import org.pesho.grader.task.parser.ImagesFinder;
+import org.pesho.grader.task.parser.ManagerFinder;
 import org.pesho.grader.task.parser.PropertiesFinder;
 import org.pesho.grader.task.parser.QuizFinder;
 import org.pesho.grader.task.parser.SolutionsFinder;
@@ -45,12 +44,15 @@ public class TaskDetails {
 	
 	private double points;
 	private int precision;
+	private int processes;
 	private double time;
 	private double ioTime;
 	private int memory;
 	private int rejudgeTimes;
 	private String checker;
 	private String cppChecker;
+	private String manager;
+	private String cppManager;
 	private String graderDir;
 	private String imagesDir;
 	private String feedback;
@@ -58,6 +60,7 @@ public class TaskDetails {
 	private String groups;
 	private String weights;
 	private String scoring;
+	private String scoringType;
 	private String dependencies;
 	private List<TestGroup> testGroups;
 	private String description;
@@ -65,11 +68,14 @@ public class TaskDetails {
 	private String contestantZip;
 	private String extensions;
 	private Set<String> allowedExtensions;
+	private String blacklist;
+	private Set<String> blacklistedWords;
 	private boolean isInteractive;
+	private boolean isCommunication;
 	private String info;
 	private Quiz quiz;
 	private String error;
-	
+
 	public static final TaskDetails EMPTY = new TaskDetails();
 	
 	public TaskDetails() {
@@ -79,6 +85,7 @@ public class TaskDetails {
 	private void setProps(Properties props, String checker, TestGroup... testGroups) {
         this.points = Double.valueOf(props.getProperty("points", "100"));
 		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
+		this.processes = Integer.valueOf(props.getProperty("processes", "1"));
         this.time = Double.valueOf(props.getProperty("time", "1"));
         this.ioTime = Double.valueOf(props.getProperty("io_time", "0"));
         this.memory = Integer.valueOf(props.getProperty("memory", "256"));
@@ -88,10 +95,13 @@ public class TaskDetails {
         this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
+        this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
         this.info = props.getProperty("info", "").trim();
         this.dependencies = props.getProperty("dependencies", "").trim();
 		this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
+		this.blacklist = props.getProperty("blacklist", "").trim();
+		this.blacklistedWords = Arrays.stream(blacklist.split(",")).map(s -> s.trim()).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
         this.checker = checker;
         this.testGroups = new ArrayList<>();
 	}
@@ -147,6 +157,7 @@ public class TaskDetails {
 		
 		this.points = Double.valueOf(props.getProperty("points", "100.0"));
 		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
+		this.processes = Integer.valueOf(props.getProperty("processes", "1"));
 		this.time = Double.valueOf(props.getProperty("time", "1"));
         this.ioTime = Double.valueOf(props.getProperty("io_time", "0"));
 		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
@@ -156,15 +167,20 @@ public class TaskDetails {
 		this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()&&!props.containsKey("patterns")?"tests":"min_fast").trim();
+        this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
         this.info = props.getProperty("info", "").trim();
         this.dependencies = props.getProperty("dependencies", "").trim();
         this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
+        this.blacklist = props.getProperty("blacklist", "").trim();
+		this.blacklistedWords = Arrays.stream(blacklist.split(",")).map(s -> s.trim()).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
 
         this.checker = CheckerFinder.find(paths).map(Path::toString).orElse(null);
+        this.manager = ManagerFinder.find(paths).map(Path::toString).orElse(null);
 		this.graderDir = GraderFinder.find(paths, allowedExtensions).map(p -> p.getParent()).map(Path::toString).orElse(null);
 		this.imagesDir = ImagesFinder.find(paths).map(Path::toString).orElse(null);
         this.isInteractive = graderDir != null;
+        this.isCommunication = cppManager != null;
 		this.description = StatementFinder.find(paths).map(Path::toString).orElse(null);
 		this.contestantZip = ContestantFinder.find(paths).map(Path::toString).orElse(null);
 		
@@ -247,6 +263,7 @@ public class TaskDetails {
 		this.files = TaskFilesFinder.find(taskName, taskPath, Files.walk(taskPath).map(p -> taskPath.relativize(p)).collect(Collectors.toList()));
 		
         if (checker != null) ((Map<String, Object>) files.get(checker)).put("type", "checker");
+        if (manager != null) ((Map<String, Object>) files.get(manager)).put("type", "manager");
         if (graderDir != null) ((Map<String, Object>) files.get(graderDir)).put("type", "grader");
         if (imagesDir != null) ((Map<String, Object>) files.get(imagesDir)).put("type", "images");
         if (description != null) ((Map<String, Object>) files.get(description)).put("type", "statement");
@@ -269,6 +286,11 @@ public class TaskDetails {
         if (checker != null && this.checker.toLowerCase().endsWith(".cpp")) {
         	cppChecker = checker;
         	checker = checker.substring(0, this.checker.length()-4);
+        }
+        if (manager != null) manager = taskPath.resolve(manager).toString();
+        if (manager != null && this.manager.toLowerCase().endsWith(".cpp")) {
+        	cppManager = manager;
+        	manager = manager.substring(0, this.manager.length()-4);
         }
         
         if (graderDir != null) graderDir = taskPath.resolve(graderDir).toString();
@@ -296,6 +318,14 @@ public class TaskDetails {
 	
 	public int getPrecision() {
 		return precision!=-1?precision:0;
+	}
+	
+	public void setProcesses(int processes) {
+		this.processes = processes;
+	}
+	
+	public int getProcesses() {
+		return processes;
 	}
 
 	public void setTime(double time) {
@@ -366,6 +396,14 @@ public class TaskDetails {
 		return scoring;
 	}
 	
+	public void setScoringType(String scoringType) {
+		this.scoringType = scoringType;
+	}
+	
+	public String getScoringType() {
+		return scoringType;
+	}
+	
 	public String getDependencies() {
 		return dependencies;
 	}
@@ -392,6 +430,22 @@ public class TaskDetails {
 	
 	public String getGraderDir() {
 		return graderDir;
+	}
+	
+	public void setManager(String manager) {
+		this.manager = manager;
+	}
+	
+	public String getManager() {
+		return manager;
+	}
+	
+	public void setCppManager(String cppManager) {
+		this.cppManager = cppManager;
+	}
+	
+	public String getCppManager() {
+		return cppManager;
 	}
 	
 	public void setTestGroups(List<TestGroup> testGroups) {
@@ -452,6 +506,10 @@ public class TaskDetails {
 	
 	public boolean isInteractive() {
 		return isInteractive;
+	}
+	
+	public boolean isCommunication() {
+		return isCommunication;
 	}
 	
 	public boolean hasFilesToDownload() {
