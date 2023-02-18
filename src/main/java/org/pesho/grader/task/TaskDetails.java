@@ -180,7 +180,7 @@ public class TaskDetails {
 		this.graderDir = GraderFinder.find(paths, allowedExtensions).map(p -> p.getParent()).map(Path::toString).orElse(null);
 		this.imagesDir = ImagesFinder.find(paths).map(Path::toString).orElse(null);
         this.isInteractive = graderDir != null;
-        this.isCommunication = cppManager != null;
+        this.isCommunication = manager != null;
 		this.description = StatementFinder.find(paths).map(Path::toString).orElse(null);
 		this.contestantZip = ContestantFinder.find(paths).map(Path::toString).orElse(null);
 		

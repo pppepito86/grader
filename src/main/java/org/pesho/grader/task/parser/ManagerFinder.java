@@ -11,7 +11,7 @@ public class ManagerFinder {
 		paths = paths.stream()
 				.filter(x -> x.getFileName().toString().equalsIgnoreCase("manager.cpp"))
 				.collect(Collectors.toList());
-		if (paths.size() == 1) return paths.stream().findFirst().map(p -> p.getParent());
+		if (paths.size() == 1) return paths.stream().findFirst();
 		return paths.stream().findFirst();
 	}
 	
