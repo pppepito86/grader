@@ -31,6 +31,7 @@ public class SourceStep implements BaseStep {
 			if (message.isEmpty()) {
 				result = new StepResult(Verdict.OK);
 			} else {
+				message = "Във вашия код не е разрешено използването на следното: " + message;
 				message = message.trim();
 				message = message.substring(0, message.length()-1);
 				result = new StepResult(Verdict.CE, message);
