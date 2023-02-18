@@ -15,73 +15,43 @@ import org.zeroturnaround.exec.ProcessExecutor;
 public abstract class TestStep implements BaseStep {
 
 	protected final File binaryFile;
-	protected final File graderFile;
+	protected final File managerFile;
 	protected final File inputFile;
 	protected final File outputFile;
 	protected final File sandboxDir;
 	protected final double time;
 	protected final int memory;
+	protected final int processes;
 	protected StepResult result;
 
-	public TestStep(File binaryFile, File graderFile, File inputFile, File outputFile, double time, int memory) {
+	public TestStep(File binaryFile, File managerFile, File inputFile, File outputFile, double time, int memory, int processes) {
 		this.binaryFile = binaryFile.getAbsoluteFile();
-		this.graderFile = graderFile != null ? graderFile.getAbsoluteFile():null;
+		this.managerFile = managerFile != null ? managerFile.getAbsoluteFile():null;
 		this.inputFile = inputFile.getAbsoluteFile();
 		this.outputFile = outputFile.getAbsoluteFile();
 		this.time = time;
 		this.memory = memory;
+		this.processes = processes;
 		this.sandboxDir = new File(binaryFile.getParentFile(), "sandbox_" + inputFile.getName());
 	}
 
 	public void execute() {
 		try {
 			createSandboxDirectory();
-			createPipes();
 			copySandboxInput();
-			
-			GraderRun graderRun = null;
-//			SolutionRun solutionRun = null;
-			if (graderFile != null) {
-				graderRun = new GraderRun(graderFile, inputFile, outputFile, 3*time+1, memory, sandboxDir);
-				graderRun.start();
-				//solutionRun = new SolutionRun(getCommand(), 3*time+1, memory, sandboxDir);
-				//solutionRun.start();
-			}
 			
 			CommandResult commandResult = new SandboxExecutor()
 					.directory(sandboxDir)
-					.input((graderFile == null)?inputFile.getName():"pipe_in")
-					.output((graderFile == null)?outputFile.getName():"pipe_out")
-					.timeout(graderFile == null?time:3*time+1)
+					.input(inputFile.getName())
+					.output(outputFile.getName())
+					.timeout(time)
 					.ioTimeout(getIoTimeout())
 					.trusted(this instanceof JavaTestStep)
 					.memory(memory)
+					.processes(processes+2)
 					.extraMemory((this instanceof JavaTestStep)?0:5)
-					.command(getCommand()).execute().getResult();
+					.command(managerFile != null ? getPiperCommand() : getCommand()).execute().getResult();
 			result = getResult(commandResult);
-			
-			if (graderRun != null) {
-//				solutionRun.join();
-				graderRun.join();
-//				if (result.getVerdict() == Verdict.OK) result = solutionRun.getResult();
-				if (result.getVerdict() == Verdict.OK) result = graderRun.getResult();
-				
-				if (result.getVerdict() == Verdict.TL) result = new StepResult(Verdict.TL);
-				if (result.getVerdict() == Verdict.OK) {
-					double time1 = commandResult.getTime()!=null?commandResult.getTime():0;
-					double time2 = 0; //solutionRun.getResult().getTime()!=null?solutionRun.getResult().getTime():0;
-					double time3 = graderRun.getResult().getTime()!=null?graderRun.getResult().getTime():0;
-					double totalTime = Precision.round(time1+time2+time3, 3);
-					if (totalTime > time) result = new StepResult(Verdict.TL);					
-					else result.setTime(totalTime);
-				} else {
-					result.setTime(null);
-				}
-				long memory1 = commandResult.getMemory()!=null?commandResult.getMemory():0;
-				long memory2 = 0; //solutionRun.getResult().getMemory()!=null?solutionRun.getResult().getMemory():0;
-				long memory3 = graderRun.getResult().getMemory()!=null?graderRun.getResult().getMemory():0;
-				result.setMemory(Math.max(memory1, Math.max(memory2, memory3)));
-			}
 			
 			copySandboxOutput();
 		} catch (Exception e) {
@@ -114,6 +84,11 @@ public abstract class TestStep implements BaseStep {
 
 	protected abstract String getCommand();
 	
+	public String getPiperCommand() {
+		String pattern = "./piper %d %s %s";
+		return String.format(pattern, processes, managerFile.getName(), binaryFile.getName());
+	}
+	
 	protected void createSandboxDirectory() {
 		sandboxDir.mkdirs();
 	}
@@ -124,26 +99,16 @@ public abstract class TestStep implements BaseStep {
 		new ProcessExecutor().command("chmod", "+x", new File(sandboxDir, binaryFile.getName()).getAbsolutePath()).execute();
 		FileUtils.copyFile(inputFile, new File(sandboxDir, inputFile.getName()));
 		
-		if (graderFile != null) {
-			FileUtils.copyFile(graderFile, new File(sandboxDir, graderFile.getName()));
-			new File(sandboxDir, graderFile.getName()).setExecutable(true);
-			new ProcessExecutor().command("chmod", "+x", new File(sandboxDir, graderFile.getName()).getAbsolutePath()).execute();
+		if (managerFile != null) {
+			FileUtils.copyFile(managerFile, new File(sandboxDir, managerFile.getName()));
+			new File(sandboxDir, managerFile.getName()).setExecutable(true);
+			new ProcessExecutor().command("chmod", "+x", new File(sandboxDir, managerFile.getName()).getAbsolutePath()).execute();
+			
+			File piperFile = new File("/vagrant/worker/piper/piper");
+			FileUtils.copyFile(piperFile, new File(sandboxDir, piperFile.getName()));
+			new File(sandboxDir, piperFile.getName()).setExecutable(true);
+			new ProcessExecutor().command("chmod", "+x", new File(sandboxDir, piperFile.getName()).getAbsolutePath()).execute();
 		}
-	}
-	
-	protected void createPipes() {
-		if (graderFile == null) return;
-		
-//		for (int i = 1; i <= 2; i++) {
-			File pipeIn = new File(sandboxDir, "pipe_in");
-			File pipeOut = new File(sandboxDir, "pipe_out");
-			try {
-				new ProcessExecutor("mkfifo", pipeIn.getAbsolutePath()).execute();
-				new ProcessExecutor("mkfifo", pipeOut.getAbsolutePath()).execute();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-//		}
 	}
 	
 	protected void copySandboxOutput() throws IOException {
