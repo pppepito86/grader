@@ -99,8 +99,14 @@ public abstract class CompileStep implements BaseStep {
 		new ProcessExecutor("chmod", "-R", "777", sandboxDir.getAbsolutePath()).execute();
 	}
 
-	protected void copySandboxInput() throws IOException {
+	protected void copySandboxInput() throws Exception {
 		FileUtils.copyFile(sourceFile, new File(sandboxDir, sourceFile.getName()));
+		
+		if (this instanceof JavaCompileStep) {
+			File jar = new File(sandboxDir.getAbsolutePath()+"/"+getBinaryFileName());
+			jar.createNewFile();
+			new ProcessExecutor("chmod", "-R", "777", jar.getAbsolutePath()).execute();
+		}
 	}
 
 	protected void copyGraderFiles() throws IOException {
