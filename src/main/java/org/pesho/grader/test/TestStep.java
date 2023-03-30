@@ -48,7 +48,7 @@ public abstract class TestStep implements BaseStep {
 					.ioTimeout(getIoTimeout())
 					.trusted(this instanceof JavaTestStep)
 					.memory(memory)
-					.processes(processes+2)
+					.processes((this instanceof JavaTestStep)?100:processes+2)
 					.extraMemory((this instanceof JavaTestStep)?0:5)
 					.command(managerFile != null ? getPiperCommand() : getCommand()).execute().getResult();
 			result = getResult(commandResult);
