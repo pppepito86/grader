@@ -10,7 +10,6 @@ import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 import org.pesho.sandbox.CommandResult;
 import org.pesho.sandbox.SandboxExecutor;
-import org.zeroturnaround.exec.ProcessExecutor;
 
 public abstract class CompileStep implements BaseStep {
 
@@ -94,19 +93,12 @@ public abstract class CompileStep implements BaseStep {
 
 	protected abstract String[] getCommands();
 
-	protected void createSandboxDirectory() throws Exception {
+	protected void createSandboxDirectory() {
 		sandboxDir.mkdirs();
-		new ProcessExecutor("chmod", "-R", "777", sandboxDir.getAbsolutePath()).execute();
 	}
 
-	protected void copySandboxInput() throws Exception {
+	protected void copySandboxInput() throws IOException {
 		FileUtils.copyFile(sourceFile, new File(sandboxDir, sourceFile.getName()));
-		
-		if (this instanceof JavaCompileStep) {
-			File jar = new File(sandboxDir.getAbsolutePath()+"/"+getBinaryFileName());
-			jar.createNewFile();
-			new ProcessExecutor("chmod", "-R", "777", jar.getAbsolutePath()).execute();
-		}
 	}
 
 	protected void copyGraderFiles() throws IOException {
