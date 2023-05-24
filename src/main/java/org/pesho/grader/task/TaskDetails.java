@@ -65,6 +65,7 @@ public class TaskDetails {
 	private List<TestGroup> testGroups;
 	private String description;
 	private String criteria;
+	private Double arbiterDelta;
 	private String contestantZip;
 	private String extensions;
 	private Set<String> allowedExtensions;
@@ -174,6 +175,7 @@ public class TaskDetails {
         this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
         this.blacklist = props.getProperty("blacklist", "").trim();
 		this.blacklistedWords = Arrays.stream(blacklist.split(",")).map(s -> s.trim()).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
+		this.arbiterDelta = Double.valueOf(props.getProperty("arbiter_delta", "1.0"));
 
         this.checker = CheckerFinder.find(paths).map(Path::toString).orElse(null);
         this.manager = ManagerFinder.find(paths).map(Path::toString).orElse(null);
@@ -495,7 +497,11 @@ public class TaskDetails {
 	public String getCriteria() {
 		return criteria;
 	}
-	
+
+	public Double getArbiterDelta() {
+		return arbiterDelta;
+	}
+
 	public String getContestantZip() {
 		return contestantZip;
 	}
