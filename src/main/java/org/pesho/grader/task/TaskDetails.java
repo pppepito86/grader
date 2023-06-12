@@ -74,6 +74,7 @@ public class TaskDetails {
 	private boolean isInteractive;
 	private boolean isCommunication;
 	private String info;
+	private int timer;
 	private Quiz quiz;
 	private String error;
 
@@ -105,6 +106,7 @@ public class TaskDetails {
 		this.blacklistedWords = Arrays.stream(blacklist.split(",")).map(s -> s.trim()).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
         this.checker = checker;
         this.testGroups = new ArrayList<>();
+		this.timer = Integer.valueOf(props.getProperty("timer", "0"));
 	}
 
 	public TaskDetails(String taskName, File taskFile) {
@@ -176,6 +178,7 @@ public class TaskDetails {
         this.blacklist = props.getProperty("blacklist", "").trim();
 		this.blacklistedWords = Arrays.stream(blacklist.split(",")).map(s -> s.trim()).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
 		this.arbiterDelta = Double.valueOf(props.getProperty("arbiter_delta", "1.0"));
+		this.timer = Integer.valueOf(props.getProperty("timer", "0"));
 
         this.checker = CheckerFinder.find(paths).map(Path::toString).orElse(null);
         this.manager = ManagerFinder.find(paths).map(Path::toString).orElse(null);
@@ -185,7 +188,7 @@ public class TaskDetails {
         this.isCommunication = manager != null;
 		this.description = StatementFinder.find(paths).map(Path::toString).orElse(null);
 		this.contestantZip = ContestantFinder.find(paths).map(Path::toString).orElse(null);
-		
+
 		if ("quiz".equals(scoring)) {
 			QuizFinder.find(paths).ifPresent(path -> {
 				try {
@@ -337,7 +340,7 @@ public class TaskDetails {
 	public double getTime() {
 		return time;
 	}
-	
+
 	public void setIoTime(double ioTime) {
 		this.ioTime = ioTime;
 	}
@@ -608,7 +611,15 @@ public class TaskDetails {
 	public Quiz getQuiz() {
 		return quiz;
 	}
-	
+
+	public void setTimer(int timer) {
+		this.timer = timer;
+	}
+
+	public int getTimer() {
+		return timer;
+	}
+
 	public static void main(String[] args) throws Exception {
 		File file = new File("C:\\Users\\pppep\\OneDrive\\Documents\\workspace\\sts\\workdir\\sti15112021\\problems\\16\\task");
 		TaskDetails details = new TaskDetails("excel", file);
