@@ -1,10 +1,16 @@
 package org.pesho.grader.task.quiz;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class QuizTask {
 	
 	private QuizType type;
 	private String description;
 	private String[] answers;
+
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+
 	private String[] correctAnswers;
 	private double points;
 	
