@@ -4,6 +4,7 @@ public enum QuizType {
 	
 	SINGLE_CHOICE,
 	MULTIPLE_CHOICE,
-	SHORT_ANSWER
+	SHORT_ANSWER,
+	TEXT
 
 }
