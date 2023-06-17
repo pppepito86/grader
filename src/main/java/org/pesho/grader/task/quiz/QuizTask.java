@@ -80,4 +80,16 @@ public class QuizTask {
 		this.points = points;
 	}
 
+	public QuizTask clone() {
+		QuizTask task = new QuizTask();
+		if (this.title != null) task.title = this.title;
+		task.type = this.type;
+		if (this.question != null) task.question = this.question;
+		if (this.description != null) task.description = this.description;
+		if (this.image != null) task.image = this.image;
+		if (this.answers != null) task.answers = this.answers.clone();
+		task.points = this.points;
+		return task;
+	}
+
 }
