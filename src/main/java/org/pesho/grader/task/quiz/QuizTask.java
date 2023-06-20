@@ -10,6 +10,7 @@ public class QuizTask {
 	private String description;
 	private QuizImage image;
 	private String[] answers;
+	private Boolean isShuffleEnabled;
 
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 
@@ -80,6 +81,15 @@ public class QuizTask {
 		this.points = points;
 	}
 
+	public Boolean getShuffleEnabled() {
+		return isShuffleEnabled;
+	}
+
+	public void setShuffleEnabled(Boolean shuffleEnabled) {
+		isShuffleEnabled = shuffleEnabled;
+	}
+
+
 	public QuizTask clone() {
 		QuizTask task = new QuizTask();
 		if (this.title != null) task.title = this.title;
@@ -89,6 +99,7 @@ public class QuizTask {
 		if (this.image != null) task.image = this.image;
 		if (this.answers != null) task.answers = this.answers.clone();
 		task.points = this.points;
+		task.isShuffleEnabled = this.isShuffleEnabled;
 		return task;
 	}
 
