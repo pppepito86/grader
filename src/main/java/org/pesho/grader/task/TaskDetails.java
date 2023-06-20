@@ -6,14 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.util.Precision;
@@ -34,6 +27,8 @@ import org.pesho.grader.task.parser.TaskTestsFinderv4;
 import org.pesho.grader.task.quiz.Quiz;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.pesho.grader.task.quiz.QuizTask;
+import org.pesho.grader.task.quiz.QuizType;
 
 public class TaskDetails {
 
@@ -607,9 +602,26 @@ public class TaskDetails {
 	public boolean isQuiz() {
 		return "quiz".equals(scoring);
 	}
-	
-	public Quiz getQuiz() {
-		return quiz;
+
+	public Quiz getQuiz(Integer seed) {
+		if (seed == null) return quiz;
+
+		Quiz seededQuiz = new Quiz();
+		String option = "1-" + quiz.getTasks().length;
+		if (quiz.getOptions() != null && quiz.getOptions().length != 0) {
+			option = quiz.getOptions()[new Random(seed).nextInt(quiz.getOptions().length)];
+		}
+		String[] split = option.split("-");
+		int first = Integer.parseInt(split[0]);
+		int last = Integer.parseInt(split[1]);
+		QuizTask[] tasks = new QuizTask[last-first+1];
+		for (int i = first; i <= last; i++) {
+			QuizTask quizTask = quiz.getTasks()[i-1].clone();
+			tasks[i-first] = quizTask;
+		}
+		seededQuiz.setTasks(tasks);
+
+		return seededQuiz;
 	}
 
 	public void setTimer(int timer) {

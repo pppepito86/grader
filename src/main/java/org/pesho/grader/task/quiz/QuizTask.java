@@ -10,10 +10,11 @@ public class QuizTask {
 	private String description;
 	private QuizImage image;
 	private String[] answers;
+
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	private Boolean isShuffleEnabled;
 
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-
 	private String[] correctAnswers;
 	private double points;
 
@@ -98,6 +99,7 @@ public class QuizTask {
 		if (this.description != null) task.description = this.description;
 		if (this.image != null) task.image = this.image;
 		if (this.answers != null) task.answers = this.answers.clone();
+		if (this.correctAnswers != null) task.correctAnswers = this.correctAnswers.clone();
 		task.points = this.points;
 		task.isShuffleEnabled = this.isShuffleEnabled;
 		return task;
