@@ -189,7 +189,7 @@ public class TaskDetails {
 				try {
 					File file = new File(taskPath.resolve(path).toString());
 					quiz = new ObjectMapper().readValue(file, Quiz.class);
-					System.out.println("quiz: " + quiz + " " + quiz.getTasks().length);
+//					System.out.println("quiz: " + quiz + " " + quiz.getTasks().length);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
