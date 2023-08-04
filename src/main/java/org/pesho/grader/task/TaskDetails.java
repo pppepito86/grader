@@ -4,26 +4,18 @@ package org.pesho.grader.task;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.util.Precision;
 import org.pesho.grader.task.parser.CheckerFinder;
 import org.pesho.grader.task.parser.ContestantFinder;
 import org.pesho.grader.task.parser.CriteriaFinder;
 import org.pesho.grader.task.parser.GraderFinder;
 import org.pesho.grader.task.parser.ImagesFinder;
+import org.pesho.grader.task.parser.ManagerFinder;
 import org.pesho.grader.task.parser.PropertiesFinder;
 import org.pesho.grader.task.parser.QuizFinder;
 import org.pesho.grader.task.parser.SolutionsFinder;
@@ -35,6 +27,8 @@ import org.pesho.grader.task.parser.TaskTestsFinderv4;
 import org.pesho.grader.task.quiz.Quiz;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.pesho.grader.task.quiz.QuizTask;
+import org.pesho.grader.task.quiz.QuizType;
 
 public class TaskDetails {
 
@@ -45,12 +39,15 @@ public class TaskDetails {
 	
 	private double points;
 	private int precision;
+	private int processes;
 	private double time;
 	private double ioTime;
 	private int memory;
 	private int rejudgeTimes;
 	private String checker;
 	private String cppChecker;
+	private String manager;
+	private String cppManager;
 	private String graderDir;
 	private String imagesDir;
 	private String feedback;
@@ -63,14 +60,19 @@ public class TaskDetails {
 	private List<TestGroup> testGroups;
 	private String description;
 	private String criteria;
+	private Double arbiterDelta;
 	private String contestantZip;
 	private String extensions;
 	private Set<String> allowedExtensions;
+	private String blacklist;
+	private Set<String> blacklistedWords;
 	private boolean isInteractive;
+	private boolean isCommunication;
 	private String info;
+	private int timer;
 	private Quiz quiz;
 	private String error;
-	
+
 	public static final TaskDetails EMPTY = new TaskDetails();
 	
 	public TaskDetails() {
@@ -80,6 +82,7 @@ public class TaskDetails {
 	private void setProps(Properties props, String checker, TestGroup... testGroups) {
         this.points = Double.valueOf(props.getProperty("points", "100"));
 		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
+		this.processes = Integer.valueOf(props.getProperty("processes", "1"));
         this.time = Double.valueOf(props.getProperty("time", "1"));
         this.ioTime = Double.valueOf(props.getProperty("io_time", "0"));
         this.memory = Integer.valueOf(props.getProperty("memory", "256"));
@@ -94,8 +97,11 @@ public class TaskDetails {
         this.info = props.getProperty("info", "").trim();
         this.dependencies = props.getProperty("dependencies", "").trim();
 		this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
+		this.blacklist = props.getProperty("blacklist", "").trim();
+		this.blacklistedWords = Arrays.stream(blacklist.split(",")).map(s -> s.trim()).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
         this.checker = checker;
         this.testGroups = new ArrayList<>();
+		this.timer = Integer.valueOf(props.getProperty("timer", "0"));
 	}
 
 	public TaskDetails(String taskName, File taskFile) {
@@ -149,6 +155,7 @@ public class TaskDetails {
 		
 		this.points = Double.valueOf(props.getProperty("points", "100.0"));
 		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
+		this.processes = Integer.valueOf(props.getProperty("processes", "1"));
 		this.time = Double.valueOf(props.getProperty("time", "1"));
         this.ioTime = Double.valueOf(props.getProperty("io_time", "0"));
 		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
@@ -163,20 +170,26 @@ public class TaskDetails {
         this.info = props.getProperty("info", "").trim();
         this.dependencies = props.getProperty("dependencies", "").trim();
         this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
+        this.blacklist = props.getProperty("blacklist", "").trim();
+		this.blacklistedWords = Arrays.stream(blacklist.split(",")).map(s -> s.trim()).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
+		this.arbiterDelta = Double.valueOf(props.getProperty("arbiter_delta", "1.0"));
+		this.timer = Integer.valueOf(props.getProperty("timer", "0"));
 
         this.checker = CheckerFinder.find(paths).map(Path::toString).orElse(null);
+        this.manager = ManagerFinder.find(paths).map(Path::toString).orElse(null);
 		this.graderDir = GraderFinder.find(paths, allowedExtensions).map(p -> p.getParent()).map(Path::toString).orElse(null);
 		this.imagesDir = ImagesFinder.find(paths).map(Path::toString).orElse(null);
         this.isInteractive = graderDir != null;
+        this.isCommunication = manager != null;
 		this.description = StatementFinder.find(paths).map(Path::toString).orElse(null);
 		this.contestantZip = ContestantFinder.find(paths).map(Path::toString).orElse(null);
-		
+
 		if ("quiz".equals(scoring)) {
 			QuizFinder.find(paths).ifPresent(path -> {
 				try {
 					File file = new File(taskPath.resolve(path).toString());
 					quiz = new ObjectMapper().readValue(file, Quiz.class);
-					System.out.println("quiz: " + quiz + " " + quiz.getTasks().length);
+//					System.out.println("quiz: " + quiz + " " + quiz.getTasks().length);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -250,6 +263,7 @@ public class TaskDetails {
 		this.files = TaskFilesFinder.find(taskName, taskPath, Files.walk(taskPath).map(p -> taskPath.relativize(p)).collect(Collectors.toList()));
 		
         if (checker != null) ((Map<String, Object>) files.get(checker)).put("type", "checker");
+        if (manager != null) ((Map<String, Object>) files.get(manager)).put("type", "manager");
         if (graderDir != null) ((Map<String, Object>) files.get(graderDir)).put("type", "grader");
         if (imagesDir != null) ((Map<String, Object>) files.get(imagesDir)).put("type", "images");
         if (description != null) ((Map<String, Object>) files.get(description)).put("type", "statement");
@@ -272,6 +286,11 @@ public class TaskDetails {
         if (checker != null && this.checker.toLowerCase().endsWith(".cpp")) {
         	cppChecker = checker;
         	checker = checker.substring(0, this.checker.length()-4);
+        }
+        if (manager != null) manager = taskPath.resolve(manager).toString();
+        if (manager != null && this.manager.toLowerCase().endsWith(".cpp")) {
+        	cppManager = manager;
+        	manager = manager.substring(0, this.manager.length()-4);
         }
         
         if (graderDir != null) graderDir = taskPath.resolve(graderDir).toString();
@@ -300,6 +319,14 @@ public class TaskDetails {
 	public int getPrecision() {
 		return precision!=-1?precision:0;
 	}
+	
+	public void setProcesses(int processes) {
+		this.processes = processes;
+	}
+	
+	public int getProcesses() {
+		return processes;
+	}
 
 	public void setTime(double time) {
 		this.time = time;
@@ -308,7 +335,7 @@ public class TaskDetails {
 	public double getTime() {
 		return time;
 	}
-	
+
 	public void setIoTime(double ioTime) {
 		this.ioTime = ioTime;
 	}
@@ -378,6 +405,14 @@ public class TaskDetails {
         }
 
 	
+	public void setScoringType(String scoringType) {
+		this.scoringType = scoringType;
+	}
+	
+	public String getScoringType() {
+		return scoringType;
+	}
+	
 	public String getDependencies() {
 		return dependencies;
 	}
@@ -404,6 +439,22 @@ public class TaskDetails {
 	
 	public String getGraderDir() {
 		return graderDir;
+	}
+	
+	public void setManager(String manager) {
+		this.manager = manager;
+	}
+	
+	public String getManager() {
+		return manager;
+	}
+	
+	public void setCppManager(String cppManager) {
+		this.cppManager = cppManager;
+	}
+	
+	public String getCppManager() {
+		return cppManager;
 	}
 	
 	public void setTestGroups(List<TestGroup> testGroups) {
@@ -453,7 +504,11 @@ public class TaskDetails {
 	public String getCriteria() {
 		return criteria;
 	}
-	
+
+	public Double getArbiterDelta() {
+		return arbiterDelta;
+	}
+
 	public String getContestantZip() {
 		return contestantZip;
 	}
@@ -466,6 +521,10 @@ public class TaskDetails {
 		return isInteractive;
 	}
 	
+	public boolean isCommunication() {
+		return isCommunication;
+	}
+	
 	public boolean hasFilesToDownload() {
 		return contestantZip != null;
 	}
@@ -476,6 +535,10 @@ public class TaskDetails {
 	
 	public Set<String> getAllowedExtensions() {
 		return allowedExtensions;
+	}
+	
+	public Set<String> getBlacklistedWords() {
+		return blacklistedWords;
 	}
 	
 	public boolean isFullFeedback() {
@@ -548,11 +611,36 @@ public class TaskDetails {
 	public boolean isQuiz() {
 		return "quiz".equals(scoring);
 	}
-	
-	public Quiz getQuiz() {
-		return quiz;
+
+	public Quiz getQuiz(Integer seed) {
+		if (seed == null) return quiz;
+
+		Quiz seededQuiz = new Quiz();
+		String option = "1-" + quiz.getTasks().length;
+		if (quiz.getOptions() != null && quiz.getOptions().length != 0) {
+			option = quiz.getOptions()[new Random(seed).nextInt(quiz.getOptions().length)];
+		}
+		String[] split = option.split("-");
+		int first = Integer.parseInt(split[0]);
+		int last = Integer.parseInt(split[1]);
+		QuizTask[] tasks = new QuizTask[last-first+1];
+		for (int i = first; i <= last; i++) {
+			QuizTask quizTask = quiz.getTasks()[i-1].clone();
+			tasks[i-first] = quizTask;
+		}
+		seededQuiz.setTasks(tasks);
+
+		return seededQuiz;
 	}
-	
+
+	public void setTimer(int timer) {
+		this.timer = timer;
+	}
+
+	public int getTimer() {
+		return timer;
+	}
+
 	public static void main(String[] args) throws Exception {
 		File file = new File("C:\\Users\\pppep\\OneDrive\\Documents\\workspace\\sts\\workdir\\sti15112021\\problems\\16\\task");
 		TaskDetails details = new TaskDetails("excel", file);

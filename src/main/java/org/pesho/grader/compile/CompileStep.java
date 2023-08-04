@@ -52,7 +52,7 @@ public abstract class CompileStep implements BaseStep {
 			command = String.format(JavaCompileStep.JAR_COMMAND_PATTERN, getBinaryFileName(), ((JavaCompileStep) this).getMainClassName());
 		}
 		
-		int timeout = 10;
+		int timeout = 30;
 		int memory = 512;
 		if (this instanceof JavaNativeImageCompileStep) timeout = 300;
 		if (this instanceof JavaNativeImageCompileStep) memory = 1536;

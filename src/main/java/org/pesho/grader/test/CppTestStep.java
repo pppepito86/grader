@@ -8,8 +8,8 @@ public class CppTestStep extends TestStep {
 	
 	private double ioTime;
 
-	public CppTestStep(File binaryFile, File graderFile, File inputFile, File outputFile, double time, int memory, double ioTime) {
-		super(binaryFile, graderFile, inputFile, outputFile, time, memory);
+	public CppTestStep(File binaryFile, File managerFile, File inputFile, File outputFile, double time, int memory, int processes, double ioTime) {
+		super(binaryFile, managerFile, inputFile, outputFile, time, memory, processes);
 		this.ioTime = ioTime;
 	}
 

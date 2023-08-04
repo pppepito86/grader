@@ -10,6 +10,7 @@ import org.pesho.grader.check.CheckStep;
 import org.pesho.grader.check.CheckStepFactory;
 import org.pesho.grader.compile.CompileStep;
 import org.pesho.grader.compile.CompileStepFactory;
+import org.pesho.grader.compile.SourceStep;
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 import org.pesho.grader.task.TaskDetails;
@@ -124,16 +125,23 @@ public class SubmissionGrader {
 	}
 
 	private double compile(File sourceFile) {
-//		File graderDir = getGrader(true);
+		SourceStep sourceStep = new SourceStep(sourceFile, taskDetails.getBlacklistedWords());
 		File graderDir = taskDetails.getGraderDir() != null ? new File(taskDetails.getGraderDir()):null;
 		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile, graderDir);
-		compileStep.execute();
-		score.setCompileResult(compileStep.getResult());
+		
+		sourceStep.execute();
+		StepResult result = sourceStep.getResult();
+		if (result.getVerdict() == Verdict.OK) {
+			compileStep.execute();
+			result = compileStep.getResult();
+		}
+		
+		score.setCompileResult(result);
 		if (listener != null) {
-			listener.setCompileResult(compileStep.getResult());
+			listener.setCompileResult(result);
 			listener.scoreUpdated(submissionId, score);
 		}
-		if (compileStep.getVerdict() == Verdict.OK) {
+		if (result.getVerdict() == Verdict.OK) {
 			binaryFile = compileStep.getBinaryFile();
 			return 1;
 		}
@@ -159,8 +167,7 @@ public class SubmissionGrader {
 			Long groupMemory = null;
 			Integer testInError = null;
 
-			File graderDir = getGrader(false);
-			File graderFile = graderDir != null?new File(graderDir, "grader") : null;
+			File managerFile = taskDetails.getManager() != null?new File(taskDetails.getManager()) : null;
 			
 			boolean allTestsOk = true;
 			double dependencyScore = 1;
@@ -177,7 +184,7 @@ public class SubmissionGrader {
 			
 			for (int j = 0; j < testGroup.getTestCases().size(); j++) {
 				TestCase testCase = testGroup.getTestCases().get(j);
-				StepResult result = executeTest(testCase, graderFile, checkerFile, allTestsOk, testPoints);
+				StepResult result = executeTest(testCase, managerFile, checkerFile, allTestsOk, testPoints);
 				
 				if (result.getVerdict() != Verdict.OK && result.getVerdict() != Verdict.PARTIAL && taskDetails.stopScoringOnFailure()) {
 					allTestsOk = false;	
@@ -210,20 +217,23 @@ public class SubmissionGrader {
 			if (taskDetails.getPoints() == -1) {
 				groupScore = checkerSum;
 				score += checkerSum;
-			} else if (taskDetails.testsScoring() || taskDetails.sumScoring()){
+			} else if (taskDetails.testsScoring() || taskDetails.sumScoring() || 
+					(testGroup.getTestCases().size() == 24 && i == 5)){
 				groupScore = testGroup.getWeight() * checkerSum / testGroup.getTestCases().size();
 				if (taskDetails.sumScoring() && groupVerdict != Verdict.OK && Double.compare(groupScore, 0.0) != 0) groupVerdict = Verdict.PARTIAL;
 			} else {
 				groupScore = testGroup.getWeight() * checkerMin;
 			}
 			score += groupScore;
+			
+			if (testGroup.getTestCases().size() == 24 && i == 5 && groupScore != 0.0) groupVerdict = Verdict.PARTIAL;
 			this.score.addGroupResult(i+1, new StepResult(groupVerdict, ""+testInError, groupTime, groupMemory, groupScore*taskDetails.getPoints(), checkerMin));
 		}
 		if (taskDetails.icpcScoring() && !accepted) return 0;
 		return score;
 	}
 	
-	private StepResult executeTest(TestCase testCase, File graderFile, File checkerFile, boolean allTestsOk, double testPoints) {
+	private StepResult executeTest(TestCase testCase, File managerFile, File checkerFile, boolean allTestsOk, double testPoints) {
 		if (!allTestsOk) {
 			StepResult result = new StepResult(Verdict.SKIPPED);
 			score.addTestResult(testCase.getNumber(), result);
@@ -238,10 +248,10 @@ public class SubmissionGrader {
 		File outputFile = new File(testCase.getOutput());
 		File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
 		Double tl = timeLimit.orElse(taskDetails.getTime());
-		TestStep testStep = TestStepFactory.getInstance(binaryFile, graderFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getIoTime());
+		TestStep testStep = TestStepFactory.getInstance(binaryFile, managerFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getIoTime());
 		testStep.execute();
 		if (testStep.getVerdict() == Verdict.TL && tl < 1 && allTestsOk) {
-			testStep = TestStepFactory.getInstance(binaryFile, graderFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getIoTime());
+			testStep = TestStepFactory.getInstance(binaryFile, managerFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getIoTime());
 			testStep.execute();
 		}
 		
