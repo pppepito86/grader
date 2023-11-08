@@ -31,7 +31,11 @@ public abstract class TestStep implements BaseStep {
 		this.outputFile = outputFile.getAbsoluteFile();
 		this.time = time;
 		this.memory = memory;
-		this.processes = processes;
+		if (managerFile != null) {
+			this.processes = processes+2;
+		} else {
+			this.processes = 1;
+		}
 		this.sandboxDir = new File(binaryFile.getParentFile(), "sandbox_" + inputFile.getName());
 	}
 
@@ -48,7 +52,7 @@ public abstract class TestStep implements BaseStep {
 					.ioTimeout(getIoTimeout())
 					.trusted(this instanceof JavaTestStep)
 					.memory(memory)
-					.processes((this instanceof JavaTestStep)?100:processes+2)
+					.processes((this instanceof JavaTestStep)?100:processes)
 					.extraMemory((this instanceof JavaTestStep)?0:5)
 					.command(managerFile != null ? getPiperCommand() : getCommand()).execute().getResult();
 			result = getResult(commandResult);
