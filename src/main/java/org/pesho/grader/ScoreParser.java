@@ -49,7 +49,10 @@ public class ScoreParser {
 					if (points.endsWith(".0")) points = points.replace(".0", "");
 					if (result.getVerdict() == Verdict.OK) return ""+points;
 					if (result.getVerdict() == Verdict.PARTIAL) return "("+points+")";
-					return "-";
+					
+					String verdictName=result.getVerdict().name();
+					if (verdictName.equals("SKIPPED")) verdictName="SK";
+					return verdictName;
 				})
 				.collect(Collectors.joining(","));
 	}
