@@ -60,7 +60,7 @@ public class TaskDetails {
 	private String dependencies;
 	private List<TestGroup> testGroups;
 	private String description;
-	private String[] analysis;
+	private String analysis;
 	private String criteria;
 	private Double arbiterDelta;
 	private String contestantZip;
@@ -184,7 +184,7 @@ public class TaskDetails {
         this.isInteractive = graderDir != null;
         this.isCommunication = manager != null;
 		this.description = StatementFinder.find(paths).map(Path::toString).orElse(null);
-		this.analysis = Arrays.stream(AnalysisFinder.find(description, paths)).map(Path::toString).toArray(String[]::new);
+		this.analysis = AnalysisFinder.find(description, paths).map(Path::toString).orElse(null);
 		this.contestantZip = ContestantFinder.find(paths).map(Path::toString).orElse(null);
 
 		if ("quiz".equals(scoring)) {
@@ -270,9 +270,8 @@ public class TaskDetails {
         if (graderDir != null) ((Map<String, Object>) files.get(graderDir)).put("type", "grader");
         if (imagesDir != null) ((Map<String, Object>) files.get(imagesDir)).put("type", "images");
         if (description != null) ((Map<String, Object>) files.get(description)).put("type", "statement");
-	for (String path : analysis) {
-	     ((Map<String, Object>) files.get(path)).put("type", "analysis");
-	}
+	if (analysis != null) ((Map<String, Object>) files.get(analysis)).put("type", "analysis");
+	
         PropertiesFinder.find(paths).map(Path::toString).ifPresent(path -> 
         	((Map<String, Object>) files.get(path)).put("type", "props")
         );
@@ -302,7 +301,7 @@ public class TaskDetails {
         if (graderDir != null) graderDir = taskPath.resolve(graderDir).toString();
         if (contestantZip != null) contestantZip = taskPath.resolve(contestantZip).toString();
         if (description != null) description = taskPath.resolve(description).toString();
-	analysis = Arrays.stream(analysis).map(path -> taskPath.resolve(path).toString()).toArray(String[]::new);
+	if (analysis != null) analysis = taskPath.resolve(analysis).toString();
 
         if (imagesDir != null) imagesDir = taskPath.resolve(imagesDir).toString();
         
@@ -413,14 +412,6 @@ public class TaskDetails {
         }
 
 	
-	public void setScoringType(String scoringType) {
-		this.scoringType = scoringType;
-	}
-	
-	public String getScoringType() {
-		return scoringType;
-	}
-	
 	public String getDependencies() {
 		return dependencies;
 	}
@@ -503,6 +494,14 @@ public class TaskDetails {
 	
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public String getAnalysis() {
+		return analysis;
+	}
+
+	public void setAnalysis (String analysis) {
+		this.analysis = analysis;
 	}
 
 	public String getImagesDir() {
