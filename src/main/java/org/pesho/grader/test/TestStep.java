@@ -104,7 +104,7 @@ public abstract class TestStep implements BaseStep {
 			new File(sandboxDir, managerFile.getName()).setExecutable(true);
 			new ProcessExecutor().command("chmod", "+x", new File(sandboxDir, managerFile.getName()).getAbsolutePath()).execute();
 			
-			File piperFile = new File("/vagrant/worker/piper/piper");
+			File piperFile = new File("/app/worker/piper/piper");
 			FileUtils.copyFile(piperFile, new File(sandboxDir, piperFile.getName()));
 			new File(sandboxDir, piperFile.getName()).setExecutable(true);
 			new ProcessExecutor().command("chmod", "+x", new File(sandboxDir, piperFile.getName()).getAbsolutePath()).execute();
