@@ -20,7 +20,6 @@ import org.pesho.grader.task.parser.PropertiesFinder;
 import org.pesho.grader.task.parser.QuizFinder;
 import org.pesho.grader.task.parser.SolutionsFinder;
 import org.pesho.grader.task.parser.StatementFinder;
-import org.pesho.grader.task.parser.AnalysisFinder;
 import org.pesho.grader.task.parser.TaskFilesFinder;
 import org.pesho.grader.task.parser.TaskTestsFinderv2;
 import org.pesho.grader.task.parser.TaskTestsFinderv3;
@@ -60,7 +59,6 @@ public class TaskDetails {
 	private String dependencies;
 	private List<TestGroup> testGroups;
 	private String description;
-	private String analysis;
 	private String criteria;
 	private Double arbiterDelta;
 	private String contestantZip;
@@ -94,7 +92,7 @@ public class TaskDetails {
         this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
-	this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
+        this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
         this.info = props.getProperty("info", "").trim();
         this.dependencies = props.getProperty("dependencies", "").trim();
@@ -167,7 +165,7 @@ public class TaskDetails {
 		this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()&&!props.containsKey("patterns")?"tests":"min_fast").trim();
-	this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
+        this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
         this.info = props.getProperty("info", "").trim();
         this.dependencies = props.getProperty("dependencies", "").trim();
@@ -184,7 +182,6 @@ public class TaskDetails {
         this.isInteractive = graderDir != null;
         this.isCommunication = manager != null;
 		this.description = StatementFinder.find(paths).map(Path::toString).orElse(null);
-		this.analysis = AnalysisFinder.find(description, paths).map(Path::toString).orElse(null);
 		this.contestantZip = ContestantFinder.find(paths).map(Path::toString).orElse(null);
 
 		if ("quiz".equals(scoring)) {
@@ -270,8 +267,6 @@ public class TaskDetails {
         if (graderDir != null) ((Map<String, Object>) files.get(graderDir)).put("type", "grader");
         if (imagesDir != null) ((Map<String, Object>) files.get(imagesDir)).put("type", "images");
         if (description != null) ((Map<String, Object>) files.get(description)).put("type", "statement");
-	if (analysis != null) ((Map<String, Object>) files.get(analysis)).put("type", "analysis");
-	
         PropertiesFinder.find(paths).map(Path::toString).ifPresent(path -> 
         	((Map<String, Object>) files.get(path)).put("type", "props")
         );
@@ -301,8 +296,6 @@ public class TaskDetails {
         if (graderDir != null) graderDir = taskPath.resolve(graderDir).toString();
         if (contestantZip != null) contestantZip = taskPath.resolve(contestantZip).toString();
         if (description != null) description = taskPath.resolve(description).toString();
-	if (analysis != null) analysis = taskPath.resolve(analysis).toString();
-
         if (imagesDir != null) imagesDir = taskPath.resolve(imagesDir).toString();
         
         for (TestCase testCase: testCases) {
@@ -402,15 +395,14 @@ public class TaskDetails {
 	public String getScoring() {
 		return scoring;
 	}
-
+	
 	public void setScoringType(String scoringType) {
-                this.scoringType = scoringType;
-        }
-
-        public String getScoringType() {
-                return scoringType;
-        }
-
+		this.scoringType = scoringType;
+	}
+	
+	public String getScoringType() {
+		return scoringType;
+	}
 	
 	public String getDependencies() {
 		return dependencies;
@@ -495,15 +487,7 @@ public class TaskDetails {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-
-	public String getAnalysis() {
-		return analysis;
-	}
-
-	public void setAnalysis (String analysis) {
-		this.analysis = analysis;
-	}
-
+	
 	public String getImagesDir() {
 		return imagesDir;
 	}

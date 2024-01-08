@@ -18,7 +18,6 @@ import org.pesho.grader.task.TestCase;
 import org.pesho.grader.task.TestGroup;
 import org.pesho.grader.test.TestStep;
 import org.pesho.grader.test.TestStepFactory;
-import org.pesho.sandbox.Messages;
 
 public class SubmissionGrader {
 	
@@ -192,17 +191,17 @@ public class SubmissionGrader {
 				
 				checkerMin = Math.min(checkerMin, result.getCheckerOutput());
 				checkerSum += result.getCheckerOutput();
-			
-				if (result.getTime() != null) {
-					if (groupTime == null) groupTime = result.getTime();
-					else groupTime = Math.max(groupTime, result.getTime());
-				}
-				if (result.getMemory() != null) {
-					if (groupMemory == null) groupMemory = result.getMemory();
-					else groupMemory = Math.max(groupMemory, result.getMemory());
-				}
-
-				if (groupVerdict != Verdict.OK && groupVerdict != Verdict.PARTIAL && testInError == null) {
+				
+				if (groupVerdict == Verdict.OK || groupVerdict == Verdict.PARTIAL) {
+					if (result.getVerdict() != Verdict.TL && result.getTime() != null) {
+						if (groupTime == null) groupTime = result.getTime();
+						else groupTime = Math.max(groupTime, result.getTime());
+					}
+					if (result.getMemory() != null) {
+						if (groupMemory == null) groupMemory = result.getMemory();
+						else groupMemory = Math.max(groupMemory, result.getMemory());
+					}
+				} else if (testInError == null) {
 					testInError = j+1;
 				}
 				if (groupVerdict == Verdict.OK) {
@@ -261,11 +260,7 @@ public class SubmissionGrader {
 				listener.addTestResult(testCase.getNumber(), testStep.getResult());
 				listener.scoreUpdated(submissionId, score);
 			}
-			StepResult result = new StepResult(testStep.getVerdict());
-			if (!Messages.WALL_CLOCK_TIMEOUT.equals(testStep.getResult().getReason())) result.setTime(testStep.getResult().getTime());
-			result.setMemory(testStep.getResult().getMemory());
-			result.setExitCode(testStep.getResult().getExitCode());
-			return result;
+			return new StepResult(testStep.getVerdict());
 		}
 		
 		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
