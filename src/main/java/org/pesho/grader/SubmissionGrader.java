@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.util.Precision;
+import org.pesho.sandbox.Messages;
 import org.pesho.grader.check.CheckStep;
 import org.pesho.grader.check.CheckStepFactory;
 import org.pesho.grader.compile.CompileStep;
@@ -192,16 +193,18 @@ public class SubmissionGrader {
 				checkerMin = Math.min(checkerMin, result.getCheckerOutput());
 				checkerSum += result.getCheckerOutput();
 				
-				if (groupVerdict == Verdict.OK || groupVerdict == Verdict.PARTIAL) {
-					if (result.getVerdict() != Verdict.TL && result.getTime() != null) {
-						if (groupTime == null) groupTime = result.getTime();
-						else groupTime = Math.max(groupTime, result.getTime());
-					}
-					if (result.getMemory() != null) {
-						if (groupMemory == null) groupMemory = result.getMemory();
-						else groupMemory = Math.max(groupMemory, result.getMemory());
-					}
-				} else if (testInError == null) {
+				Double time=result.getTime();
+				if ((time != null) && ((groupTime == null) || (groupTime >= 0))) {
+					if ((groupTime == null) || (time < 0)) groupTime = time;
+					else groupTime = Math.max(groupTime, time);
+				}
+				Long memory=result.getMemory();
+				if ((memory != null) && ((groupMemory == null) || (groupMemory >= 0))) {
+					if ((groupMemory == null) || (memory < 0)) groupMemory = memory;
+					else groupMemory = Math.max(groupMemory, memory);
+				}
+				
+				if (groupVerdict != Verdict.OK && groupVerdict != Verdict.PARTIAL && testInError == null) {
 					testInError = j+1;
 				}
 				if (groupVerdict == Verdict.OK) {
@@ -260,7 +263,11 @@ public class SubmissionGrader {
 				listener.addTestResult(testCase.getNumber(), testStep.getResult());
 				listener.scoreUpdated(submissionId, score);
 			}
-			return new StepResult(testStep.getVerdict());
+			StepResult result = new StepResult(testStep.getVerdict());
+			if (!Messages.WALL_CLOCK_TIMEOUT.equals(testStep.getResult().getReason())) result.setTime(testStep.getResult().getTime());
+			result.setMemory(testStep.getResult().getMemory());
+			result.setExitCode(testStep.getResult().getExitCode());
+			return result;
 		}
 		
 		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
