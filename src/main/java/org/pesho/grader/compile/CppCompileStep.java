@@ -1,5 +1,6 @@
 package org.pesho.grader.compile;
 import java.io.File;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.StepResult;
@@ -17,18 +18,18 @@ public class CppCompileStep extends CompileStep {
 	public static final String SOURCE_FILE_ENDING = ".cpp";
 
 	public CppCompileStep(File sourceFile) {
-		this(sourceFile, null);
+		this(sourceFile, null, null, null);
 	}
 	
-	public CppCompileStep(File sourceFile, File graderDir) {
-		super(sourceFile, graderDir);
+	public CppCompileStep(File sourceFile, File graderDir, Map<String, Double> time, Map<String, Integer> memory) {
+		super(sourceFile, graderDir, time, memory);
 	}
 	
 	@Override
 	public void execute() {
 		super.execute();
 		if (getVerdict() != Verdict.OK) {
-			System.out.println("Compilation failed with c++17, will try wit c++11.");
+			System.out.println("Compilation failed with c++17, will try with c++11.");
 			tryOther(COMPILE_CPP_11_COMMAND_PATTERN);
 		}
 		if (getVerdict() != Verdict.OK) {
@@ -61,8 +62,8 @@ public class CppCompileStep extends CompileStep {
 					.directory(sandboxDir)
 					.trusted(true)
 					.showError()
-					.timeout(10)
-					.memory(256)
+					.timeout(time.get("default"))
+					.memory(memory.get("default"))
 					.command(command[0])
 					.execute().getResult();
 			StepResult result = getResult(commandResult);

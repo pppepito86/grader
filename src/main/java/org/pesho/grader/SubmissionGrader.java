@@ -3,6 +3,7 @@ package org.pesho.grader;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.util.Precision;
@@ -28,29 +29,31 @@ public class SubmissionGrader {
 	private File binaryFile;
 	private SubmissionScore score;
 	private GradeListener listener;
-	private Optional<Double> timeLimit;
+	private Optional<Double> compileTime;
+	private Optional<Integer> compileMemory;
 	
 	public SubmissionGrader(String submissionId, TaskDetails taskTests, String sourceFile) {
 		this(submissionId, taskTests, sourceFile, null);
 	}
 	
 	public SubmissionGrader(String submissionId, TaskDetails taskTests, String sourceFile, GradeListener listener) {
-		this(submissionId, taskTests, sourceFile, listener, null);
+		this(submissionId, taskTests, sourceFile, listener, Optional.ofNullable(null), Optional.ofNullable(null));
 	}
 	
-	public SubmissionGrader(String submissionId, TaskDetails taskDetails, String sourceFile, GradeListener listener, Double tl) {
+	public SubmissionGrader(String submissionId, TaskDetails taskDetails, String sourceFile, GradeListener listener, Optional<Double> compileTL, Optional<Integer> compileML) {
 		this.submissionId = submissionId;
 		this.taskDetails = taskDetails;
 		this.originalSourceFile = new File(sourceFile).getAbsoluteFile();
 		this.score = new SubmissionScore();
 		this.listener = listener;
-		this.timeLimit = Optional.ofNullable(tl);
+		this.compileTime = compileTL;
+		this.compileMemory = compileML;
 	}
 	
-	public double grade() {
+	public double grade(String piperDir) {
 		File sandboxDir = new File(originalSourceFile.getParentFile(), "sandbox_"+originalSourceFile.getName());
 		try {
-			double score = gradeInternal(sandboxDir);
+			double score = gradeInternal(sandboxDir, piperDir);
 //			if (score > 0) FileUtils.deleteQuietly(sandboxDir);
 			return score;
 		} finally {
@@ -73,7 +76,7 @@ public class SubmissionGrader {
 		return null;
 	}
 	
-	public double gradeInternal(File sandboxDir) {
+	public double gradeInternal(File sandboxDir, String piperDir) {
 		sandboxDir.mkdirs();
 		File sourceFile = new File(sandboxDir, originalSourceFile.getName());
 		File checkerFile = null;
@@ -102,7 +105,7 @@ public class SubmissionGrader {
 			return 0;
 		}
 		
-		double testsScore = executeTests(checkerFile);
+		double testsScore = executeTests(checkerFile, piperDir);
 		double finalScore = 0;
 		String verdict = "";
 		if (taskDetails.getPoints() == -1) {
@@ -127,7 +130,19 @@ public class SubmissionGrader {
 	private double compile(File sourceFile) {
 		SourceStep sourceStep = new SourceStep(sourceFile, taskDetails.getBlacklistedWords());
 		File graderDir = taskDetails.getGraderDir() != null ? new File(taskDetails.getGraderDir()):null;
-		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile, graderDir);
+		Map<String, Double> compileTL = taskDetails.getCompileTime();
+		if (compileTime.isPresent()) {
+			for (String lang : compileTL.keySet()) {
+				compileTL.put(lang, compileTime.get());
+			}
+		}
+		Map<String, Integer> compileML = taskDetails.getCompileMemory();
+		if (compileMemory.isPresent()) {
+			for (String lang : compileML.keySet()) {
+				compileML.put(lang, compileMemory.get());
+			}
+		}
+		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile, graderDir, compileTL, compileML);
 		
 		sourceStep.execute();
 		StepResult result = sourceStep.getResult();
@@ -148,7 +163,7 @@ public class SubmissionGrader {
 		return 0;
 	}
 	
-	private double executeTests(File checkerFile) {
+	private double executeTests(File checkerFile, String piperDir) {
 		int groupsCount = taskDetails.getTestGroups().size();
 		int testsCount = taskDetails.getTestGroups().stream().mapToInt(g -> g.getTestCases().size()).sum();
 		score.startingTests(groupsCount, testsCount);
@@ -168,6 +183,7 @@ public class SubmissionGrader {
 			Integer testInError = null;
 
 			File managerFile = taskDetails.getManager() != null?new File(taskDetails.getManager()) : null;
+			File piperFile = new File(piperDir+"/piper");
 			
 			boolean allTestsOk = true;
 			double dependencyScore = 1;
@@ -184,7 +200,7 @@ public class SubmissionGrader {
 			
 			for (int j = 0; j < testGroup.getTestCases().size(); j++) {
 				TestCase testCase = testGroup.getTestCases().get(j);
-				StepResult result = executeTest(testCase, managerFile, checkerFile, allTestsOk, testPoints);
+				StepResult result = executeTest(testCase, managerFile, piperFile, checkerFile, allTestsOk, testPoints);
 				
 				if (result.getVerdict() != Verdict.OK && result.getVerdict() != Verdict.PARTIAL && taskDetails.stopScoringOnFailure()) {
 					allTestsOk = false;	
@@ -235,7 +251,7 @@ public class SubmissionGrader {
 		return score;
 	}
 	
-	private StepResult executeTest(TestCase testCase, File managerFile, File checkerFile, boolean allTestsOk, double testPoints) {
+	private StepResult executeTest(TestCase testCase, File managerFile, File piperFile, File checkerFile, boolean allTestsOk, double testPoints) {
 		if (!allTestsOk) {
 			StepResult result = new StepResult(Verdict.SKIPPED);
 			score.addTestResult(testCase.getNumber(), result);
@@ -249,11 +265,11 @@ public class SubmissionGrader {
 		File inputFile = new File(testCase.getInput());
 		File outputFile = new File(testCase.getOutput());
 		File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
-		Double tl = timeLimit.orElse(taskDetails.getTime());
-		TestStep testStep = TestStepFactory.getInstance(binaryFile, managerFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getIoTime());
+		Double tl = taskDetails.getTime();
+		TestStep testStep = TestStepFactory.getInstance(binaryFile, managerFile, piperFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getIoTime());
 		testStep.execute();
 		if (testStep.getVerdict() == Verdict.TL && tl < 1 && allTestsOk) {
-			testStep = TestStepFactory.getInstance(binaryFile, managerFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getIoTime());
+			testStep = TestStepFactory.getInstance(binaryFile, managerFile, piperFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getIoTime());
 			testStep.execute();
 		}
 		

@@ -1,5 +1,6 @@
 package org.pesho.grader.compile;
 import java.io.File;
+import java.util.Map;
 
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
@@ -11,8 +12,8 @@ public class ZipCompileStep extends CompileStep {
 
 	public static final String SOURCE_FILE_ENDING = ".zip";
 
-	public ZipCompileStep(File sourceFile, File graderDir) {
-		super(sourceFile, graderDir);
+	public ZipCompileStep(File sourceFile, File graderDir, Map<String, Double> time, Map<String, Integer> memory) {
+		super(sourceFile, graderDir, time, memory);
 	}
 	
 	@Override

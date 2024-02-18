@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.math3.util.Precision;
 import org.pesho.grader.step.BaseStep;
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
@@ -16,6 +15,7 @@ public abstract class TestStep implements BaseStep {
 
 	protected final File binaryFile;
 	protected final File managerFile;
+	protected final File piperFile;
 	protected final File inputFile;
 	protected final File outputFile;
 	protected final File sandboxDir;
@@ -24,9 +24,10 @@ public abstract class TestStep implements BaseStep {
 	protected final int processes;
 	protected StepResult result;
 
-	public TestStep(File binaryFile, File managerFile, File inputFile, File outputFile, double time, int memory, int processes) {
+	public TestStep(File binaryFile, File managerFile, File piperFile, File inputFile, File outputFile, double time, int memory, int processes) {
 		this.binaryFile = binaryFile.getAbsoluteFile();
 		this.managerFile = managerFile != null ? managerFile.getAbsoluteFile():null;
+		this.piperFile = piperFile != null ? piperFile.getAbsoluteFile():null;
 		this.inputFile = inputFile.getAbsoluteFile();
 		this.outputFile = outputFile.getAbsoluteFile();
 		this.time = time;
@@ -104,7 +105,6 @@ public abstract class TestStep implements BaseStep {
 			new File(sandboxDir, managerFile.getName()).setExecutable(true);
 			new ProcessExecutor().command("chmod", "+x", new File(sandboxDir, managerFile.getName()).getAbsolutePath()).execute();
 			
-			File piperFile = new File("/app/worker/piper/piper");
 			FileUtils.copyFile(piperFile, new File(sandboxDir, piperFile.getName()));
 			new File(sandboxDir, piperFile.getName()).setExecutable(true);
 			new ProcessExecutor().command("chmod", "+x", new File(sandboxDir, piperFile.getName()).getAbsolutePath()).execute();

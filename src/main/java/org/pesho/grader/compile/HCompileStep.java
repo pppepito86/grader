@@ -1,5 +1,6 @@
 package org.pesho.grader.compile;
 import java.io.File;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.StepResult;
@@ -17,11 +18,11 @@ public class HCompileStep extends CompileStep {
 	public static final String SOURCE_FILE_ENDING = ".h";
 
 	public HCompileStep(File sourceFile) {
-		this(sourceFile, null);
+		this(sourceFile, null, null, null);
 	}
 	
-	public HCompileStep(File sourceFile, File graderDir) {
-		super(sourceFile, graderDir);
+	public HCompileStep(File sourceFile, File graderDir, Map<String, Double> time, Map<String, Integer> memory) {
+		super(sourceFile, graderDir, time, memory);
 	}
 	
 	@Override

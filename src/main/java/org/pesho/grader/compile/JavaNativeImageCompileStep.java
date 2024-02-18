@@ -1,5 +1,6 @@
 package org.pesho.grader.compile;
 import java.io.File;
+import java.util.Map;
 
 public class JavaNativeImageCompileStep extends CompileStep {
 
@@ -10,8 +11,8 @@ public class JavaNativeImageCompileStep extends CompileStep {
 	public static final String JAR_FILE_ENDING = ".jar";
 	public static final String BINARY_FILE_ENDING = ".jar";
 
-	public JavaNativeImageCompileStep(File sourceFile, File graderDir) {
-		super(sourceFile, graderDir);
+	public JavaNativeImageCompileStep(File sourceFile, File graderDir, Map<String, Double> time, Map<String, Integer> memory) {
+		super(sourceFile, graderDir, time, memory);
 	}
 
 	@Override

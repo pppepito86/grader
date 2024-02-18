@@ -1,5 +1,6 @@
 package org.pesho.grader.compile;
 import java.io.File;
+import java.util.Map;
 
 public class GoCompileStep extends CompileStep {
 
@@ -7,11 +8,11 @@ public class GoCompileStep extends CompileStep {
 	public static final String SOURCE_FILE_ENDING = ".go";
 
 	public GoCompileStep(File sourceFile) {
-		this(sourceFile, null);
+		this(sourceFile, null, null, null);
 	}
 	
-	public GoCompileStep(File sourceFile, File graderDir) {
-		super(sourceFile, graderDir);
+	public GoCompileStep(File sourceFile, File graderDir, Map<String, Double> time, Map<String, Integer> memory) {
+		super(sourceFile, graderDir, time, memory);
 	}
 	
 	@Override

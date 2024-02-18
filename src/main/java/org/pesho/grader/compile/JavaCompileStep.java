@@ -1,8 +1,6 @@
 package org.pesho.grader.compile;
 import java.io.File;
-import java.util.Arrays;
-
-import org.zeroturnaround.exec.ProcessExecutor;
+import java.util.Map;
 
 public class JavaCompileStep extends CompileStep {
 
@@ -11,8 +9,8 @@ public class JavaCompileStep extends CompileStep {
 	public static final String SOURCE_FILE_ENDING = ".java";
 	public static final String BINARY_FILE_ENDING = ".jar";
 
-	public JavaCompileStep(File sourceFile, File graderDir) {
-		super(sourceFile, graderDir);
+	public JavaCompileStep(File sourceFile, File graderDir, Map<String, Double> time, Map<String, Integer> memory) {
+		super(sourceFile, graderDir, time, memory);
 	}
 
 	@Override

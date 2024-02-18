@@ -3,6 +3,7 @@ package org.pesho.grader.compile;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.BaseStep;
@@ -16,12 +17,16 @@ public abstract class CompileStep implements BaseStep {
 	protected final File sourceFile;
 	protected final File graderDir;
 	protected final File sandboxDir;
+	protected final Map<String, Double> time;
+	protected final Map<String, Integer> memory;
 	protected StepResult result;
 
-	public CompileStep(File sourceFile, File graderDir) {
+	public CompileStep(File sourceFile, File graderDir, Map<String, Double> time, Map<String, Integer> memory) {
 		this.sourceFile = sourceFile.getAbsoluteFile();
 		this.graderDir = graderDir;
 		this.sandboxDir = new File(sourceFile.getParentFile(), "sandbox_compile");
+		this.time = time;
+		this.memory = memory;
 	}
 
 	public void execute() {
@@ -52,16 +57,16 @@ public abstract class CompileStep implements BaseStep {
 			command = String.format(JavaCompileStep.JAR_COMMAND_PATTERN, getBinaryFileName(), ((JavaCompileStep) this).getMainClassName());
 		}
 		
-		int timeout = 10;
-		int memory = 512;
-		if (this instanceof JavaNativeImageCompileStep) timeout = 300;
-		if (this instanceof JavaNativeImageCompileStep) memory = 1536;
+		double timeout = time.get("default");
+		int maxMemory = memory.get("default");
+		if (this instanceof JavaNativeImageCompileStep) timeout = time.get("java");
+		if (this instanceof JavaNativeImageCompileStep) maxMemory = memory.get("java");
 		return new SandboxExecutor()
 				.directory(sandboxDir)
 				.trusted(true)
 				.showError()
 				.timeout(timeout)
-				.memory(memory)
+				.memory(maxMemory)
 				.command(command);		
 	}
 

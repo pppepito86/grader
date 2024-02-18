@@ -29,12 +29,10 @@ import org.pesho.grader.task.quiz.Quiz;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.pesho.grader.task.quiz.QuizTask;
-import org.pesho.grader.task.quiz.QuizType;
 
 public class TaskDetails {
 
 	private String taskName;
-	private String taskDir;
 	
 	private Map<String, Object> files;
 	
@@ -43,7 +41,13 @@ public class TaskDetails {
 	private int processes;
 	private double time;
 	private double ioTime;
+	private double compileTime;
+	private double javaCompileTime;
+	private boolean isDefaultCompileTime;
 	private int memory;
+	private int compileMemory;
+	private int javaCompileMemory;
+	private boolean isDefaultCompileMemory;
 	private int rejudgeTimes;
 	private String checker;
 	private String cppChecker;
@@ -87,14 +91,20 @@ public class TaskDetails {
 		this.processes = Integer.valueOf(props.getProperty("processes", "1"));
         this.time = Double.valueOf(props.getProperty("time", "1"));
         this.ioTime = Double.valueOf(props.getProperty("io_time", "0"));
+        this.compileTime = Double.valueOf(props.getProperty("compile_time", "10"));
+        this.javaCompileTime = Double.valueOf(props.getProperty("java_compile_time", "300"));
+        this.isDefaultCompileTime = !props.containsKey("compile_time");
         this.memory = Integer.valueOf(props.getProperty("memory", "256"));
-		this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "1"));
+        this.compileMemory = Integer.valueOf(props.getProperty("compile_memory", "512"));
+        this.javaCompileMemory = Integer.valueOf(props.getProperty("java_compile_memory", "1536"));
+        this.isDefaultCompileMemory = !props.containsKey("compile_memory");
+        this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "1"));
         this.feedback = props.getProperty("feedback", "FULL").trim();
         this.sample = props.getProperty("sample", "").trim();
         this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
-	this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
+        this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
         this.info = props.getProperty("info", "").trim();
         this.dependencies = props.getProperty("dependencies", "").trim();
@@ -126,7 +136,6 @@ public class TaskDetails {
 	
 	public void parseTask(String taskName, Path taskPath) throws IOException {
 		this.taskName = taskName != null ? taskName : taskPath.getFileName().toString();
-		this.taskDir = taskPath.toAbsolutePath().toString();
 		
 		List<Path> paths = Files.walk(taskPath)
 				.filter(p -> !p.toString().contains("__MACOSX"))
@@ -160,14 +169,20 @@ public class TaskDetails {
 		this.processes = Integer.valueOf(props.getProperty("processes", "1"));
 		this.time = Double.valueOf(props.getProperty("time", "1"));
         this.ioTime = Double.valueOf(props.getProperty("io_time", "0"));
+		this.compileTime = Double.valueOf(props.getProperty("compile_time", "10"));
+		this.javaCompileTime = Double.valueOf(props.getProperty("java_compile_time", "300"));
+		this.isDefaultCompileTime = !props.containsKey("compile_time");
 		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
+		this.compileMemory = Integer.valueOf(props.getProperty("compile_memory", "512"));
+		this.isDefaultCompileMemory = !props.containsKey("compile_memory");
+		this.javaCompileMemory = Integer.valueOf(props.getProperty("java_compile_memory", "1536"));
 		this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "1"));
 		this.feedback = props.getProperty("feedback", "FULL").trim();
         this.sample = props.getProperty("sample", "").trim();
 		this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
         this.scoring = props.getProperty("scoring", this.groups.isEmpty()&&!props.containsKey("patterns")?"tests":"min_fast").trim();
-	this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
+        this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
         this.info = props.getProperty("info", "").trim();
         this.dependencies = props.getProperty("dependencies", "").trim();
@@ -350,6 +365,25 @@ public class TaskDetails {
 	public double getIoTime() {
 		return ioTime;
 	}
+
+	public void setCompileTime(double compileTime) {
+		this.compileTime = compileTime;
+	}
+	
+	public Map<String, Double> getCompileTime() {
+		Map<String, Double> tmp = new HashMap<>();
+		tmp.put("default", compileTime);
+		tmp.put("java", javaCompileTime);
+		return tmp;
+	}
+
+	public void setJavaCompileTime(double javaCompileTime) {
+		this.javaCompileTime = javaCompileTime;
+	}
+
+	public boolean isDefaultCompileTime() {
+		return isDefaultCompileTime;
+	}
 	
 	public void setMemory(int memory) {
 		this.memory = memory;
@@ -358,7 +392,26 @@ public class TaskDetails {
 	public int getMemory() {
 		return memory;
 	}
+
+	public void setCompileMemory(int compileMemory) {
+		this.compileMemory = compileMemory;
+	}
 	
+	public Map<String, Integer> getCompileMemory() {
+		Map<String, Integer> tmp = new HashMap<>();
+		tmp.put("default", compileMemory);
+		tmp.put("java", javaCompileMemory);
+		return tmp;
+	}
+
+	public void setJavaCompileMemory(int javaCompileMemory) {
+		this.javaCompileMemory = javaCompileMemory;
+	}
+
+	public boolean isDefaultCompileMemory() {
+		return isDefaultCompileMemory;
+	}
+
 	public int getRejudgeTimes() {
 		return rejudgeTimes;
 	}
@@ -646,12 +699,6 @@ public class TaskDetails {
 
 	public int getTimer() {
 		return timer;
-	}
-
-	public static void main(String[] args) throws Exception {
-		File file = new File("C:\\Users\\pppep\\OneDrive\\Documents\\workspace\\sts\\workdir\\sti15112021\\problems\\16\\task");
-		TaskDetails details = new TaskDetails("excel", file);
-		System.out.println(details.getContestantZip());
 	}
 	
 	

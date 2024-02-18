@@ -1,5 +1,6 @@
 package org.pesho.grader.compile;
 import java.io.File;
+import java.util.Map;
 
 public class CSharpCompileStep extends CompileStep {
 
@@ -8,11 +9,11 @@ public class CSharpCompileStep extends CompileStep {
 	public static final String BINARY_FILE_ENDING = ".exe";
 
 	public CSharpCompileStep(File sourceFile) {
-		this(sourceFile, null);
+		this(sourceFile, null, null, null);
 	}
-
-	public CSharpCompileStep(File sourceFile, File graderDir) {
-		super(sourceFile, graderDir);
+	
+	public CSharpCompileStep(File sourceFile, File graderDir, Map<String, Double> time, Map<String, Integer> memory) {
+		super(sourceFile, graderDir, time, memory);
 	}
 	
 	@Override
