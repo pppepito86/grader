@@ -20,6 +20,7 @@ import org.pesho.grader.task.parser.PropertiesFinder;
 import org.pesho.grader.task.parser.QuizFinder;
 import org.pesho.grader.task.parser.SolutionsFinder;
 import org.pesho.grader.task.parser.StatementFinder;
+import org.pesho.grader.task.parser.TranslationsFinder;
 import org.pesho.grader.task.parser.AnalysisFinder;
 import org.pesho.grader.task.parser.TaskFilesFinder;
 import org.pesho.grader.task.parser.TaskTestsFinderv2;
@@ -64,6 +65,7 @@ public class TaskDetails {
 	private String dependencies;
 	private List<TestGroup> testGroups;
 	private String description;
+	private Map<String,String> translatedStatements;
 	private String analysis;
 	private String criteria;
 	private Double arbiterDelta;
@@ -198,8 +200,11 @@ public class TaskDetails {
 		this.imagesDir = ImagesFinder.find(paths).map(Path::toString).orElse(null);
         this.isInteractive = graderDir != null;
         this.isCommunication = manager != null;
-		this.description = StatementFinder.find(paths).map(Path::toString).orElse(null);
-		this.analysis = AnalysisFinder.find(description, paths).map(Path::toString).orElse(null);
+		this.analysis = AnalysisFinder.find(paths).map(Path::toString).orElse(null);
+		this.description = StatementFinder.find(analysis, paths).map(Path::toString).orElse(null);
+		this.translatedStatements = TranslationsFinder.find(description, paths).stream().map(Path::toString)
+			.collect(Collectors.toMap(x -> x.toString().substring(x.length()-6, x.length()-4), x-> x, (key1, key2) -> key1, TreeMap::new));
+		if (!translatedStatements.containsKey("en")) translatedStatements.put("en", description);
 		this.contestantZip = ContestantFinder.find(paths).map(Path::toString).orElse(null);
 
 		if ("quiz".equals(scoring)) {
@@ -284,7 +289,10 @@ public class TaskDetails {
         if (manager != null) ((Map<String, Object>) files.get(manager)).put("type", "manager");
         if (graderDir != null) ((Map<String, Object>) files.get(graderDir)).put("type", "grader");
         if (imagesDir != null) ((Map<String, Object>) files.get(imagesDir)).put("type", "images");
-        if (description != null) ((Map<String, Object>) files.get(description)).put("type", "statement");
+		for (Map.Entry<String,String> entry : translatedStatements.entrySet()) {
+			((Map<String, Object>) files.get(entry.getValue())).put("type", "statement_" + entry.getKey());
+		}
+		if (description != null) ((Map<String, Object>) files.get(description)).put("type", "statement");
 	if (analysis != null) ((Map<String, Object>) files.get(analysis)).put("type", "analysis");
 	
         PropertiesFinder.find(paths).map(Path::toString).ifPresent(path -> 
@@ -316,6 +324,9 @@ public class TaskDetails {
         if (graderDir != null) graderDir = taskPath.resolve(graderDir).toString();
         if (contestantZip != null) contestantZip = taskPath.resolve(contestantZip).toString();
         if (description != null) description = taskPath.resolve(description).toString();
+		for (Map.Entry<String,String> entry : translatedStatements.entrySet()) {
+			translatedStatements.put(entry.getKey(), taskPath.resolve(entry.getValue()).toString());
+		}
 	if (analysis != null) analysis = taskPath.resolve(analysis).toString();
 
         if (imagesDir != null) imagesDir = taskPath.resolve(imagesDir).toString();
@@ -547,6 +558,10 @@ public class TaskDetails {
 	
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public Map<String, String> getTranslations() {
+		return translatedStatements;
 	}
 
 	public String getAnalysis() {

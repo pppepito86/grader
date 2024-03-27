@@ -7,15 +7,12 @@ import java.util.stream.Collectors;
 
 public class AnalysisFinder {
 
-        public static Optional<Path> find (String statement, List<Path> paths) {
-		if (statement!=null) statement=removeExtension(statement.toLowerCase());
-		final String statementName=statement;
-                paths = paths.stream()
+        public static Optional<Path> find (List<Path> paths) {
+		paths = paths.stream()
 			        .filter(x -> {
 					    String name=x.getFileName().toString().toLowerCase();
-                                            if ((!name.endsWith("pdf"))&&(!name.endsWith("docx"))&&(!name.endsWith("doc"))&&(!name.endsWith("rtf"))) return false;
+                                            if (((!name.endsWith("pdf"))&&(!name.endsWith("docx"))&&(!name.endsWith("doc"))&&(!name.endsWith("rtf"))&&(!name.endsWith("txt")))) return false;
                                             String path=removeExtension(x.toString().toLowerCase());
-                                            if (path.equals(statementName)) return false;
                                             name=removeExtension(name);
                                             if ((!path.contains("analysis"))&&(!path.contains("solution"))&&(!path.contains("author"))&&
 						(!path.contains("analiz"))&&(!path.contains("reshenie"))&&
