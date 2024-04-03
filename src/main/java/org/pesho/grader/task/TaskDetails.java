@@ -204,7 +204,7 @@ public class TaskDetails {
 		this.description = StatementFinder.find(analysis, paths).map(Path::toString).orElse(null);
 		this.translatedStatements = TranslationsFinder.find(description, paths).stream().map(Path::toString)
 			.collect(Collectors.toMap(x -> x.toString().substring(x.length()-6, x.length()-4), x-> x, (key1, key2) -> key1, TreeMap::new));
-		if (!translatedStatements.containsKey("en")) translatedStatements.put("en", description);
+		if (!translatedStatements.containsKey("en") && description != null) translatedStatements.put("en", description);
 		this.contestantZip = ContestantFinder.find(paths).map(Path::toString).orElse(null);
 
 		if ("quiz".equals(scoring)) {

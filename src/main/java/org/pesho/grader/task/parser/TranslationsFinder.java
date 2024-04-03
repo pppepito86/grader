@@ -3,11 +3,13 @@ package org.pesho.grader.task.parser;
 import java.nio.file.Path;
 import java.io.File;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 public class TranslationsFinder {
 
     public static List<Path> find(String statement, List<Path> paths) {
+        if (statement == null) return new ArrayList<>();
         String dir = (new File(statement)).getAbsoluteFile().getParent();
         return paths.stream()
             .filter(x -> {
