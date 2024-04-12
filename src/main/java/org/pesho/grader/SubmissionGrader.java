@@ -235,8 +235,7 @@ public class SubmissionGrader {
 			if (taskDetails.getPoints() == -1) {
 				groupScore = checkerSum;
 				score += checkerSum;
-			} else if (taskDetails.testsScoring() || taskDetails.sumScoring() || 
-					(testGroup.getTestCases().size() == 24 && i == 5)){
+			} else if (taskDetails.testsScoring() || taskDetails.sumScoring()){
 				groupScore = testGroup.getWeight() * checkerSum / testGroup.getTestCases().size();
 				if (taskDetails.sumScoring() && groupVerdict != Verdict.OK && Double.compare(groupScore, 0.0) != 0) groupVerdict = Verdict.PARTIAL;
 			} else {
@@ -244,7 +243,6 @@ public class SubmissionGrader {
 			}
 			score += groupScore;
 			
-			if (testGroup.getTestCases().size() == 24 && i == 5 && groupScore != 0.0) groupVerdict = Verdict.PARTIAL;
 			this.score.addGroupResult(i+1, new StepResult(groupVerdict, ""+testInError, groupTime, groupMemory, groupScore*taskDetails.getPoints(), checkerMin));
 		}
 		if (taskDetails.icpcScoring() && !accepted) return 0;
