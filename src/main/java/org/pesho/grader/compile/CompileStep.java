@@ -59,8 +59,8 @@ public abstract class CompileStep implements BaseStep {
 		
 		double timeout = time.get("default");
 		int maxMemory = memory.get("default");
-		if (this instanceof JavaNativeImageCompileStep) timeout = time.get("java");
-		if (this instanceof JavaNativeImageCompileStep) maxMemory = memory.get("java");
+		if (this instanceof JavaCompileStep || this instanceof JavaNativeImageCompileStep) timeout = time.get("java");
+		if (this instanceof JavaCompileStep || this instanceof JavaNativeImageCompileStep) maxMemory = memory.get("java");
 		return new SandboxExecutor()
 				.directory(sandboxDir)
 				.trusted(true)
