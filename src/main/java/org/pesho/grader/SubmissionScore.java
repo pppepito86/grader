@@ -4,8 +4,12 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.apache.commons.math3.util.Precision;
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
+import org.pesho.grader.task.TaskDetails;
+import org.pesho.grader.task.TestCase;
+import org.pesho.grader.task.TestGroup;
 
 public class SubmissionScore implements GradeListener {
 
@@ -99,5 +103,83 @@ public class SubmissionScore implements GradeListener {
 		for (int i = 0; i < testResults.size(); i++) scoreSteps.put("Test"+(i+1), testResults.get(i));
 		return scoreSteps;
 	}
-	
+
+	public double calculateScore (TaskDetails task) {
+		double testsScore = 0.0;
+		if (compileResult ==  null) setCompileResult(getScoreSteps().get("Compile"));
+		if (compileResult.getVerdict() != Verdict.CE) {
+			groupResults = new ArrayList<>();
+			for (int i = 0; i < task.getTestGroups().size(); i++) {
+				TestGroup testGroup = task.getTestGroups().get(i);
+				double checkerSum = 0.0;
+
+				Verdict groupVerdict = Verdict.OK;
+				Double groupTime = null;
+				Long groupMemory = null;
+				Integer testInError = null;
+
+				double dependencyScore = 1;
+				for (int dependencyGroup: task.dependsOn(i+1)) {
+					StepResult dependencyResult = groupResults.get(dependencyGroup-1);
+					if (dependencyResult.getVerdict() == Verdict.PARTIAL && dependencyResult.getCheckerOutput() !=  null) {
+						dependencyScore = Math.min(dependencyScore, dependencyResult.getCheckerOutput());
+					}
+				}
+				double checkerMin = testGroup.getTestCases().size() != 0 ? dependencyScore : 0.0;
+			
+				for (int j = 0; j < testGroup.getTestCases().size(); j++) {
+					TestCase testCase = testGroup.getTestCases().get(j);
+					int testNumber = testCase.getNumber();
+					if (testNumber-1 >= testResults.size()) addTestResult(testNumber, scoreSteps.get("Test"+testCase.getNumber())); /// backward compatability
+					StepResult result = testResults.get(testNumber-1);
+					
+					checkerMin = Math.min(checkerMin, result.getCheckerOutput());
+					checkerSum += result.getCheckerOutput();
+				
+					Double time=result.getTime();
+					if ((time != null) && ((groupTime == null) || (groupTime >= 0))) {
+						if ((groupTime == null) || (time < 0)) groupTime = time;
+						else groupTime = Math.max(groupTime, time);
+					}
+					Long memory=result.getMemory();
+					if ((memory != null) && ((groupMemory == null) || (groupMemory >= 0))) {
+						if ((groupMemory == null) || (memory < 0)) groupMemory = memory;
+						else groupMemory = Math.max(groupMemory, memory);
+					}
+				
+					if (groupVerdict != Verdict.OK && groupVerdict != Verdict.PARTIAL && testInError == null) {
+						testInError = j+1;
+					}
+					if (groupVerdict == Verdict.OK) {
+						groupVerdict = result.getVerdict();
+					} else if (groupVerdict == Verdict.PARTIAL && result.getVerdict() != Verdict.OK) {
+						groupVerdict = result.getVerdict();
+					}
+				}
+
+				double groupScore = 0;
+				if (task.getPoints() == -1) {
+					groupScore = checkerSum;
+				} else if (task.testsScoring() || task.sumScoring()){
+					groupScore = testGroup.getWeight() * checkerSum / testGroup.getTestCases().size();
+					if (task.sumScoring() && groupVerdict != Verdict.OK && Double.compare(groupScore, 0.0) != 0) groupVerdict = Verdict.PARTIAL;
+				} else {
+					groupScore = testGroup.getWeight() * checkerMin;
+				}
+				testsScore += groupScore;
+			
+				addGroupResult(i+1, new StepResult(groupVerdict, ""+testInError, groupTime, groupMemory, groupScore*task.getPoints(), checkerMin));
+			}
+		}
+
+		double finalScore = 0;
+		if (task.getPoints() == -1) {
+			finalScore = Precision.round(testsScore, task.getPrecision());
+		} else {
+			finalScore = Precision.round(testsScore * task.getPoints(), task.getPrecision());
+		}
+		addFinalScore("", finalScore);
+
+		return finalScore;
+	}
 }

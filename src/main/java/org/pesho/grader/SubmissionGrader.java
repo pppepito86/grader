@@ -105,23 +105,9 @@ public class SubmissionGrader {
 			return 0;
 		}
 		
-		double testsScore = executeTests(checkerFile, piperDir);
-		double finalScore = 0;
-		String verdict = "";
-		if (taskDetails.getPoints() == -1) {
-			finalScore = Precision.round(testsScore, taskDetails.getPrecision());
-		} else {
-			finalScore = Precision.round(testsScore * taskDetails.getPoints(), taskDetails.getPrecision());
-			
-			int percent = (int) (Math.round(100 * finalScore / testsScore) + 0.5);
-			verdict = "Accepted";
-			if (percent < 100) {
-				verdict = percent + "%";
-			}
-		}
-		score.addFinalScore(verdict, finalScore);
+		double finalScore = executeTests(checkerFile, piperDir);
 		if (listener != null) {
-			listener.addFinalScore(verdict, finalScore);
+			listener.addFinalScore("", finalScore);
 			listener.scoreUpdated(submissionId, score);
 		}
 		return finalScore;
@@ -168,35 +154,23 @@ public class SubmissionGrader {
 		int testsCount = taskDetails.getTestGroups().stream().mapToInt(g -> g.getTestCases().size()).sum();
 		score.startingTests(groupsCount, testsCount);
 		
-		double score = 0.0;
-		boolean accepted = true;
 		double totalWeight = taskDetails.getTestGroups().stream().mapToDouble(g -> g.getWeight()).sum();
 		for (int i = 0; i < taskDetails.getTestGroups().size(); i++) {
 			TestGroup testGroup = taskDetails.getTestGroups().get(i);
 			double testWeight = testGroup.getWeight()/testGroup.getTestCases().size()/totalWeight;
 			double testPoints = testWeight*taskDetails.getPoints();
-			double checkerSum = 0.0;
 			
-			Verdict groupVerdict = Verdict.OK;
-			Double groupTime = null;
-			Long groupMemory = null;
-			Integer testInError = null;
-
 			File managerFile = taskDetails.getManager() != null?new File(taskDetails.getManager()) : null;
 			File piperFile = new File(piperDir+"/piper");
 			
 			boolean allTestsOk = true;
-			double dependencyScore = 1;
 			for (int dependencyGroup: taskDetails.dependsOn(i+1)) {
 				StepResult dependencyResult = this.score.getGroupResults().get(dependencyGroup-1);
 				if (dependencyResult.getVerdict() != Verdict.OK && dependencyResult.getVerdict() != Verdict.PARTIAL) {
 					allTestsOk = false;
-				}
-				if (dependencyResult.getVerdict() == Verdict.PARTIAL && dependencyResult.getCheckerOutput() !=  null) {
-					dependencyScore = Math.min(dependencyScore, dependencyResult.getCheckerOutput());
+					break;
 				}
 			}
-			double checkerMin = testGroup.getTestCases().size() != 0 ? dependencyScore : 0.0;
 			
 			for (int j = 0; j < testGroup.getTestCases().size(); j++) {
 				TestCase testCase = testGroup.getTestCases().get(j);
@@ -205,48 +179,9 @@ public class SubmissionGrader {
 				if (result.getVerdict() != Verdict.OK && result.getVerdict() != Verdict.PARTIAL && taskDetails.stopScoringOnFailure()) {
 					allTestsOk = false;	
 				}
-				
-				checkerMin = Math.min(checkerMin, result.getCheckerOutput());
-				checkerSum += result.getCheckerOutput();
-				
-				Double time=result.getTime();
-				if ((time != null) && ((groupTime == null) || (groupTime >= 0))) {
-					if ((groupTime == null) || (time < 0)) groupTime = time;
-					else groupTime = Math.max(groupTime, time);
-				}
-				Long memory=result.getMemory();
-				if ((memory != null) && ((groupMemory == null) || (groupMemory >= 0))) {
-					if ((groupMemory == null) || (memory < 0)) groupMemory = memory;
-					else groupMemory = Math.max(groupMemory, memory);
-				}
-				
-				if (groupVerdict != Verdict.OK && groupVerdict != Verdict.PARTIAL && testInError == null) {
-					testInError = j+1;
-				}
-				if (groupVerdict == Verdict.OK) {
-					groupVerdict = result.getVerdict();
-				} else if (groupVerdict == Verdict.PARTIAL && result.getVerdict() != Verdict.OK) {
-					groupVerdict = result.getVerdict();
-				}
 			}
-
-			double groupScore = 0;
-			if (groupVerdict != Verdict.OK) accepted = false;
-			if (taskDetails.getPoints() == -1) {
-				groupScore = checkerSum;
-				score += checkerSum;
-			} else if (taskDetails.testsScoring() || taskDetails.sumScoring()){
-				groupScore = testGroup.getWeight() * checkerSum / testGroup.getTestCases().size();
-				if (taskDetails.sumScoring() && groupVerdict != Verdict.OK && Double.compare(groupScore, 0.0) != 0) groupVerdict = Verdict.PARTIAL;
-			} else {
-				groupScore = testGroup.getWeight() * checkerMin;
-			}
-			score += groupScore;
-			
-			this.score.addGroupResult(i+1, new StepResult(groupVerdict, ""+testInError, groupTime, groupMemory, groupScore*taskDetails.getPoints(), checkerMin));
 		}
-		if (taskDetails.icpcScoring() && !accepted) return 0;
-		return score;
+		return score.calculateScore(taskDetails);
 	}
 	
 	private StepResult executeTest(TestCase testCase, File managerFile, File piperFile, File checkerFile, boolean allTestsOk, double testPoints) {

@@ -30,7 +30,11 @@ public class AnalysisFinder {
                         }
                 }
 		
-		paths.sort((a, b) -> a.toString().length() - b.toString().length());
+		paths.sort((a, b) -> {
+                        if (a.toString().length() < b.toString().length()) return -1;
+                        if (a.toString().length() > b.toString().length()) return +1;
+                        return a.toString().compareTo(b.toString());
+                });
 		for (Path p : paths) {
 		        if (p.getFileName().toString().endsWith("pdf")) return Optional.ofNullable(p);
 		}
