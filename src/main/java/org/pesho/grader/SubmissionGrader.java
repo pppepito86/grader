@@ -180,6 +180,8 @@ public class SubmissionGrader {
 					allTestsOk = false;	
 				}
 			}
+
+			score.calculateGroupScore(i, taskDetails);
 		}
 		return score.calculateScore(taskDetails);
 	}
