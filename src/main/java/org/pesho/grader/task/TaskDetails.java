@@ -40,6 +40,7 @@ public class TaskDetails {
 	private double points;
 	private int precision;
 	private int processes;
+	private int openFiles;
 	private double time;
 	private double ioTime;
 	private double compileTime;
@@ -91,6 +92,7 @@ public class TaskDetails {
         this.points = Double.valueOf(props.getProperty("points", "100"));
 		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
 		this.processes = Integer.valueOf(props.getProperty("processes", "1"));
+		this.openFiles = Integer.valueOf(props.getProperty("open_files", "64"));
         this.time = Double.valueOf(props.getProperty("time", "1"));
         this.ioTime = Double.valueOf(props.getProperty("io_time", "0"));
         this.compileTime = Double.valueOf(props.getProperty("compile_time", "10"));
@@ -169,6 +171,7 @@ public class TaskDetails {
 		this.points = Double.valueOf(props.getProperty("points", "100.0"));
 		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
 		this.processes = Integer.valueOf(props.getProperty("processes", "1"));
+		this.openFiles = Integer.valueOf(props.getProperty("open_files", "64"));
 		this.time = Double.valueOf(props.getProperty("time", "1"));
         this.ioTime = Double.valueOf(props.getProperty("io_time", "0"));
 		this.compileTime = Double.valueOf(props.getProperty("compile_time", "10"));
@@ -360,6 +363,14 @@ public class TaskDetails {
 	
 	public int getProcesses() {
 		return processes;
+	}
+
+	public void setOpenFiles(int openFiles) {
+		this.openFiles = openFiles;
+	}
+
+	public int getOpenFiles() {
+		return openFiles;
 	}
 
 	public void setTime(double time) {

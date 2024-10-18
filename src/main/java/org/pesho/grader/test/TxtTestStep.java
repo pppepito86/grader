@@ -8,8 +8,8 @@ public class TxtTestStep extends TestStep {
 
 	public static final String EXECUTE_COMMAND_PATTERN = "/bin/cat %s";
 
-	public TxtTestStep(File binaryFile, File managerFile, File piperFile, File inputFile, File outputFile, double time, int memory, int processes) {
-		super(binaryFile, managerFile, piperFile, inputFile, outputFile, time, memory, processes);
+	public TxtTestStep(File binaryFile, File managerFile, File piperFile, File inputFile, File outputFile, double time, int memory, int processes, int openFiles) {
+		super(binaryFile, managerFile, piperFile, inputFile, outputFile, time, memory, processes, openFiles);
 	}
 
 	@Override

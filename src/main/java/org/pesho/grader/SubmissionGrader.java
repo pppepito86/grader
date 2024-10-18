@@ -201,10 +201,10 @@ public class SubmissionGrader {
 		File outputFile = new File(testCase.getOutput());
 		File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
 		Double tl = taskDetails.getTime();
-		TestStep testStep = TestStepFactory.getInstance(binaryFile, managerFile, piperFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getIoTime());
+		TestStep testStep = TestStepFactory.getInstance(binaryFile, managerFile, piperFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getOpenFiles(), taskDetails.getIoTime());
 		testStep.execute();
 		if (testStep.getVerdict() == Verdict.TL && tl < 1 && allTestsOk) {
-			testStep = TestStepFactory.getInstance(binaryFile, managerFile, piperFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getIoTime());
+			testStep = TestStepFactory.getInstance(binaryFile, managerFile, piperFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getOpenFiles(), taskDetails.getIoTime());
 			testStep.execute();
 		}
 		
