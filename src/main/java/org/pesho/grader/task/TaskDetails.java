@@ -263,7 +263,7 @@ public class TaskDetails {
 			}
 		} else {
 			String[] groupsSplit = groups.split(",");
-			String[] weightsSplit = weights.split(",");
+			String[] weightsSplit = (weights.trim().isEmpty())?new String[]{}:weights.split(",");
 			double totalWeight = 0;
 			if (!weights.trim().isEmpty()) {
 				for (String weight: weightsSplit) totalWeight += Double.valueOf(weight.trim());
@@ -495,7 +495,7 @@ public class TaskDetails {
 	public List<Integer> dependsOn(int groupNumber) {
 		if (dependencies.isEmpty()) return new LinkedList<>();
 		
-		String group = dependencies.split(",")[groupNumber-1].trim();
+		String group = dependencies.split(",",-1)[groupNumber-1].trim();
 		if (group.isEmpty()) return new LinkedList<>();
 		return Arrays.stream(group.split(";")).map(String::trim).map(Integer::parseInt).collect(Collectors.toList());
 	}

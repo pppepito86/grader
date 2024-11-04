@@ -175,6 +175,11 @@ public class SubmissionGrader {
 			for (int j = 0; j < testGroup.getTestCases().size(); j++) {
 				TestCase testCase = testGroup.getTestCases().get(j);
 				StepResult result = executeTest(testCase, managerFile, piperFile, checkerFile, allTestsOk, testPoints);
+				score.addTestResult(testCase.getNumber(), result);
+				if (listener != null) {
+					listener.addTestResult(testCase.getNumber(), result);
+					listener.scoreUpdated(submissionId, score);
+				}
 				
 				if (result.getVerdict() != Verdict.OK && result.getVerdict() != Verdict.PARTIAL && taskDetails.stopScoringOnFailure()) {
 					allTestsOk = false;	
@@ -189,12 +194,7 @@ public class SubmissionGrader {
 	private StepResult executeTest(TestCase testCase, File managerFile, File piperFile, File checkerFile, boolean allTestsOk, double testPoints) {
 		if (!allTestsOk) {
 			StepResult result = new StepResult(Verdict.SKIPPED);
-			score.addTestResult(testCase.getNumber(), result);
-			if (listener != null) {
-				listener.addTestResult(testCase.getNumber(), result);
-				listener.scoreUpdated(submissionId, score);
-			}
-			return new StepResult(result.getVerdict());
+			return result;
 		}
 		
 		File inputFile = new File(testCase.getInput());
@@ -209,15 +209,8 @@ public class SubmissionGrader {
 		}
 		
 		if (testStep.getVerdict() != Verdict.OK) {
-			score.addTestResult(testCase.getNumber(), testStep.getResult());
-			if (listener != null) {
-				listener.addTestResult(testCase.getNumber(), testStep.getResult());
-				listener.scoreUpdated(submissionId, score);
-			}
-			StepResult result = new StepResult(testStep.getVerdict());
-			if (!Messages.WALL_CLOCK_TIMEOUT.equals(testStep.getResult().getReason())) result.setTime(testStep.getResult().getTime());
-			result.setMemory(testStep.getResult().getMemory());
-			result.setExitCode(testStep.getResult().getExitCode());
+			StepResult result = testStep.getResult();
+			if (Messages.WALL_CLOCK_TIMEOUT.equals(testStep.getResult().getReason())) result.setTime(null);
 			return result;
 		}
 		
@@ -237,11 +230,6 @@ public class SubmissionGrader {
 		if (result.getVerdict() == Verdict.OK) result.setPoints(testPoints);
 		if (result.getVerdict() == Verdict.PARTIAL) result.setPoints(result.getCheckerOutput() * testPoints);
 
-		score.addTestResult(testCase.getNumber(), result);
-		if (listener != null) {
-			listener.addTestResult(testCase.getNumber(), result);
-			listener.scoreUpdated(submissionId, score);
-		}
 		return result;
 	}
 	

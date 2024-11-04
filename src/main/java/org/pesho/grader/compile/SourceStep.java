@@ -52,7 +52,6 @@ public class SourceStep implements BaseStep {
 
 	@Override
 	public Verdict getVerdict() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 	
