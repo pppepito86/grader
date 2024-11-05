@@ -6,7 +6,6 @@ import java.util.Optional;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.math3.util.Precision;
 import org.pesho.sandbox.Messages;
 import org.pesho.grader.check.CheckStep;
 import org.pesho.grader.check.CheckStepFactory;
@@ -154,6 +153,7 @@ public class SubmissionGrader {
 		int testsCount = taskDetails.getTestGroups().stream().mapToInt(g -> g.getTestCases().size()).sum();
 		score.startingTests(groupsCount, testsCount);
 		
+		double testsScore = 0.0;
 		double totalWeight = taskDetails.getTestGroups().stream().mapToDouble(g -> g.getWeight()).sum();
 		for (int i = 0; i < taskDetails.getTestGroups().size(); i++) {
 			TestGroup testGroup = taskDetails.getTestGroups().get(i);
@@ -186,9 +186,9 @@ public class SubmissionGrader {
 				}
 			}
 
-			score.calculateGroupScore(i, taskDetails);
+			testsScore += score.calculateGroupScore(i, taskDetails);
 		}
-		return score.calculateScore(taskDetails);
+		return score.calculateFinalScore(taskDetails, testsScore);
 	}
 	
 	private StepResult executeTest(TestCase testCase, File managerFile, File piperFile, File checkerFile, boolean allTestsOk, double testPoints) {
@@ -203,9 +203,16 @@ public class SubmissionGrader {
 		Double tl = taskDetails.getTime();
 		TestStep testStep = TestStepFactory.getInstance(binaryFile, managerFile, piperFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getOpenFiles(), taskDetails.getIoTime());
 		testStep.execute();
-		if (testStep.getVerdict() == Verdict.TL && tl < 1 && allTestsOk) {
+		if (testStep.getVerdict() == Verdict.TL && !Messages.WALL_CLOCK_TIMEOUT.equals(testStep.getResult().getReason()) && tl < 1) {
 			testStep = TestStepFactory.getInstance(binaryFile, managerFile, piperFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getOpenFiles(), taskDetails.getIoTime());
 			testStep.execute();
+		}
+		if (testStep.getVerdict() == Verdict.TL) {
+			int rejudgeTimes = taskDetails.getRejudgeTimes();
+			for (int i = 2; i <= rejudgeTimes; i++) {
+				if (testStep.getVerdict() != Verdict.TL || Messages.WALL_CLOCK_TIMEOUT.equals(testStep.getResult().getReason()) || Messages.EXTRA_TIME_LIMIT_EXCEEDED.equals(testStep.getResult().getReason())) break;
+				testStep.execute();
+			}
 		}
 		
 		if (testStep.getVerdict() != Verdict.OK) {

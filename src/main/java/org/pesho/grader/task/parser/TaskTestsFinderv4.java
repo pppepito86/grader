@@ -34,7 +34,7 @@ public class TaskTestsFinderv4 {
 				.map(p -> taskPath.relativize(p))
 				.collect(Collectors.toList());
 		
-		List<TestCase> testCases = TaskTestsFinderv4.find(paths, "peru1,perulog,perumic");
+		List<TestCase> testCases = TaskTestsFinderv4.find(paths, taskPath, "peru1,perulog,perumic");
 		for (TestCase testCase: testCases) {
 			System.out.println(testCase.getNumber() + " " + testCase.getInput() + " " + testCase.getOutput());
 		}
@@ -57,13 +57,21 @@ public class TaskTestsFinderv4 {
 				.findFirst().orElse(null);
 	}
 	
-	public static List<TestCase> find(List<Path> paths, String patterns) throws IOException {
+	public static List<TestCase> find(List<Path> paths, Path basePath, String patterns) throws IOException {
 		Path testFolder = findTestsFolder(paths);
 		if (testFolder == null) throw new IllegalStateException("Cannot find tests folder.");
 		
+		String[] patternsSplit = patterns.split(",");
 		List<Path> possibleTests = paths.stream()
 				.filter(p -> !p.equals(testFolder))
+				.filter(p -> Files.isRegularFile(basePath.resolve(p)))
 				.filter(p -> p.toString().startsWith(testFolder.toString()))
+				.filter(p -> {
+					for (String patternSplit : patternsSplit) {
+						if (p.toString().contains(patternSplit)) return true;
+					}
+					return false;
+				})
 				.collect(Collectors.toList());
 		
 		List<Path> possibleInputs = possibleTests.stream()
@@ -77,7 +85,6 @@ public class TaskTestsFinderv4 {
 			possibleOutputs.add(possibleInputs.remove(possibleInputs.size()-1));
 		}
 
-		String[] patternsSplit = patterns.split(","); 
 		possibleInputs = possibleInputs.stream().sorted((pi1, pi2) -> {
 			List<String> l1 = splitName(pi1.toString());
 			List<String> l2 = splitName(pi2.toString());

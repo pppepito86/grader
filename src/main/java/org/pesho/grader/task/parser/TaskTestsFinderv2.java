@@ -1,6 +1,7 @@
 package org.pesho.grader.task.parser;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -29,8 +30,11 @@ public class TaskTestsFinderv2 {
 			new AbstractMap.SimpleImmutableEntry<>("ans", 1))
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	
-	public static List<TestCase> find(List<Path> paths) throws IOException {
-		Set<String> pathsSet = paths.stream().map(Path::toString).collect(Collectors.toSet());
+	public static List<TestCase> find(List<Path> paths, Path basePath) throws IOException {
+		Set<String> pathsSet = paths.stream()
+			.filter(p -> Files.isRegularFile(basePath.resolve(p)))
+			.map(Path::toString)
+			.collect(Collectors.toSet());
 		
 		List<PathPattern> patterns = getTestPatterns(pathsSet);
 		int testsCount = patterns.stream()

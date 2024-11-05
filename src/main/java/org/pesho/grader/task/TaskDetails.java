@@ -107,7 +107,7 @@ public class TaskDetails {
         this.sample = props.getProperty("sample", "").trim();
         this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
-        this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"tests":"min_fast").trim();
+        this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"sum":"min_fast").trim();
         this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
         this.info = props.getProperty("info", "").trim();
@@ -186,7 +186,7 @@ public class TaskDetails {
         this.sample = props.getProperty("sample", "").trim();
 		this.groups = props.getProperty("groups", "").trim();
         this.weights = props.getProperty("weights", "").trim();
-        this.scoring = props.getProperty("scoring", this.groups.isEmpty()&&!props.containsKey("patterns")?"tests":"min_fast").trim();
+        this.scoring = props.getProperty("scoring", this.groups.isEmpty()&&!props.containsKey("patterns")?"sum":"min_fast").trim();
         this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
         this.extensions = props.getProperty("extensions", "cpp").trim();
         this.info = props.getProperty("info", "").trim();
@@ -227,8 +227,8 @@ public class TaskDetails {
 		if ("manual".equals(scoring) || "quiz".equals(scoring)) {
 			testCases = new ArrayList<>();
 		} else if (props.containsKey("patterns")) {
-			testCases = TaskTestsFinderv4.find(paths, props.getProperty("patterns"));
-			if (this.groups == "") {
+			testCases = TaskTestsFinderv4.find(paths, taskPath, props.getProperty("patterns"));
+			if (groups.isEmpty() && groupsScoring()) {
 				String[] patternsSplit = props.getProperty("patterns").split(",");
 				int total = 0;
 				for (String patternSplit: patternsSplit) {
@@ -242,9 +242,9 @@ public class TaskDetails {
 				groups = groups.substring(0, groups.length()-1);
 			}
 		} else if (props.containsKey("input") && props.containsKey("output")) {
-			testCases = new TaskTestsFinderv3().find(paths, props.getProperty("input"), props.getProperty("output"));
+			testCases = new TaskTestsFinderv3().find(paths, taskPath, props.getProperty("input"), props.getProperty("output"));
 		} else {
-			testCases = TaskTestsFinderv2.find(paths);
+			testCases = TaskTestsFinderv2.find(paths, taskPath);
 		}
 
 		Set<Integer> feedbackGroups = feedback();
@@ -297,7 +297,7 @@ public class TaskDetails {
 			((Map<String, Object>) files.get(entry.getValue())).put("type", "statement_" + entry.getKey());
 		}
 		if (description != null) ((Map<String, Object>) files.get(description)).put("type", "statement");
-	if (analysis != null) ((Map<String, Object>) files.get(analysis)).put("type", "analysis");
+		if (analysis != null) ((Map<String, Object>) files.get(analysis)).put("type", "analysis");
 	
         PropertiesFinder.find(paths).map(Path::toString).ifPresent(path -> 
         	((Map<String, Object>) files.get(path)).put("type", "props")
@@ -331,7 +331,7 @@ public class TaskDetails {
 		for (Map.Entry<String,String> entry : translatedStatements.entrySet()) {
 			translatedStatements.put(entry.getKey(), taskPath.resolve(entry.getValue()).toString());
 		}
-	if (analysis != null) analysis = taskPath.resolve(analysis).toString();
+		if (analysis != null) analysis = taskPath.resolve(analysis).toString();
 
         if (imagesDir != null) imagesDir = taskPath.resolve(imagesDir).toString();
         
@@ -541,19 +541,11 @@ public class TaskDetails {
 	}
 	
 	public boolean testsScoring() {
-		return scoring.equalsIgnoreCase("tests") || scoring.equalsIgnoreCase("icpc");
+		return scoring.equalsIgnoreCase("sum") || scoring.equalsIgnoreCase("tests") || scoring.equalsIgnoreCase("icpc");
 	}
 
 	public boolean groupsScoring() {
 		return !testsScoring();
-	}
-
-	public boolean icpcScoring() {
-		return scoring.equalsIgnoreCase("icpc"); 
-	}
-	
-	public boolean sumScoring() {
-		return scoring.equalsIgnoreCase("sum"); 
 	}
 	
 	public boolean minScoring() {
