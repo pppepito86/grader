@@ -33,6 +33,11 @@ public class ScoreParser {
 				.mapToObj(i -> {
 					Verdict verdict = score.getTestResults().get(i).getVerdict();
 					if (verdict == Verdict.WAITING) return "wait";
+					if (verdict == Verdict.PARTIAL) {
+						String points = "" + Precision.round(score.getTestResults().get(i).getPoints(), 6);
+						if (points.contains(".")) points = points.replaceAll("0*$","").replaceAll("\\.$","");
+						return "|"+points+"|";
+					}
 					if (details.getTestGroups().get(i).getWeight() == 0) return "["+verdict.name()+"]";
 					return verdict.name();
 				})
@@ -44,9 +49,8 @@ public class ScoreParser {
 				.map(result -> {
 					if (result.getVerdict() == Verdict.WAITING) return "wait";
 					
-					String points = ""+Precision.round(result.getPoints(), 2);
-					if (points.endsWith(".00")) points = points.replace(".00", "");
-					if (points.endsWith(".0")) points = points.replace(".0", "");
+					String points = "" + Precision.round(result.getPoints(), 6);
+					if (points.contains(".")) points = points.replaceAll("0*$","").replaceAll("\\.$","");
 					if (result.getVerdict() == Verdict.OK) return ""+points;
 					if (result.getVerdict() == Verdict.PARTIAL) return "("+points+")";
 					
