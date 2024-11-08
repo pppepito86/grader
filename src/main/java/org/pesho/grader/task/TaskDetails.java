@@ -141,22 +141,9 @@ public class TaskDetails {
 	public void parseTask(String taskName, Path taskPath) throws IOException {
 		this.taskName = taskName != null ? taskName : taskPath.getFileName().toString();
 		
-		List<Path> paths = Files.walk(taskPath)
-				.filter(p -> !p.toString().contains("__MACOSX"))
-//				.filter(Files::isRegularFile)
-				.map(p -> taskPath.relativize(p))
-//				.map(Path::toString)
-				.collect(Collectors.toList());
+		List<Path> paths = findAllPaths(taskPath);
 		
-		Properties props = new Properties();
-		
-		PropertiesFinder.find(paths).ifPresent(path -> {
-			try (FileInputStream fileInputStream = new FileInputStream(taskPath.resolve(path).toString())) {
-				props.load(fileInputStream);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		});
+		Properties props = findProperties(taskPath, paths);
 		
 		CriteriaFinder.find(paths).ifPresent(path -> {
 			try {
@@ -203,8 +190,11 @@ public class TaskDetails {
 		this.imagesDir = ImagesFinder.find(paths).map(Path::toString).orElse(null);
         this.isInteractive = graderDir != null;
         this.isCommunication = manager != null;
-		this.analysis = AnalysisFinder.find(paths).map(Path::toString).orElse(null);
-		this.description = StatementFinder.find(analysis, paths).map(Path::toString).orElse(null);
+		this.analysis = findAnalysis(paths);
+		this.description = findDescription(taskPath, true);
+		if (description != null && description.endsWith(".tex") && taskPath.resolve(description.replaceAll("\\.tex$", ".pdf")).toFile().exists()) { /// statement should be compiled at this time
+			description = description.replaceAll("\\.tex$", ".pdf");
+		}
 		this.translatedStatements = TranslationsFinder.find(description, paths).stream().map(Path::toString)
 			.collect(Collectors.toMap(x -> x.toString().substring(x.length()-6, x.length()-4), x-> x, (key1, key2) -> key1, TreeMap::new));
 		if (!translatedStatements.containsKey("en") && description != null) translatedStatements.put("en", description);
@@ -223,28 +213,19 @@ public class TaskDetails {
 			});
 		}
 		
-		List<TestCase> testCases = null;
-		if ("manual".equals(scoring) || "quiz".equals(scoring)) {
-			testCases = new ArrayList<>();
-		} else if (props.containsKey("patterns")) {
-			testCases = TaskTestsFinderv4.find(paths, taskPath, props.getProperty("patterns"));
-			if (groups.isEmpty() && groupsScoring()) {
-				String[] patternsSplit = props.getProperty("patterns").split(",");
-				int total = 0;
-				for (String patternSplit: patternsSplit) {
-					int br = 0;
-					for (TestCase testCase: testCases) {
-						if (testCase.getInput().contains(patternSplit)) br++;
-					}
-					total+=br;
-					groups += (total-br+1)+"-"+total+ ",";
+		List<TestCase> testCases = findTestCases(taskPath, true);
+		if (props.containsKey("patterns") && groups.isEmpty() && groupsScoring()) {
+			String[] patternsSplit = props.getProperty("patterns").split(",");
+			int total = 0;
+			for (String patternSplit: patternsSplit) {
+				int br = 0;
+				for (TestCase testCase: testCases) {
+					if (testCase.getInput().contains(patternSplit)) br++;
 				}
-				groups = groups.substring(0, groups.length()-1);
+				total+=br;
+				groups += (total-br+1)+"-"+total+ ",";
 			}
-		} else if (props.containsKey("input") && props.containsKey("output")) {
-			testCases = new TaskTestsFinderv3().find(paths, taskPath, props.getProperty("input"), props.getProperty("output"));
-		} else {
-			testCases = TaskTestsFinderv2.find(paths, taskPath);
+			groups = groups.substring(0, groups.length()-1);
 		}
 
 		Set<Integer> feedbackGroups = feedback();
@@ -339,6 +320,27 @@ public class TaskDetails {
         	testCase.setInput(taskPath.resolve(testCase.getInput()).toString());
         	testCase.setOutput(taskPath.resolve(testCase.getOutput()).toString());
         }
+	}
+
+	private static List<Path> findAllPaths (Path taskPath) throws IOException {
+		return Files.walk(taskPath)
+				.filter(p -> !p.toString().contains("__MACOSX"))
+//				.filter(Files::isRegularFile)
+				.map(p -> taskPath.relativize(p))
+//				.map(Path::toString)
+				.collect(Collectors.toList());
+	}
+
+	private static Properties findProperties (Path taskPath, List<Path> paths) {
+		Properties props = new Properties();
+		PropertiesFinder.find(paths).ifPresent(path -> {
+			try (FileInputStream fileInputStream = new FileInputStream(taskPath.resolve(path).toString())) {
+				props.load(fileInputStream);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
+		return props;
 	}
 
 	public void setPoints(double points) {
@@ -539,6 +541,23 @@ public class TaskDetails {
 	public List<TestGroup> getTestGroups() {
 		return testGroups;
 	}
+
+	public static List<TestCase> findTestCases(Path taskPath, boolean relative) throws IOException {
+		//if ("manual".equals(scoring) || "quiz".equals(scoring)) new ArrayList<>();
+		List<Path> paths = findAllPaths(taskPath);
+		Properties props = findProperties(taskPath, paths);
+		List<TestCase> testCases;
+		if (props.containsKey("patterns")) testCases = TaskTestsFinderv4.find(paths, taskPath, props.getProperty("patterns"));
+		else if (props.containsKey("input") && props.containsKey("output")) testCases = new TaskTestsFinderv3().find(paths, taskPath, props.getProperty("input"), props.getProperty("output"));
+		else testCases = TaskTestsFinderv2.find(paths, taskPath);
+		if (relative == false) {
+			for (TestCase testCase : testCases) {
+				testCase.setInput(taskPath.resolve(testCase.getInput()).toString());
+				testCase.setOutput(taskPath.resolve(testCase.getOutput()).toString());
+			}
+		}
+		return testCases;
+	}
 	
 	public boolean testsScoring() {
 		return scoring.equalsIgnoreCase("sum") || scoring.equalsIgnoreCase("tests") || scoring.equalsIgnoreCase("icpc");
@@ -564,6 +583,14 @@ public class TaskDetails {
 		this.description = description;
 	}
 
+	public static String findDescription (Path taskPath, boolean relative) throws IOException {
+		List<Path> paths = findAllPaths(taskPath);
+		String analysis = findAnalysis(paths);
+		String description = StatementFinder.find(analysis, paths, taskPath).map(Path::toString).orElse(null);
+		if (relative == false) return taskPath.resolve(description).toString();
+		return description;
+	}
+
 	public Map<String, String> getTranslations() {
 		return translatedStatements;
 	}
@@ -574,6 +601,10 @@ public class TaskDetails {
 
 	public void setAnalysis (String analysis) {
 		this.analysis = analysis;
+	}
+
+	public static String findAnalysis (List<Path> paths) throws IOException {
+		return AnalysisFinder.find(paths).map(Path::toString).orElse(null);
 	}
 
 	public String getImagesDir() {
@@ -681,6 +712,11 @@ public class TaskDetails {
 	
 	public String getError() {
 		return error;
+	}
+
+	public void addError (String newError) {
+		if (error != null) error += "\n" + newError;
+		else error = newError;
 	}
 	
 	public boolean isManualScoring() {

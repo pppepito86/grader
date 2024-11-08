@@ -1,19 +1,38 @@
 package org.pesho.grader.task.parser;
 
+import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class StatementFinder {
 
-	public static Optional<Path> find(String analysis, List<Path> paths) {
+	public static Optional<Path> find(String analysis, List<Path> paths, Path basePath) {
 		if (analysis != null) analysis=removeExtension(analysis.toLowerCase());
 		final String analysisName=analysis;
 		paths = paths.stream()
 				.filter(x -> {
 					String name=x.getFileName().toString().toLowerCase();
-					if (!name.endsWith("pdf")) return false;
+					if (!name.endsWith(".pdf") && !name.endsWith(".tex")) return false;
+					if (name.endsWith(".tex")) {
+						try {
+    						Scanner scanner = new Scanner(basePath.resolve(x).toFile());
+							boolean found = false;
+							while (scanner.hasNextLine()) {
+								String line = scanner.nextLine();
+								if (line.contains("begin{document}")) {
+									found = true;
+									break;
+								}
+    						}
+							scanner.close();
+							if (found == false) return false;
+						} catch(FileNotFoundException e) { 
+							e.printStackTrace();
+						}
+					}
 					String path=removeExtension(x.toString().toLowerCase());
                     if (path.equals(analysisName)) return false;
 					if (path.contains("analysis") || path.contains("solution") ||
@@ -24,12 +43,23 @@ public class StatementFinder {
 		
 		if (paths.size() == 0) return Optional.empty();
 		
+		for (String s: new String[]{"task.tex", "description.tex", "statement.tex"}) {
+			if (paths.stream().filter(f -> f.getFileName().toString().toLowerCase().equals(s)).count() > 0) {
+				paths = paths.stream().filter(f -> f.getFileName().toString().toLowerCase().equals(s)).collect(Collectors.toList());
+				break;
+			}
+		}
+		if (paths.stream().filter(f -> f.toString().toLowerCase().endsWith(".tex")).count() > 0) {
+			paths = paths.stream().filter(f -> f.toString().toLowerCase().endsWith(".tex")).collect(Collectors.toList());
+		}
+
 		for (String s: new String[]{"task.pdf", "description.pdf", "statement.pdf"}) {
 			if (paths.stream().filter(f -> f.getFileName().toString().toLowerCase().equals(s)).count() > 0) {
 				paths = paths.stream().filter(f -> f.getFileName().toString().toLowerCase().equals(s)).collect(Collectors.toList());
 				break;
 			}
 		}
+
 		if (paths.stream().filter(f -> f.toString().toLowerCase().contains("statement")).count() > 0) {
 			paths = paths.stream().filter(f -> f.toString().toLowerCase().contains("statement")).collect(Collectors.toList());
 		}
