@@ -96,9 +96,9 @@ public class SubmissionGrader {
 		}
 		
 		if (compile(sourceFile) == 0) {
-			score.addFinalScore("Compilation Failed", 0);
+			score.addFinalScore(0, true);
 			if (listener != null) {
-				listener.addFinalScore("Compilation Failed", 0);
+				//listener.addFinalScore("Compilation Failed", 0);
 				listener.scoreUpdated(submissionId, score);
 			}
 			return 0;
@@ -106,7 +106,7 @@ public class SubmissionGrader {
 		
 		double finalScore = executeTests(checkerFile, piperDir);
 		if (listener != null) {
-			listener.addFinalScore("", finalScore);
+			//listener.addFinalScore("", finalScore);
 			listener.scoreUpdated(submissionId, score);
 		}
 		return finalScore;
@@ -138,7 +138,7 @@ public class SubmissionGrader {
 		
 		score.setCompileResult(result);
 		if (listener != null) {
-			listener.setCompileResult(result);
+			//listener.setCompileResult(result);
 			listener.scoreUpdated(submissionId, score);
 		}
 		if (result.getVerdict() == Verdict.OK) {
@@ -177,7 +177,7 @@ public class SubmissionGrader {
 				StepResult result = executeTest(testCase, managerFile, piperFile, checkerFile, allTestsOk, testPoints);
 				score.addTestResult(testCase.getNumber(), result);
 				if (listener != null) {
-					listener.addTestResult(testCase.getNumber(), result);
+					//listener.addTestResult(testCase.getNumber(), result);
 					listener.scoreUpdated(submissionId, score);
 				}
 				
@@ -187,8 +187,13 @@ public class SubmissionGrader {
 			}
 
 			testsScore += score.calculateGroupScore(i, taskDetails);
+			score.calculateFinalScore(taskDetails, testsScore, false);
+			if (listener != null) {
+				//listener.addGroupResult(i+1, score.getGroupResults().get(i));
+				listener.scoreUpdated(submissionId, score);
+			}
 		}
-		return score.calculateFinalScore(taskDetails, testsScore);
+		return score.calculateFinalScore(taskDetails, testsScore, true);
 	}
 	
 	private StepResult executeTest(TestCase testCase, File managerFile, File piperFile, File checkerFile, boolean allTestsOk, double testPoints) {

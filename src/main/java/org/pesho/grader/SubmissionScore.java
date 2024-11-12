@@ -46,9 +46,9 @@ public class SubmissionScore implements GradeListener {
 		else groupResults.set(groupNumber-1, stepResult);
 	}
 	
-	public void addFinalScore(String verdict, double score) {
+	public void addFinalScore(double score, boolean finished) {
 		this.score = score;
-		this.finished = true;
+		this.finished = finished;
 	}
 
 	public StepResult getCompileResult() {
@@ -173,12 +173,12 @@ public class SubmissionScore implements GradeListener {
 				testsScore += calculateGroupScore(i, task);
 			}
 		}
-		return calculateFinalScore(task, testsScore);
+		return calculateFinalScore(task, testsScore, true);
 	}
 
-	public double calculateFinalScore (TaskDetails task, double testsScore) {
+	public double calculateFinalScore (TaskDetails task, double testsScore, boolean finished) {
 		double finalScore = Precision.round(testsScore * task.getPoints(), task.getPrecision());
-		addFinalScore("", finalScore);
+		addFinalScore(finalScore, finished);
 
 		return finalScore;
 	}
