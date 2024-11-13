@@ -292,7 +292,7 @@ public class TaskDetails {
 		
         for (TestCase testCase: testCases) {
         	((Map<String, Object>) files.get(testCase.getInput())).put("type", "test_in");
-        	((Map<String, Object>) files.get(testCase.getOutput())).put("type", "test_out");
+        	if (testCase.getOutput() != null) ((Map<String, Object>) files.get(testCase.getOutput())).put("type", "test_out");
         }
         
         if (checker != null) checker = taskPath.resolve(checker).toString();
@@ -318,7 +318,7 @@ public class TaskDetails {
         
         for (TestCase testCase: testCases) {
         	testCase.setInput(taskPath.resolve(testCase.getInput()).toString());
-        	testCase.setOutput(taskPath.resolve(testCase.getOutput()).toString());
+        	if (testCase.getOutput() != null) testCase.setOutput(taskPath.resolve(testCase.getOutput()).toString());
         }
 	}
 
@@ -549,11 +549,11 @@ public class TaskDetails {
 		List<TestCase> testCases;
 		if (props.containsKey("patterns")) testCases = TaskTestsFinderv4.find(paths, taskPath, props.getProperty("patterns"));
 		else if (props.containsKey("input") && props.containsKey("output")) testCases = new TaskTestsFinderv3().find(paths, taskPath, props.getProperty("input"), props.getProperty("output"));
-		else testCases = TaskTestsFinderv2.find(paths, taskPath);
+		else testCases = TaskTestsFinderv2.find(paths, taskPath, CheckerFinder.find(paths).isPresent());
 		if (relative == false) {
 			for (TestCase testCase : testCases) {
 				testCase.setInput(taskPath.resolve(testCase.getInput()).toString());
-				testCase.setOutput(taskPath.resolve(testCase.getOutput()).toString());
+				if (testCase.getOutput() != null) testCase.setOutput(taskPath.resolve(testCase.getOutput()).toString());
 			}
 		}
 		return testCases;
@@ -715,6 +715,7 @@ public class TaskDetails {
 	}
 
 	public void addError (String newError) {
+		if (newError == null || newError.isEmpty()) return ;
 		if (error != null) error += "\n" + newError;
 		else error = newError;
 	}

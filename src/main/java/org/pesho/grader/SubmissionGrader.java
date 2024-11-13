@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.pesho.sandbox.Messages;
 import org.pesho.grader.check.CheckStep;
 import org.pesho.grader.check.CheckStepFactory;
@@ -203,7 +204,16 @@ public class SubmissionGrader {
 		}
 		
 		File inputFile = new File(testCase.getInput());
-		File outputFile = new File(testCase.getOutput());
+		File outputFile = null;
+		if (testCase.getOutput() == null) {
+			try {
+				outputFile = File.createTempFile("temp-"+RandomStringUtils.randomAlphabetic(8), ".sol");
+				outputFile.deleteOnExit();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		else outputFile = new File(testCase.getOutput());
 		File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
 		Double tl = taskDetails.getTime();
 		TestStep testStep = TestStepFactory.getInstance(binaryFile, managerFile, piperFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getOpenFiles(), taskDetails.getIoTime());
@@ -228,6 +238,7 @@ public class SubmissionGrader {
 		
 		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
 		checkerStep.execute();
+		if (testCase.getOutput() == null) FileUtils.deleteQuietly(outputFile);
 		StepResult result = checkerStep.getResult();
 		result.setTime(testStep.getResult().getTime());
 		result.setMemory(testStep.getResult().getMemory());
