@@ -66,6 +66,7 @@ public class TaskDetails {
 	private String dependencies;
 	private List<TestGroup> testGroups;
 	private String description;
+	private String texMode;
 	private Map<String,String> translatedStatements;
 	private String analysis;
 	private String criteria;
@@ -85,39 +86,52 @@ public class TaskDetails {
 	public static final TaskDetails EMPTY = new TaskDetails();
 	
 	public TaskDetails() {
-		setProps(new Properties(), null);
+		setProps(new Properties());
 	}
 	
-	private void setProps(Properties props, String checker, TestGroup... testGroups) {
-        this.points = Double.valueOf(props.getProperty("points", "100"));
+	private void setProps(Properties props) {
+		this.points = Double.valueOf(props.getProperty("points", "100.0"));
 		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
 		this.processes = Integer.valueOf(props.getProperty("processes", "1"));
 		this.openFiles = Integer.valueOf(props.getProperty("open_files", "64"));
-        this.time = Double.valueOf(props.getProperty("time", "1"));
-        this.ioTime = Double.valueOf(props.getProperty("io_time", "0"));
-        this.compileTime = Double.valueOf(props.getProperty("compile_time", "10"));
-        this.javaCompileTime = Double.valueOf(props.getProperty("java_compile_time", "300"));
-        this.isDefaultCompileTime = !props.containsKey("compile_time");
-        this.memory = Integer.valueOf(props.getProperty("memory", "256"));
-        this.compileMemory = Integer.valueOf(props.getProperty("compile_memory", "512"));
-        this.javaCompileMemory = Integer.valueOf(props.getProperty("java_compile_memory", "1536"));
-        this.isDefaultCompileMemory = !props.containsKey("compile_memory");
-        this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "1"));
-        this.feedback = props.getProperty("feedback", "FULL").trim();
-        this.sample = props.getProperty("sample", "").trim();
-        this.groups = props.getProperty("groups", "").trim();
-        this.weights = props.getProperty("weights", "").trim();
-        this.scoring = props.getProperty("scoring", this.groups.isEmpty()?"sum":"min_fast").trim();
-        this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
-        this.extensions = props.getProperty("extensions", "cpp").trim();
-        this.info = props.getProperty("info", "").trim();
-        this.dependencies = props.getProperty("dependencies", "").trim();
+		this.time = Double.valueOf(props.getProperty("time", "1"));
+		this.ioTime = Double.valueOf(props.getProperty("io_time", "0"));
+		this.compileTime = Double.valueOf(props.getProperty("compile_time", "10"));
+		this.javaCompileTime = Double.valueOf(props.getProperty("java_compile_time", "300"));
+		this.isDefaultCompileTime = !props.containsKey("compile_time");
+		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
+		this.compileMemory = Integer.valueOf(props.getProperty("compile_memory", "512"));
+		this.isDefaultCompileMemory = !props.containsKey("compile_memory");
+		this.javaCompileMemory = Integer.valueOf(props.getProperty("java_compile_memory", "1536"));
+		this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "1"));
+		this.feedback = props.getProperty("feedback", "FULL").trim();
+		this.sample = props.getProperty("sample", "").trim();
+		this.groups = props.getProperty("groups", "").trim();
+		this.weights = props.getProperty("weights", "").trim();
+		this.scoring = props.getProperty("scoring", this.groups.isEmpty()&&!props.containsKey("patterns")?"sum":"min_fast").trim();
+		this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
+		this.extensions = props.getProperty("extensions", "cpp").trim();
+		this.info = props.getProperty("info", "").trim();
+		this.dependencies = props.getProperty("dependencies", "").trim();
+		this.texMode = props.getProperty("latex", "lualatex").trim();
 		this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
 		this.blacklist = props.getProperty("blacklist", "").trim();
 		this.blacklistedWords = Arrays.stream(blacklist.split(",")).map(s -> s.trim()).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
-        this.checker = checker;
-        this.testGroups = new ArrayList<>();
+		this.arbiterDelta = Double.valueOf(props.getProperty("arbiter_delta", "1.0"));
 		this.timer = Integer.valueOf(props.getProperty("timer", "0"));
+
+		this.checker = null;
+		this.manager = null;
+		this.graderDir = null;
+		this.imagesDir = null;
+		this.isInteractive = false;
+		this.isCommunication = false;
+		this.analysis = null;
+		this.description = null;
+		this.translatedStatements = new HashMap<>();
+		this.contestantZip = null;
+		this.testGroups = new ArrayList<>();
+		this.files = new HashMap<>();
 	}
 
 	public TaskDetails(String taskName, File taskFile) {
@@ -129,7 +143,7 @@ public class TaskDetails {
 			parseTask(taskName, taskPath);
 		} catch (Exception e) {
 			error = e.getMessage();
-			setProps(new Properties(), null);
+			setProps(new Properties());
 			try {
 				files = TaskFilesFinder.find(taskName, taskPath, Files.walk(taskPath).map(p -> taskPath.relativize(p)).collect(Collectors.toList()));
 			} catch (Exception e2) {
@@ -155,34 +169,7 @@ public class TaskDetails {
 			}
 		});
 		
-		this.points = Double.valueOf(props.getProperty("points", "100.0"));
-		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
-		this.processes = Integer.valueOf(props.getProperty("processes", "1"));
-		this.openFiles = Integer.valueOf(props.getProperty("open_files", "64"));
-		this.time = Double.valueOf(props.getProperty("time", "1"));
-        this.ioTime = Double.valueOf(props.getProperty("io_time", "0"));
-		this.compileTime = Double.valueOf(props.getProperty("compile_time", "10"));
-		this.javaCompileTime = Double.valueOf(props.getProperty("java_compile_time", "300"));
-		this.isDefaultCompileTime = !props.containsKey("compile_time");
-		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
-		this.compileMemory = Integer.valueOf(props.getProperty("compile_memory", "512"));
-		this.isDefaultCompileMemory = !props.containsKey("compile_memory");
-		this.javaCompileMemory = Integer.valueOf(props.getProperty("java_compile_memory", "1536"));
-		this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "1"));
-		this.feedback = props.getProperty("feedback", "FULL").trim();
-        this.sample = props.getProperty("sample", "").trim();
-		this.groups = props.getProperty("groups", "").trim();
-        this.weights = props.getProperty("weights", "").trim();
-        this.scoring = props.getProperty("scoring", this.groups.isEmpty()&&!props.containsKey("patterns")?"sum":"min_fast").trim();
-        this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
-        this.extensions = props.getProperty("extensions", "cpp").trim();
-        this.info = props.getProperty("info", "").trim();
-        this.dependencies = props.getProperty("dependencies", "").trim();
-        this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
-        this.blacklist = props.getProperty("blacklist", "").trim();
-		this.blacklistedWords = Arrays.stream(blacklist.split(",")).map(s -> s.trim()).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
-		this.arbiterDelta = Double.valueOf(props.getProperty("arbiter_delta", "1.0"));
-		this.timer = Integer.valueOf(props.getProperty("timer", "0"));
+		setProps(props);
 
         this.checker = CheckerFinder.find(paths).map(Path::toString).orElse(null);
         this.manager = ManagerFinder.find(paths).map(Path::toString).orElse(null);
@@ -482,12 +469,12 @@ public class TaskDetails {
 	}
 
 	public void setScoringType(String scoringType) {
-                this.scoringType = scoringType;
-        }
+		this.scoringType = scoringType;
+	}
 
-        public String getScoringType() {
-                return scoringType;
-        }
+	public String getScoringType() {
+		return scoringType;
+	}
 
 	
 	public String getDependencies() {
@@ -589,6 +576,20 @@ public class TaskDetails {
 		String description = StatementFinder.find(analysis, paths, taskPath).map(Path::toString).orElse(null);
 		if (relative == false) return taskPath.resolve(description).toString();
 		return description;
+	}
+
+	public String getTexMode() {
+		return texMode;
+	}
+	
+	public void setTexMode(String texMode) {
+		this.texMode = texMode;
+	}
+
+	public static String findTexMode (Path taskPath) throws IOException {
+		List<Path> paths = findAllPaths(taskPath);
+		Properties props = findProperties(taskPath, paths);	
+		return props.getProperty("latex", "lualatex").trim();
 	}
 
 	public Map<String, String> getTranslations() {
