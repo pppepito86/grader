@@ -151,6 +151,13 @@ public class SubmissionScore implements GradeListener {
                 groupVerdict = result.getVerdict();
             }
         }
+        if (groupVerdict == Verdict.OK) {
+		for (int dependencyGroup: task.dependsOn(groupIndex+1)) {
+			StepResult dependencyResult = groupResults.get(dependencyGroup-1);
+			groupVerdict = dependencyResult.getVerdict();
+	    	}
+        }
+
 
         double groupScore = 0;
         if (task.testsScoring()){
@@ -177,7 +184,7 @@ public class SubmissionScore implements GradeListener {
 	}
 
 	public double calculateFinalScore (TaskDetails task, double testsScore, boolean finished) {
-		double finalScore = Precision.round(testsScore * task.getPoints(), task.getPrecision());
+		double finalScore = Precision.round(Precision.round(testsScore * task.getPoints(), 6), task.getPrecision());
 		addFinalScore(finalScore, finished);
 
 		return finalScore;
