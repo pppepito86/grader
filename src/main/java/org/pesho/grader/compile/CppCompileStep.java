@@ -94,22 +94,6 @@ public class CppCompileStep extends CompileStep {
 		return new String[] { command };
 	}
 	
-	private String getAllFiles() {
-		String files = sourceFile.getName();
-		if (graderDir != null && graderDir.exists()) {
-			for (File file: graderDir.listFiles()) {
-				if (!file.isFile()) continue;
-				if (file.getName().equalsIgnoreCase("grader")) continue;
-				if (file.getName().equals(sourceFile.getName())) continue;
-				if (file.getName().equalsIgnoreCase(".DS_Store")) continue;
-				
-				files += " " + file.getName();
-			}
-		}
-		return files;
-	}
-	
-	
 	@Override
 	public String getBinaryFileName() {
 		return sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", "");

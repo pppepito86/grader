@@ -45,18 +45,4 @@ public class JavaCompileStep extends CompileStep {
 //			return new File(sourceFile.getParentFile(), "grader.java").getName().replaceAll(SOURCE_FILE_ENDING + "$", ".class");
 //		}
 	}
-	
-	private String getAllFiles() {
-		String files = sourceFile.getName();
-		if (graderDir != null && graderDir.exists()) {
-			for (File file: graderDir.listFiles()) {
-				if (!file.isFile()) continue;
-				if (file.getName().equals(sourceFile.getName())) continue;
-				
-				files += " " + file.getName();
-			}
-		}
-		return files;
-	}
-	
 }

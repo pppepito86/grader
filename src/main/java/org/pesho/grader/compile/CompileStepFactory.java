@@ -26,6 +26,9 @@ public class CompileStepFactory {
 		if (sourceFile.getName().endsWith(ZipCompileStep.SOURCE_FILE_ENDING)) {
 			return new ZipCompileStep(sourceFile, graderDir, time, memory);
 		}
+		if (sourceFile.getName().endsWith(PythonCompileStep.SOURCE_FILE_ENDING)) {
+			return new PythonCompileStep(sourceFile, graderDir, time, memory);
+		}
 		
 		return new NoCompileStep(sourceFile, graderDir, time, memory);
 	}

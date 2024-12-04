@@ -22,14 +22,6 @@ public class CCompileStep extends CompileStep {
 		return new String[] { command };
 	}
 	
-	private String getAllFiles() {
-		String files = sourceFile.getName();
-		if (graderDir != null && graderDir.exists()) {
-			for (File file: graderDir.listFiles()) files += " " + file.getName();
-		}
-		return files;
-	}
-	
 	@Override
 	public String getBinaryFileName() {
 		return sourceFile.getName().replaceAll(SOURCE_FILE_ENDING + "$", "");

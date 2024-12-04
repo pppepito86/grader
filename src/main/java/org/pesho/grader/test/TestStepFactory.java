@@ -3,6 +3,7 @@ import java.io.File;
 
 import org.pesho.grader.compile.CSharpCompileStep;
 import org.pesho.grader.compile.JavaCompileStep;
+import org.pesho.grader.compile.PythonCompileStep;
 
 public class TestStepFactory {
 	
@@ -25,6 +26,9 @@ public class TestStepFactory {
 		}
 		if (binaryFile.getName().endsWith(CSharpCompileStep.BINARY_FILE_ENDING)) {
 			return new CSharpTestStep(binaryFile, managerFile, piperFile, inputFile, outputFile, time, memory, processes, openFiles);
+		}
+		if (binaryFile.getName().endsWith(PythonCompileStep.BINARY_FILE_ENDING)) {
+			return new PythonTestStep(binaryFile, managerFile, piperFile, inputFile, outputFile, time, memory, processes, openFiles);
 		}
 		return new CppTestStep(binaryFile, managerFile, piperFile, inputFile, outputFile, time, memory, processes, openFiles, ioTime);
 	}

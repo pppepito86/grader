@@ -15,13 +15,14 @@ public class CheckerFinder {
 		List<Path> filtered = paths.stream()
 				.filter(x -> x.toString().contains("checker"))
 				.filter(x -> x.getFileName().toString().endsWith(".jar")
+						|| x.getFileName().toString().endsWith(".py") 
 						|| x.getFileName().toString().endsWith(".sh") 
 						|| !x.getFileName().toString().contains("."))
 				.collect(Collectors.toList());
 		if (filtered.size() == 1) return filtered.stream().findFirst();
 
 		
-		List<String> candidates = Arrays.asList("checker", "checker.sh", "checker.jar");
+		List<String> candidates = Arrays.asList("checker", "checker.sh", "checker.jar", "checker.py");
 		for (Path path: paths) {
 			String parent = Optional.ofNullable(path.getParent()).map(Path::getFileName).map(Path::toString).orElse("");
 			if (candidates.contains(path.getFileName().toString().toLowerCase()) && parent.equals("checker")) {

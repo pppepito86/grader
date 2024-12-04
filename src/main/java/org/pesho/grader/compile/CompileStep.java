@@ -90,6 +90,21 @@ public abstract class CompileStep implements BaseStep {
 		}
 	}
 
+	protected String getAllFiles() {
+		String files = sourceFile.getName();
+		if (graderDir != null && graderDir.exists()) {
+			for (File file: graderDir.listFiles()) {
+				if (!file.isFile()) continue;
+				if (file.getName().equalsIgnoreCase("grader")) continue;
+				if (file.getName().equals(sourceFile.getName())) continue;
+				if (file.getName().equalsIgnoreCase(".DS_Store")) continue;
+				
+				files += " " + file.getName();
+			}
+		}
+		return files;
+	}
+
 	public File getBinaryFile() {
 		return new File(sourceFile.getParentFile(), getBinaryFileName());
 	}

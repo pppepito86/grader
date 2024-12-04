@@ -61,21 +61,6 @@ public class SubmissionGrader {
 		}
 	}
 	
-	public File getGrader(boolean compile) {
-		if (taskDetails.getGraderDir() == null) return null;
-
-		File graderDir = new File(taskDetails.getGraderDir());
-		if (taskDetails.getAllowedExtensions().size() > 1) {
-			if (originalSourceFile.getName().toLowerCase().endsWith(".java")) graderDir = new File(graderDir, "java");
-			else graderDir = new File(graderDir, "cpp");
-		}
-		
-		boolean isCompile = !new File(graderDir, "grader").exists();
-		if (compile == isCompile) return graderDir;
-		
-		return null;
-	}
-	
 	public double gradeInternal(File sandboxDir, String piperDir) {
 		sandboxDir.mkdirs();
 		File sourceFile = new File(sandboxDir, originalSourceFile.getName());
