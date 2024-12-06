@@ -13,7 +13,7 @@ public class CheckStepFactory {
 		if (binaryFile.getName().endsWith(JavaCompileStep.BINARY_FILE_ENDING)) {
 			return new JavaCheckStep(binaryFile, inputFile, outputFile, solutionFile);
 		}
-		if (binaryFile.getName().endsWith(PythonCompileStep.BINARY_FILE_ENDING)) {
+		if (binaryFile.getName().endsWith(PythonCompileStep.BINARY_FILE_ENDING) || binaryFile.getName().endsWith(PythonCompileStep.SOURCE_FILE_ENDING)) {
 			return new PythonCheckStep(binaryFile, inputFile, outputFile, solutionFile);
 		}
 		return new CppCheckStep(binaryFile, inputFile, outputFile, solutionFile);

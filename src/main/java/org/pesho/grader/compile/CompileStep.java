@@ -61,13 +61,15 @@ public abstract class CompileStep implements BaseStep {
 		int maxMemory = memory.get("default");
 		if (this instanceof JavaCompileStep || this instanceof JavaNativeImageCompileStep) timeout = time.get("java");
 		if (this instanceof JavaCompileStep || this instanceof JavaNativeImageCompileStep) maxMemory = memory.get("java");
-		return new SandboxExecutor()
+		SandboxExecutor sandbox = new SandboxExecutor()
 				.directory(sandboxDir)
 				.trusted(true)
 				.showError()
 				.timeout(timeout)
 				.memory(maxMemory)
 				.command(command);		
+		if (this instanceof PythonCompileStep) return sandbox.outputIsError();
+		return sandbox;
 	}
 
 	@Override
