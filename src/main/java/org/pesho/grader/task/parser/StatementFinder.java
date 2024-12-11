@@ -69,7 +69,7 @@ public class StatementFinder {
 	}
 	
 	private static String removeExtension (String name) {
-		String[] parts=name.split(".");
+		String[] parts=name.split("\\.");
 		if (parts.length<2) return name;
 		String res="";
 		for (int i=0; i<=parts.length-2; i++) {

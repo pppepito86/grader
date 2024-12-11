@@ -16,14 +16,14 @@ public class AnalysisFinder {
                                             name=removeExtension(name);
                                             if ((!path.contains("analysis"))&&(!path.contains("solution"))&&(!path.contains("author"))&&
 						(!path.contains("analiz"))&&(!path.contains("reshenie"))&&
-                                                (!name.startsWith("sol"))&&(!name.startsWith("resh"))&&
-                                                (!name.endsWith("sol"))&&(!name.endsWith("resh"))) return false;
+                                                (!name.startsWith("sol"))&&(!name.startsWith("resh"))&&(!name.startsWith("author"))&&(!name.startsWith("autor"))&&
+                                                (!name.endsWith("sol"))&&(!name.endsWith("resh"))&&(!name.endsWith("author"))&&(!name.endsWith("autor"))) return false;
                                             return true;
 				}).collect(Collectors.toList());
 
                 if (paths.size() == 0) return Optional.empty();
 		
-		for (String s: new String[]{"analysis", "solution", "author", "analiz", "reshenie"}) {
+		for (String s: new String[]{"analysis", "solution", "author", "autor", "analiz", "reshenie"}) {
                         if (paths.stream().filter(f -> removeExtension(f.getFileName().toString().toLowerCase()).contains(s)).count() > 0) {
                                 paths = paths.stream().filter(f -> removeExtension(f.getFileName().toString().toLowerCase()).contains(s)).collect(Collectors.toList());
                                 break;
@@ -42,7 +42,7 @@ public class AnalysisFinder {
         }
 
 	private static String removeExtension (String name) {
-	        String[] parts=name.split(".");
+	        String[] parts=name.split("\\.");
 		if (parts.length<2) return name;
 		String res="";
 		for (int i=0; i<=parts.length-2; i++) {
