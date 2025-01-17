@@ -36,6 +36,7 @@ public class ScoreParser {
 					if (verdict == Verdict.PARTIAL) {
 						String points = "" + Precision.round(score.getTestResults().get(i).getPoints(), 6);
 						if (points.contains(".")) points = points.replaceAll("0*$","").replaceAll("\\.$","");
+						if (details.getTestGroups().get(i).getWeight() == 0) return "[|"+points+"|]";
 						return "|"+points+"|";
 					}
 					if (details.getTestGroups().get(i).getWeight() == 0) return "["+verdict.name()+"]";

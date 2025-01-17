@@ -483,10 +483,15 @@ public class TaskDetails {
 	
 	public List<Integer> dependsOn(int groupNumber) {
 		if (dependencies.isEmpty()) return new LinkedList<>();
+		boolean sampleGroup = (groupsScoring() && getTestGroups().size() > 0 && getTestGroups().get(0).getWeight() == 0);
 		
 		String group = dependencies.split(",",-1)[groupNumber-1].trim();
 		if (group.isEmpty()) return new LinkedList<>();
-		return Arrays.stream(group.split(";")).map(String::trim).map(Integer::parseInt).collect(Collectors.toList());
+		return Arrays.stream(group.split(";")).map(String::trim).map(g -> {
+			int res = Integer.parseInt(g);
+			if (sampleGroup) res++;
+			return res;
+		}).collect(Collectors.toList());
 	}
 	
 	public void setChecker(String checker) {
