@@ -21,7 +21,7 @@ public class ScoreParser {
 		if (score.getCompileResult() == null) return "";
 		if (score.getCompileResult().getVerdict() == Verdict.CE) return Verdict.CE.toString();
 		
-		if (details.testsScoring()) {
+		if (score.getType().equals("user_tests") || details.testsScoring()) {
 			return getTestsScore();
 		} else {
 			return getGroupsScore();
@@ -36,10 +36,10 @@ public class ScoreParser {
 					if (verdict == Verdict.PARTIAL) {
 						String points = "" + Precision.round(score.getTestResults().get(i).getPoints(), 6);
 						if (points.contains(".")) points = points.replaceAll("0*$","").replaceAll("\\.$","");
-						if (details.getTestGroups().get(i).getWeight() == 0) return "[|"+points+"|]";
+						if (score.getType().equals("submission") && details.getTestGroups().get(i).getWeight() == 0) return "[|"+points+"|]";
 						return "|"+points+"|";
 					}
-					if (details.getTestGroups().get(i).getWeight() == 0) return "["+verdict.name()+"]";
+					if (score.getType().equals("submission") && details.getTestGroups().get(i).getWeight() == 0) return "["+verdict.name()+"]";
 					return verdict.name();
 				})
 				.collect(Collectors.joining(","));

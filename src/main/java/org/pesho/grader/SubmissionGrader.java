@@ -2,8 +2,11 @@ package org.pesho.grader;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Optional;
 import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -25,35 +28,46 @@ public class SubmissionGrader {
 	
 	private String submissionId;
 	private TaskDetails taskDetails;
+	private List<File> inputFiles;
+	private List<File> outputFiles;
 	private File originalSourceFile;
 	private File binaryFile;
 	private SubmissionScore score;
 	private GradeListener listener;
 	private Optional<Double> compileTime;
 	private Optional<Integer> compileMemory;
+	private File piperFile;
 	
-	public SubmissionGrader(String submissionId, TaskDetails taskTests, String sourceFile) {
-		this(submissionId, taskTests, sourceFile, null);
-	}
-	
-	public SubmissionGrader(String submissionId, TaskDetails taskTests, String sourceFile, GradeListener listener) {
-		this(submissionId, taskTests, sourceFile, listener, Optional.ofNullable(null), Optional.ofNullable(null));
-	}
-	
-	public SubmissionGrader(String submissionId, TaskDetails taskDetails, String sourceFile, GradeListener listener, Optional<Double> compileTL, Optional<Integer> compileML) {
+	public SubmissionGrader(String submissionId, TaskDetails taskDetails, String sourceFile, GradeListener listener, String piperFile, Optional<Double> compileTL, Optional<Integer> compileML) {
 		this.submissionId = submissionId;
 		this.taskDetails = taskDetails;
 		this.originalSourceFile = new File(sourceFile).getAbsoluteFile();
-		this.score = new SubmissionScore();
+		this.inputFiles = null;
+		this.outputFiles = null;
+		this.score = new SubmissionScore("submission");
 		this.listener = listener;
 		this.compileTime = compileTL;
 		this.compileMemory = compileML;
+		this.piperFile = new File(piperFile);
+	}
+
+	public SubmissionGrader(String submissionId, TaskDetails taskDetails, String sourceFile, List<String> inputFiles, List<String> outputFiles, GradeListener listener, String piperFile, Optional<Double> compileTL, Optional<Integer> compileML) {
+		this.submissionId = submissionId;
+		this.taskDetails = taskDetails;
+		this.originalSourceFile = new File(sourceFile).getAbsoluteFile();
+		this.inputFiles = inputFiles.stream().map(f -> new File(f).getAbsoluteFile()).collect(Collectors.toList());
+		this.outputFiles = outputFiles.stream().map(f -> new File(f).getAbsoluteFile()).collect(Collectors.toList());
+		this.score = new SubmissionScore("user_tests");
+		this.listener = listener;
+		this.compileTime = compileTL;
+		this.compileMemory = compileML;
+		this.piperFile = new File(piperFile);
 	}
 	
-	public double grade(String piperDir) {
+	public double grade() {
 		File sandboxDir = new File(originalSourceFile.getParentFile(), "sandbox_"+originalSourceFile.getName());
 		try {
-			double score = gradeInternal(sandboxDir, piperDir);
+			double score = gradeInternal(sandboxDir);
 //			if (score > 0) FileUtils.deleteQuietly(sandboxDir);
 			return score;
 		} finally {
@@ -61,7 +75,8 @@ public class SubmissionGrader {
 		}
 	}
 	
-	public double gradeInternal(File sandboxDir, String piperDir) {
+	public double gradeInternal(File sandboxDir) {
+		String type = (inputFiles == null ? "submission" : "user_tests");
 		sandboxDir.mkdirs();
 		File sourceFile = new File(sandboxDir, originalSourceFile.getName());
 		File checkerFile = null;
@@ -90,7 +105,7 @@ public class SubmissionGrader {
 			return 0;
 		}
 		
-		double finalScore = executeTests(checkerFile, piperDir);
+		double finalScore = executeTests(checkerFile, type);
 		if (listener != null) {
 			//listener.addFinalScore("", finalScore);
 			listener.scoreUpdated(submissionId, score);
@@ -134,45 +149,52 @@ public class SubmissionGrader {
 		return 0;
 	}
 	
-	private double executeTests(File checkerFile, String piperDir) {
-		int groupsCount = taskDetails.getTestGroups().size();
-		int testsCount = taskDetails.getTestGroups().stream().mapToInt(g -> g.getTestCases().size()).sum();
+	private double executeTests(File checkerFile, String type) {
+		int groupsCount = (type.equals("submission") ? taskDetails.getTestGroups().size() : inputFiles.size());
+		int testsCount = (type.equals("submission") ? taskDetails.getTestGroups().stream().mapToInt(g -> g.getTestCases().size()).sum() : inputFiles.size());
 		score.startingTests(groupsCount, testsCount);
 		
 		double testsScore = 0.0;
-		double totalWeight = taskDetails.getTestGroups().stream().mapToDouble(g -> g.getWeight()).sum();
-		for (int i = 0; i < taskDetails.getTestGroups().size(); i++) {
-			TestGroup testGroup = taskDetails.getTestGroups().get(i);
-			double testWeight = testGroup.getWeight()/testGroup.getTestCases().size()/totalWeight;
+		double totalWeight = (type.equals("submission") ? taskDetails.getTestGroups().stream().mapToDouble(g -> g.getWeight()).sum() : inputFiles.size());
+		for (int i = 0; i < groupsCount; i++) {
+			TestGroup testGroup = (type.equals("submission") ? taskDetails.getTestGroups().get(i) : null);
+			double testWeight = (type.equals("submission") ? testGroup.getWeight()/testGroup.getTestCases().size()/totalWeight : 1/totalWeight);
 			double testPoints = testWeight*taskDetails.getPoints();
 			
 			File managerFile = taskDetails.getManager() != null?new File(taskDetails.getManager()) : null;
-			File piperFile = new File(piperDir+"/piper");
 			
-			boolean allTestsOk = true;
-			for (int dependencyGroup: taskDetails.dependsOn(i+1)) {
-				StepResult dependencyResult = this.score.getGroupResults().get(dependencyGroup-1);
-				if (dependencyResult.getVerdict() != Verdict.OK && dependencyResult.getVerdict() != Verdict.PARTIAL) {
-					allTestsOk = false;
-					break;
+			if (type.equals("submission")) {
+				boolean allTestsOk = true;
+				for (int dependencyGroup: taskDetails.dependsOn(i+1)) {
+					StepResult dependencyResult = this.score.getGroupResults().get(dependencyGroup-1);
+					if (dependencyResult.getVerdict() != Verdict.OK && dependencyResult.getVerdict() != Verdict.PARTIAL) {
+						allTestsOk = false;
+						break;
+					}
 				}
+			
+				for (int j = 0; j < testGroup.getTestCases().size(); j++) {
+					TestCase testCase = testGroup.getTestCases().get(j);
+					StepResult result = executeTest(testCase, managerFile, checkerFile, allTestsOk, testPoints, "submission");
+					score.addTestResult(testCase.getNumber(), result);
+					if (listener != null) {
+						//listener.addTestResult(testCase.getNumber(), result);
+						listener.scoreUpdated(submissionId, score);
+					}
+					
+					if (result.getVerdict() != Verdict.OK && result.getVerdict() != Verdict.PARTIAL && taskDetails.stopScoringOnFailure()) {
+						allTestsOk = false;	
+					}
+				}
+				testsScore += score.calculateGroupScore(i, taskDetails);
 			}
-			
-			for (int j = 0; j < testGroup.getTestCases().size(); j++) {
-				TestCase testCase = testGroup.getTestCases().get(j);
-				StepResult result = executeTest(testCase, managerFile, piperFile, checkerFile, allTestsOk, testPoints);
-				score.addTestResult(testCase.getNumber(), result);
-				if (listener != null) {
-					//listener.addTestResult(testCase.getNumber(), result);
-					listener.scoreUpdated(submissionId, score);
-				}
-				
-				if (result.getVerdict() != Verdict.OK && result.getVerdict() != Verdict.PARTIAL && taskDetails.stopScoringOnFailure()) {
-					allTestsOk = false;	
-				}
+			else {
+				StepResult result = executeTest(new TestCase(i+1, inputFiles.get(i).getAbsolutePath(), (outputFiles.size() == 0 ? null : outputFiles.get(i).getAbsolutePath())), managerFile, checkerFile, true, testPoints, "user_tests");
+				score.addTestResult(i+1, result);
+				score.addGroupResult(i+1, new StepResult(result.getVerdict(), "", result.getTime(), result.getMemory(), testPoints, result.getCheckerOutput()));
+				testsScore += testPoints;
 			}
 
-			testsScore += score.calculateGroupScore(i, taskDetails);
 			score.calculateFinalScore(taskDetails, testsScore, false);
 			if (listener != null) {
 				//listener.addGroupResult(i+1, score.getGroupResults().get(i));
@@ -182,7 +204,7 @@ public class SubmissionGrader {
 		return score.calculateFinalScore(taskDetails, testsScore, true);
 	}
 	
-	private StepResult executeTest(TestCase testCase, File managerFile, File piperFile, File checkerFile, boolean allTestsOk, double testPoints) {
+	private StepResult executeTest(TestCase testCase, File managerFile, File checkerFile, boolean allTestsOk, double testPoints, String type) {
 		if (!allTestsOk) {
 			StepResult result = new StepResult(Verdict.SKIPPED);
 			return result;
@@ -221,19 +243,31 @@ public class SubmissionGrader {
 			return result;
 		}
 		
-		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
-		checkerStep.execute();
-		if (testCase.getOutput() == null) FileUtils.deleteQuietly(outputFile);
-		StepResult result = checkerStep.getResult();
+		StepResult result = new StepResult();
+		if (type.equals("submission") || (type.equals("user_tests") && testCase.getOutput() != null)) {
+			CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
+			checkerStep.execute();
+			if (testCase.getOutput() == null) FileUtils.deleteQuietly(outputFile);
+			result = checkerStep.getResult();
+		}
+		else {
+			try {
+				result = new StepResult(Verdict.OK, FileUtils.readFileToString(solutionFile, Charset.forName("UTF-8")), "");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
 		result.setTime(testStep.getResult().getTime());
 		result.setMemory(testStep.getResult().getMemory());
 		result.setExitCode(testStep.getResult().getExitCode());
 				
-//		if (taskDetails.isPartial() && result.getVerdict() == Verdict.WA) result.setVerdict(Verdict.PARTIAL); 
+/*		if (taskDetails.isPartial() && result.getVerdict() == Verdict.WA) result.setVerdict(Verdict.PARTIAL); 
 
 		if (taskDetails.getPoints() == -1) {
 			if (Double.compare(result.getCheckerOutput(), -1.0) == 0) result.setVerdict(Verdict.WA);
 		}
+*/
 		
 		if (result.getVerdict() == Verdict.OK) result.setPoints(testPoints);
 		if (result.getVerdict() == Verdict.PARTIAL) result.setPoints(result.getCheckerOutput() * testPoints);

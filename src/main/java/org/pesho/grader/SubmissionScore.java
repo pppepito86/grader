@@ -18,13 +18,20 @@ public class SubmissionScore implements GradeListener {
 	private List<StepResult> groupResults;
 	private List<StepResult> testResults;
 	private double score;
+	private String type;
 	
 	// DO NOT REMOVE for backward compatibility
 	private LinkedHashMap<String, StepResult> scoreSteps;
-	
+
 	public SubmissionScore() {
 		this.testResults = new ArrayList<>();
 		this.groupResults = new ArrayList<>();
+	}
+
+	public SubmissionScore(String type) {
+		this.testResults = new ArrayList<>();
+		this.groupResults = new ArrayList<>();
+		this.type = type;
 	}
 	
 	public void setCompileResult(StepResult stepResult) {
@@ -65,6 +72,10 @@ public class SubmissionScore implements GradeListener {
 	
 	public double getScore() {
 		return score;
+	}
+
+	public String getType() {
+		return type;
 	}
 	
 	public Double findTime() {
