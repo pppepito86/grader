@@ -28,7 +28,7 @@ public class TaskTestsFinderv4 {
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	
 	public static void main(String[] args) throws Exception {
-		Path taskPath = new File("C:\\Users\\pppep\\OneDrive\\Desktop\\tests\\task2").toPath();
+		/*Path taskPath = new File("C:\\Users\\pppep\\OneDrive\\Desktop\\tests\\task2").toPath();
 		List<Path> paths = Files.walk(taskPath)
 				.filter(p -> !p.toString().contains("__MACOSX"))
 				.map(p -> taskPath.relativize(p))
@@ -37,7 +37,7 @@ public class TaskTestsFinderv4 {
 		List<TestCase> testCases = TaskTestsFinderv4.find(paths, taskPath, "peru1,perulog,perumic");
 		for (TestCase testCase: testCases) {
 			System.out.println(testCase.getNumber() + " " + testCase.getInput() + " " + testCase.getOutput());
-		}
+		}*/
 	}
 	
 	public static int getLevel(Path path)  {

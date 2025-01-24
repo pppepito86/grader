@@ -58,6 +58,10 @@ public class SubmissionScore implements GradeListener {
 		this.finished = finished;
 	}
 
+	public void setType (String type) {
+		this.type = type;
+	}
+
 	public StepResult getCompileResult() {
 		return compileResult;
 	}
