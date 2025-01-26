@@ -19,18 +19,20 @@ public abstract class TestStep implements BaseStep {
 	protected final File inputFile;
 	protected final File outputFile;
 	protected final File sandboxDir;
+	protected final boolean isOfficial;
 	protected final double time;
 	protected final int memory;
 	protected final int processes;
 	protected final int openFiles;
 	protected StepResult result;
 
-	public TestStep(File binaryFile, File managerFile, File piperFile, File inputFile, File outputFile, double time, int memory, int processes, int openFiles) {
+	public TestStep(File binaryFile, File managerFile, File piperFile, File inputFile, File outputFile, boolean isOfficial, double time, int memory, int processes, int openFiles) {
 		this.binaryFile = binaryFile.getAbsoluteFile();
 		this.managerFile = managerFile != null ? managerFile.getAbsoluteFile():null;
 		this.piperFile = piperFile != null ? piperFile.getAbsoluteFile():null;
 		this.inputFile = inputFile.getAbsoluteFile();
 		this.outputFile = outputFile.getAbsoluteFile();
+		this.isOfficial = isOfficial;
 		this.time = time;
 		this.memory = memory;
 		this.processes = processes;
@@ -47,6 +49,7 @@ public abstract class TestStep implements BaseStep {
 					.directory(sandboxDir)
 					.input(inputFile.getName())
 					.output(outputFile.getName())
+					.isOfficial(isOfficial)
 					.timeout(time)
 					.ioTimeout(getIoTimeout())
 					.trusted(this instanceof JavaTestStep)

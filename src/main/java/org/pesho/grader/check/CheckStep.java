@@ -29,7 +29,7 @@ public abstract class CheckStep implements BaseStep {
 		this.inputFile = inputFile;
 		this.outputFile = outputFile;
 		this.solutionFile = solutionFile;
-		this.sandboxDir = new File(binaryFile != null ? binaryFile.getParentFile() : solutionFile.getParentFile(), "sandbox_" + outputFile.getName());
+		this.sandboxDir = new File(binaryFile != null ? binaryFile.getParentFile() : solutionFile.getParentFile(), "sandbox_" + inputFile.getName());
 	}
 
 	public void execute() {
@@ -83,9 +83,10 @@ public abstract class CheckStep implements BaseStep {
 	}
 	
 	protected String readOutput(File file) {
+		if (file == null) return "";
 	    try (InputStream is = new FileInputStream(file)) {
 	    	String output = "";
-	    	byte[] b = new byte[1000];
+	    	byte[] b = new byte[1021];
 	        int read = is.read(b);
 	        if (read > 0) output += new String(b, 0, read);
 	        if (is.available() > 0) {

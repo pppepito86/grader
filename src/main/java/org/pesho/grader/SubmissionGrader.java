@@ -2,7 +2,6 @@ package org.pesho.grader;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Optional;
 import java.util.Map;
 import java.util.List;
@@ -27,6 +26,7 @@ import org.pesho.grader.test.TestStepFactory;
 public class SubmissionGrader {
 	
 	private String submissionId;
+	private boolean isOfficial;
 	private TaskDetails taskDetails;
 	private List<File> inputFiles;
 	private List<File> outputFiles;
@@ -38,8 +38,9 @@ public class SubmissionGrader {
 	private Optional<Integer> compileMemory;
 	private File piperFile;
 	
-	public SubmissionGrader(String submissionId, TaskDetails taskDetails, String sourceFile, GradeListener listener, String piperFile, Optional<Double> compileTL, Optional<Integer> compileML) {
+	public SubmissionGrader(String submissionId, Optional<Boolean> isOfficial, TaskDetails taskDetails, String sourceFile, GradeListener listener, String piperFile, Optional<Double> compileTL, Optional<Integer> compileML) {
 		this.submissionId = submissionId;
+		this.isOfficial = (isOfficial.isPresent() ? isOfficial.get() : true); // backward compatability
 		this.taskDetails = taskDetails;
 		this.originalSourceFile = new File(sourceFile).getAbsoluteFile();
 		this.inputFiles = null;
@@ -51,8 +52,9 @@ public class SubmissionGrader {
 		this.piperFile = new File(piperFile);
 	}
 
-	public SubmissionGrader(String submissionId, TaskDetails taskDetails, String sourceFile, List<String> inputFiles, List<String> outputFiles, GradeListener listener, String piperFile, Optional<Double> compileTL, Optional<Integer> compileML) {
+	public SubmissionGrader(String submissionId, Optional<Boolean> isOfficial, TaskDetails taskDetails, String sourceFile, List<String> inputFiles, List<String> outputFiles, GradeListener listener, String piperFile, Optional<Double> compileTL, Optional<Integer> compileML) {
 		this.submissionId = submissionId;
+		this.isOfficial = (isOfficial.isPresent() ? isOfficial.get() : true); // backward compatability
 		this.taskDetails = taskDetails;
 		this.originalSourceFile = new File(sourceFile).getAbsoluteFile();
 		this.inputFiles = inputFiles.stream().map(f -> new File(f).getAbsoluteFile()).collect(Collectors.toList());
@@ -212,23 +214,22 @@ public class SubmissionGrader {
 		
 		File inputFile = new File(testCase.getInput());
 		File outputFile = null;
-		if (testCase.getOutput() == null) {
-			try {
-				outputFile = File.createTempFile("temp-"+RandomStringUtils.randomAlphabetic(8), ".sol");
-				outputFile.deleteOnExit();
-			} catch (IOException e) {
-				e.printStackTrace();
+		if ((type.equals("submission") || (type.equals("user_tests") && testCase.getOutput() != null))) {
+			if (testCase.getOutput() == null) {
+				try {
+					outputFile = File.createTempFile("temp-"+RandomStringUtils.randomAlphabetic(8), ".sol");
+					outputFile.deleteOnExit();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
+			else outputFile = new File(testCase.getOutput());
 		}
-		else outputFile = new File(testCase.getOutput());
-		File solutionFile = new File(binaryFile.getParentFile(), "user_"+outputFile.getName());
+		File solutionFile = new File(binaryFile.getParentFile(), "user_"+ (outputFile != null ? outputFile.getName() : "temp-"+RandomStringUtils.randomAlphabetic(8)+".sol"));
 		Double tl = taskDetails.getTime();
-		TestStep testStep = TestStepFactory.getInstance(binaryFile, managerFile, piperFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getOpenFiles(), taskDetails.getIoTime());
+		TestStep testStep = TestStepFactory.getInstance(binaryFile, managerFile, piperFile, inputFile, solutionFile, isOfficial, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getOpenFiles(), taskDetails.getIoTime());
 		testStep.execute();
-		if (testStep.getVerdict() == Verdict.TL && !Messages.WALL_CLOCK_TIMEOUT.equals(testStep.getResult().getReason()) && tl < 1) {
-			testStep = TestStepFactory.getInstance(binaryFile, managerFile, piperFile, inputFile, solutionFile, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getOpenFiles(), taskDetails.getIoTime());
-			testStep.execute();
-		}
+		if (testStep.getVerdict() == Verdict.TL && !Messages.WALL_CLOCK_TIMEOUT.equals(testStep.getResult().getReason()) && tl < 1) testStep.execute();
 		if (testStep.getVerdict() == Verdict.TL) {
 			int rejudgeTimes = taskDetails.getRejudgeTimes();
 			for (int i = 2; i <= rejudgeTimes; i++) {
@@ -243,20 +244,18 @@ public class SubmissionGrader {
 			return result;
 		}
 		
-		StepResult result = new StepResult();
-		if (type.equals("submission") || (type.equals("user_tests") && testCase.getOutput() != null)) {
-			CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
-			checkerStep.execute();
-			if (testCase.getOutput() == null) FileUtils.deleteQuietly(outputFile);
-			result = checkerStep.getResult();
-		}
-		else {
+		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
+		checkerStep.execute();
+		if (type.equals("submissions") && testCase.getOutput() == null) FileUtils.deleteQuietly(outputFile);
+		if (type.equals("user_tests") && isOfficial == true) {
+			File saveSolutionFile = new File(originalSourceFile.getParentFile(), "test_user_out");
 			try {
-				result = new StepResult(Verdict.OK, FileUtils.readFileToString(solutionFile, Charset.forName("UTF-8")), "");
+				FileUtils.copyFile(solutionFile, saveSolutionFile);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
+		StepResult result = checkerStep.getResult();
 
 		result.setTime(testStep.getResult().getTime());
 		result.setMemory(testStep.getResult().getMemory());

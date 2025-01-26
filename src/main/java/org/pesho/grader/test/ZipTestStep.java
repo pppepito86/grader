@@ -13,8 +13,8 @@ public class ZipTestStep extends TestStep {
 
 	public static final String EXECUTE_COMMAND_PATTERN = "/usr/bin/unzip -p %s %s";
 
-	public ZipTestStep(File binaryFile, File managerFile, File piperFile, File inputFile, File outputFile, double time, int memory, int processes, int openFiles) {
-		super(binaryFile, managerFile, piperFile, inputFile, outputFile, time, memory, processes, openFiles);
+	public ZipTestStep(File binaryFile, File managerFile, File piperFile, File inputFile, File outputFile, boolean isOfficial, double time, int memory, int processes, int openFiles) {
+		super(binaryFile, managerFile, piperFile, inputFile, outputFile, isOfficial, time, memory, processes, openFiles);
 	}
 
 	@Override

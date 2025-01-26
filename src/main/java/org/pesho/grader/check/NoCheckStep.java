@@ -12,8 +12,6 @@ public class NoCheckStep extends CheckStep {
 
 	public static final String GRADE_COMMAND_PATTERN = "bash -c 'diff -Z -B -q \"%s\" \"%s\"'";
 	
-	protected StepResult result;
-	
 	public NoCheckStep(File binaryFile, File inputFile, File outputFile, File solutionFile) {
 		super(binaryFile, inputFile, outputFile, solutionFile);
 	}
@@ -31,16 +29,6 @@ public class NoCheckStep extends CheckStep {
 			e.printStackTrace();
 			result = new StepResult(Verdict.SE, e.getMessage());
 		}
-	}
-
-	@Override
-	public StepResult getResult() {
-		return result;
-	}
-	
-	@Override
-	public Verdict getVerdict() {
-		return result.getVerdict();
 	}
 
 	protected String getCommand() {
