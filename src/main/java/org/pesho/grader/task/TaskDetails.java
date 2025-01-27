@@ -78,6 +78,8 @@ public class TaskDetails {
 	private Set<String> blacklistedWords;
 	private boolean isInteractive;
 	private boolean isCommunication;
+	private String outputOnly;
+	private boolean isTranslation;
 	private String info;
 	private int timer;
 	private Quiz quiz;
@@ -126,6 +128,8 @@ public class TaskDetails {
 		this.imagesDir = null;
 		this.isInteractive = false;
 		this.isCommunication = false;
+		this.outputOnly = "no";
+		this.isTranslation = false;
 		this.analysis = null;
 		this.description = null;
 		this.translatedStatements = new HashMap<>();
@@ -177,6 +181,8 @@ public class TaskDetails {
 		this.imagesDir = ImagesFinder.find(paths).map(Path::toString).orElse(null);
         this.isInteractive = graderDir != null;
         this.isCommunication = manager != null;
+		this.outputOnly = allowedExtensions.contains("txt") ? "single" : allowedExtensions.contains("zip") ? "multiple" : "no";
+		this.isTranslation = allowedExtensions.contains("pdf");
 		this.analysis = findAnalysis(paths);
 		this.description = findDescription(taskPath, true);
 		if (description != null && description.endsWith(".tex") && taskPath.resolve(description.replaceAll("\\.tex$", ".pdf")).toFile().exists()) { /// statement should be compiled at this time
@@ -639,6 +645,14 @@ public class TaskDetails {
 	
 	public boolean isCommunication() {
 		return isCommunication;
+	}
+
+	public String outputOnly() {
+		return outputOnly;
+	}
+
+	public boolean isTranslation() {
+		return isTranslation;
 	}
 	
 	public boolean hasFilesToDownload() {
