@@ -2,6 +2,8 @@ package org.pesho.grader;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Map;
 import java.util.List;
@@ -237,7 +239,7 @@ public class SubmissionGrader {
 				testStep.execute();
 			}
 		}
-		
+
 		if (testStep.getVerdict() != Verdict.OK) {
 			StepResult result = testStep.getResult();
 			if (Messages.WALL_CLOCK_TIMEOUT.equals(testStep.getResult().getReason())) result.setTime(null);
@@ -249,10 +251,19 @@ public class SubmissionGrader {
 		if (type.equals("submissions") && testCase.getOutput() == null) FileUtils.deleteQuietly(outputFile);
 		if (type.equals("user_tests") && isOfficial == true) {
 			File saveSolutionFile = new File(originalSourceFile.getParentFile(), "test_user_out");
-			try {
-				FileUtils.copyFile(solutionFile, saveSolutionFile);
-			} catch (IOException e) {
-				e.printStackTrace();
+			if (solutionFile.length() <= 10 * 1024 * 1024L) {
+				try {
+					FileUtils.copyFile(solutionFile, saveSolutionFile);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			else {
+				try {
+					Files.write(Paths.get(saveSolutionFile.getAbsolutePath()), "User output larger than 10 MB!\n".getBytes());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		StepResult result = checkerStep.getResult();

@@ -75,7 +75,7 @@ public abstract class TestStep implements BaseStep {
 			case OOM: return new StepResult(Verdict.ML, result.getReason(), result.getExitCode(), result.getTime(), result.getMemory());
 			case PROGRAM_ERROR:	return new StepResult(Verdict.RE, result.getReason(), result.getExitCode(), result.getTime(), result.getMemory());
 			case TIMEOUT: return new StepResult(Verdict.TL, result.getReason(), result.getExitCode(), result.getTime(), result.getMemory());
-			default:  return new StepResult(Verdict.SE, result.getReason(), result.getExitCode());
+			default: return new StepResult(Verdict.SE, result.getReason(), result.getExitCode());
 		}
 	}
 	

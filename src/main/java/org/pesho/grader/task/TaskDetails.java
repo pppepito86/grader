@@ -80,6 +80,7 @@ public class TaskDetails {
 	private boolean isCommunication;
 	private String outputOnly;
 	private boolean isTranslation;
+	private String userTests;
 	private String info;
 	private int timer;
 	private Quiz quiz;
@@ -121,6 +122,7 @@ public class TaskDetails {
 		this.blacklistedWords = Arrays.stream(blacklist.split(",")).map(s -> s.trim()).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
 		this.arbiterDelta = Double.valueOf(props.getProperty("arbiter_delta", "1.0"));
 		this.timer = Integer.valueOf(props.getProperty("timer", "0"));
+		this.userTests = props.getProperty("user_tests", "no").trim();
 
 		this.checker = null;
 		this.manager = null;
@@ -183,6 +185,8 @@ public class TaskDetails {
         this.isCommunication = manager != null;
 		this.outputOnly = allowedExtensions.contains("txt") ? "single" : allowedExtensions.contains("zip") ? "multiple" : "no";
 		this.isTranslation = allowedExtensions.contains("pdf");
+		if (this.outputOnly.equals("multiple") || this.isTranslation) this.userTests = "no";
+		else if (!props.containsKey("user_tests")) this.userTests = !this.outputOnly.equals("no") || this.isInteractive || this.isCommunication ? "no" : this.checker != null ? "no_checker" : "unrestricted";
 		this.analysis = findAnalysis(paths);
 		this.description = findDescription(taskPath, true);
 		if (description != null && description.endsWith(".tex") && taskPath.resolve(description.replaceAll("\\.tex$", ".pdf")).toFile().exists()) { /// statement should be compiled at this time
@@ -653,6 +657,14 @@ public class TaskDetails {
 
 	public boolean isTranslation() {
 		return isTranslation;
+	}
+
+	public void setUserTests(String userTests) {
+		this.userTests = userTests;
+	}
+	
+	public String getUserTests() {
+		return userTests;
 	}
 	
 	public boolean hasFilesToDownload() {
