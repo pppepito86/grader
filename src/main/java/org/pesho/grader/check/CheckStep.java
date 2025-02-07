@@ -120,7 +120,7 @@ public abstract class CheckStep implements BaseStep {
 		new File(sandboxDir, binaryFile.getName()).setExecutable(true);
 		new ProcessExecutor().command("chmod", "+x", new File(sandboxDir, binaryFile.getName()).getAbsolutePath()).execute();
 		FileUtils.copyFile(inputFile, new File(sandboxDir, inputFile.getName()));
-		FileUtils.copyFile(outputFile, new File(sandboxDir, outputFile.getName()));
+		if (outputFile != null) FileUtils.copyFile(outputFile, new File(sandboxDir, outputFile.getName()));
 		FileUtils.copyFile(solutionFile, new File(sandboxDir, solutionFile.getName()));
 
 	}

@@ -7,7 +7,7 @@ import org.pesho.grader.compile.PythonCompileStep;
 public class CheckStepFactory {
 
 	public static CheckStep getInstance(File binaryFile, File inputFile, File outputFile, File solutionFile) {
-		if ((binaryFile == null || !binaryFile.exists()) && (outputFile == null || !outputFile.exists())) {
+		if (outputFile == null || !outputFile.exists()) {
 			return new UserTestCheckStep(binaryFile, inputFile, solutionFile);
 		}
 		if (binaryFile == null || !binaryFile.exists()) {

@@ -248,7 +248,7 @@ public class SubmissionGrader {
 		
 		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
 		checkerStep.execute();
-		if (type.equals("submissions") && testCase.getOutput() == null) FileUtils.deleteQuietly(outputFile);
+		if (type.equals("submission") && testCase.getOutput() == null) FileUtils.deleteQuietly(outputFile);
 		if (type.equals("user_tests") && isOfficial == true) {
 			File saveSolutionFile = new File(originalSourceFile.getParentFile(), "test_user_out");
 			if (solutionFile.length() <= 10 * 1024 * 1024L) {
