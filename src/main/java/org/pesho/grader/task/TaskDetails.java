@@ -115,7 +115,24 @@ public class TaskDetails {
 		this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
 		this.extensions = props.getProperty("extensions", "cpp").trim();
 		this.info = props.getProperty("info", "").trim();
-		this.dependencies = props.getProperty("dependencies", "").trim();
+		this.dependencies = String.join(",", Arrays.stream(props.getProperty("dependencies", "").trim().split(","))
+			.map(d -> String.join(";", Arrays.stream(d.trim().split(";"))
+				.map(g -> g.trim())
+				.map(g -> {
+					if (!g.contains("-")) return g;
+					String[] nums = g.split("-");
+					if (nums.length != 2) return g;
+					int st = Integer.valueOf(nums[0]), end = Integer.valueOf(nums[1]);
+					String[] groups = new String[end-st+1];
+					for (int i = st; i <= end; i++) {
+						groups[i-st] = String.valueOf(i);
+					}
+					return String.join(";", groups);
+				})
+				.toArray(CharSequence[]::new))
+			)
+			.toArray(CharSequence[]::new)
+		);
 		this.texMode = props.getProperty("latex", "lualatex").trim();
 		this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
 		this.blacklist = props.getProperty("blacklist", "").trim();
@@ -492,14 +509,22 @@ public class TaskDetails {
 	}
 	
 	public List<Integer> dependsOn(int groupNumber) {
-		if (dependencies.isEmpty()) return new LinkedList<>();
+		if (dependencies.split(",").length < groupNumber) return new LinkedList<>();
+
 		boolean sampleGroup = (groupsScoring() && getTestGroups().size() > 0 && getTestGroups().get(0).getWeight() == 0);
+		sampleGroup |= Arrays.stream(dependencies.split(",")).anyMatch(d -> Arrays.stream(d.split(";")).anyMatch(g -> g.equals(0)));
+		String[] deps = dependencies.split(",");
+		for (int i = 0; i < deps.length; i++) {
+			int maxGroup = Arrays.stream(deps[i].split(";")).filter(g -> g.length() != 0).mapToInt(Integer::parseInt).max().orElse(-1);
+			if (maxGroup == i) sampleGroup = false; /// backward compatability
+		}
+		final boolean number0 = sampleGroup;
 		
-		String group = dependencies.split(",",-1)[groupNumber-1].trim();
+		String group = dependencies.split(",",-1)[groupNumber-1];
 		if (group.isEmpty()) return new LinkedList<>();
-		return Arrays.stream(group.split(";")).map(String::trim).map(g -> {
+		return Arrays.stream(group.split(";")).map(g -> {
 			int res = Integer.parseInt(g);
-			if (sampleGroup) res++;
+			if (number0) res++;
 			return res;
 		}).collect(Collectors.toList());
 	}
