@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.BaseStep;
@@ -35,12 +38,19 @@ public abstract class CompileStep implements BaseStep {
 			copySandboxInput();
 			copyGraderFiles();
 
-			StepResult result = Arrays.stream(getCommands())
+			List<StepResult> results = Arrays.stream(getCommands())
 				.map(command -> buildCommand(command)
 						.execute().getResult())
 				.map(x -> getResult(x))
-				.filter(x -> x.getVerdict() != Verdict.OK)
-				.findFirst().orElse(new StepResult(Verdict.OK));
+				.collect(Collectors.toList());
+			StepResult result;
+			if (results.stream().anyMatch(x -> x.getVerdict() != Verdict.OK)) {
+				result = results.stream().filter(x -> x.getVerdict() != Verdict.OK).findFirst().orElse(null);
+			}
+			else {
+				if (results.size() == 1) result = results.get(0);
+				else result = new StepResult(Verdict.OK);
+			}
 			copySandboxOutput();
 			
 			this.result = result;
@@ -48,7 +58,7 @@ public abstract class CompileStep implements BaseStep {
 			e.printStackTrace();
 			this.result = new StepResult(Verdict.SE, e.getMessage());
 		} finally {
-			FileUtils.deleteQuietly(sandboxDir);
+			if (!(this instanceof ZipLaTexCompileStep)) FileUtils.deleteQuietly(sandboxDir);
 		}
 	}
 	
@@ -61,14 +71,17 @@ public abstract class CompileStep implements BaseStep {
 		int maxMemory = memory.get("default");
 		if (this instanceof JavaCompileStep || this instanceof JavaNativeImageCompileStep) timeout = time.get("java");
 		if (this instanceof JavaCompileStep || this instanceof JavaNativeImageCompileStep) maxMemory = memory.get("java");
+		if (this instanceof ZipLaTexCompileStep) timeout = 30;
+		if (this instanceof ZipLaTexCompileStep) maxMemory = 1024;
 		SandboxExecutor sandbox = new SandboxExecutor()
 				.directory(sandboxDir)
 				.trusted(true)
+				.trustedDirectories(getTrustedDirectories())
 				.showError()
 				.timeout(timeout)
 				.memory(maxMemory)
-				.command(command);		
-		if (this instanceof PythonCompileStep) return sandbox.outputIsError();
+				.command(command);
+		if (this instanceof PythonCompileStep || (this instanceof ZipLaTexCompileStep && !command.equals(ZipLaTexCompileStep.NOTEX_COMMAND_PATTERN))) return sandbox.outputIsError();
 		return sandbox;
 	}
 
@@ -84,11 +97,11 @@ public abstract class CompileStep implements BaseStep {
 	
 	protected StepResult getResult(CommandResult result) {
 		switch (result.getStatus()) {
-		case SUCCESS: return new StepResult(Verdict.OK);
-		case TIMEOUT: return new StepResult(Verdict.CE, "Compilation TL");
-		case OOM: return new StepResult(Verdict.CE, "Compilation ML");
-		case SYSTEM_ERROR: return new StepResult(Verdict.SE, result.getReason());
-		default: return new StepResult(Verdict.CE, result.getReason());
+		case SUCCESS: return new StepResult(Verdict.OK, null, result.getExitCode(), result.getTime(), result.getMemory());
+		case TIMEOUT: return new StepResult(Verdict.CE, "Compilation TL", result.getExitCode(), result.getTime(), result.getMemory());
+		case OOM: return new StepResult(Verdict.CE, "Compilation ML", result.getExitCode(), result.getTime(), result.getMemory());
+		case SYSTEM_ERROR: return new StepResult(Verdict.SE, result.getReason(), result.getExitCode());
+		default: return new StepResult(Verdict.CE, result.getReason(), result.getExitCode(), result.getTime(), result.getMemory());
 		}
 	}
 
@@ -114,6 +127,10 @@ public abstract class CompileStep implements BaseStep {
 	public abstract String getBinaryFileName();
 
 	protected abstract String[] getCommands();
+
+	protected List<String> getTrustedDirectories() {
+		return new ArrayList<>();
+	}
 
 	protected void createSandboxDirectory() {
 		sandboxDir.mkdirs();

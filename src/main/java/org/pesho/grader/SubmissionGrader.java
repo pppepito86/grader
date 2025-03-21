@@ -17,6 +17,7 @@ import org.pesho.grader.check.CheckStepFactory;
 import org.pesho.grader.compile.CompileStep;
 import org.pesho.grader.compile.CompileStepFactory;
 import org.pesho.grader.compile.SourceStep;
+import org.pesho.grader.compile.ZipLaTexCompileStep;
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 import org.pesho.grader.task.TaskDetails;
@@ -100,7 +101,7 @@ public class SubmissionGrader {
 			return 0;
 		}
 		
-		if (compile(sourceFile) == 0) {
+		if (compile(sourceFile, type) == 0) {
 			score.addFinalScore(0, true);
 			if (listener != null) {
 				//listener.addFinalScore("Compilation Failed", 0);
@@ -114,10 +115,29 @@ public class SubmissionGrader {
 			//listener.addFinalScore("", finalScore);
 			listener.scoreUpdated(submissionId, score);
 		}
+
+		if (type.equals("user_tests") && inputFiles.size() == 0) {
+			File savePdfFile = new File(originalSourceFile.getParentFile(), "test_user_out");
+			if (binaryFile.length() <= 10 * 1024 * 1024L) {
+				try {
+					FileUtils.copyFile(binaryFile, savePdfFile);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			else {
+				try {
+					Files.write(Paths.get(savePdfFile.getAbsolutePath()), "Compiled pdf statement larger than 10 MB!\n".getBytes());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		return finalScore;
 	}
 
-	private double compile(File sourceFile) {
+	private double compile(File sourceFile, String type) {
 		SourceStep sourceStep = new SourceStep(sourceFile, taskDetails.getBlacklistedWords());
 		File graderDir = taskDetails.getGraderDir() != null ? new File(taskDetails.getGraderDir()):null;
 		Map<String, Double> compileTL = taskDetails.getCompileTime();
@@ -132,7 +152,10 @@ public class SubmissionGrader {
 				compileML.put(lang, compileMemory.get());
 			}
 		}
-		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile, graderDir, compileTL, compileML);
+		CompileStep compileStep = CompileStepFactory.getInstance(sourceFile, graderDir, compileTL, compileML, type.equals("submission"));
+		if (compileStep instanceof ZipLaTexCompileStep) {
+			((ZipLaTexCompileStep)compileStep).setTexMode(taskDetails.getTexMode());
+		}
 		
 		sourceStep.execute();
 		StepResult result = sourceStep.getResult();
@@ -249,7 +272,7 @@ public class SubmissionGrader {
 		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
 		checkerStep.execute();
 		if (type.equals("submission") && testCase.getOutput() == null) FileUtils.deleteQuietly(outputFile);
-		if (type.equals("user_tests") && isOfficial == true) {
+		if (type.equals("user_tests") && inputFiles.size() == 1) {
 			File saveSolutionFile = new File(originalSourceFile.getParentFile(), "test_user_out");
 			if (solutionFile.length() <= 10 * 1024 * 1024L) {
 				try {

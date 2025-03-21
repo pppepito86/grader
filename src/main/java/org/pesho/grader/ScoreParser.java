@@ -19,9 +19,10 @@ public class ScoreParser {
 
 	public String getVerdict() {
 		if (score.getCompileResult() == null) return "";
-		if (score.getCompileResult().getVerdict() == Verdict.CE) return Verdict.CE.toString();
+		if (score.getCompileResult().getVerdict() == Verdict.CE || score.getCompileResult().getVerdict() == Verdict.SE) return score.getCompileResult().getVerdict().toString();
 		
 		if (score.getType().equals("user_tests") || details.testsScoring()) {
+			if (score.getTestResults().size() == 0) return "OK";
 			return getTestsScore();
 		} else {
 			return getGroupsScore();
