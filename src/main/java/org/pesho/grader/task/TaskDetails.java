@@ -586,20 +586,27 @@ public class TaskDetails {
 		return testCases;
 	}
 	
+	private boolean propertyContainsToken (String property, String token) {
+		return Arrays.stream(property.split(",")).anyMatch(t -> t.equalsIgnoreCase(token));
+	}
 	public boolean testsScoring() {
-		return scoring.equalsIgnoreCase("sum") || scoring.equalsIgnoreCase("tests") || scoring.equalsIgnoreCase("icpc");
+		return (propertyContainsToken(scoring, "sum") && groups.isEmpty()) || propertyContainsToken(scoring, "tests") || propertyContainsToken(scoring, "icpc"); // backward compatability
 	}
 
 	public boolean groupsScoring() {
 		return !testsScoring();
 	}
 	
+	public boolean sumScoring() {
+		return propertyContainsToken(scoring, "sum");
+	}
+
 	public boolean minScoring() {
-		return scoring.equalsIgnoreCase("min") || scoring.equalsIgnoreCase("min_fast");
+		return propertyContainsToken(scoring, "min") || propertyContainsToken(scoring, "min_fast");
 	}
 	
 	public boolean stopScoringOnFailure() {
-		return scoring.equalsIgnoreCase("min_fast"); 
+		return propertyContainsToken(scoring, "min_fast") && !propertyContainsToken(scoring, "min");
 	}
 	
 	public String getDescription() {
