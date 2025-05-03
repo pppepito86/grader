@@ -606,7 +606,7 @@ public class TaskDetails {
 	}
 	
 	public boolean stopScoringOnFailure() {
-		return propertyContainsToken(scoring, "min_fast") && !propertyContainsToken(scoring, "min");
+		return propertyContainsToken(scoring, "min_fast") || !propertyContainsToken(scoring, "min");
 	}
 	
 	public String getDescription() {
