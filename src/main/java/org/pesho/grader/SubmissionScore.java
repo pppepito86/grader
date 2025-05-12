@@ -84,7 +84,7 @@ public class SubmissionScore implements GradeListener {
 	
 	public Double findTime() {
 		if (compileResult == null) return null;
-		if (compileResult.getVerdict() == Verdict.CE || groupResults.size() == 0) return compileResult.getTime();
+		if (compileResult.getVerdict() == Verdict.CE || (isFinished() && groupResults.size() == 0)) return compileResult.getTime();
 		Double time=null;
 		for (StepResult r : groupResults) {
 			Double rTime=r.getTime();
@@ -98,7 +98,7 @@ public class SubmissionScore implements GradeListener {
 	
 	public Long findMemory() {
 		if (compileResult == null) return null;
-		if (compileResult.getVerdict() == Verdict.CE || groupResults.size() == 0) return compileResult.getMemory();
+		if (compileResult.getVerdict() == Verdict.CE || (isFinished() && groupResults.size() == 0)) return compileResult.getMemory();
 		Long memory=null;
 		for (StepResult r : groupResults) {
 			Long rMemory=r.getMemory();

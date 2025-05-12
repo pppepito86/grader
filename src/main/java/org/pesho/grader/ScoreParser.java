@@ -22,7 +22,7 @@ public class ScoreParser {
 		if (score.getCompileResult().getVerdict() == Verdict.CE || score.getCompileResult().getVerdict() == Verdict.SE) return score.getCompileResult().getVerdict().toString();
 		
 		if (score.getType().equals("user_tests") || details.testsScoring()) {
-			if (score.getTestResults().size() == 0) return "OK";
+			if (score.isFinished() && score.getTestResults().size() == 0) return "OK";
 			return getTestsScore();
 		} else {
 			return getGroupsScore();
