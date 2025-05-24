@@ -1,7 +1,5 @@
 package org.pesho.grader.task.parser;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap;
@@ -57,9 +55,9 @@ public class TaskTestsFinderv4 {
 				.findFirst().orElse(null);
 	}
 	
-	public static List<TestCase> find(List<Path> paths, Path basePath, String patterns) throws IOException {
+	public static List<TestCase> find(List<Path> paths, Path basePath, String patterns) throws IllegalStateException {
 		Path testFolder = findTestsFolder(paths);
-		if (testFolder == null) throw new IllegalStateException("Cannot find tests folder.");
+		if (testFolder == null) throw new IllegalStateException("backend.no_tests_folder");
 		
 		String[] patternsSplit = patterns.split(",");
 		List<Path> possibleTests = paths.stream()

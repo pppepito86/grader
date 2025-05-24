@@ -84,7 +84,7 @@ public class TaskDetails {
 	private String info;
 	private int timer;
 	private Quiz quiz;
-	private String error;
+	private Map<String, String> error = new HashMap<>();
 
 	public static final TaskDetails EMPTY = new TaskDetails();
 	
@@ -107,32 +107,15 @@ public class TaskDetails {
 		this.isDefaultCompileMemory = !props.containsKey("compile_memory");
 		this.javaCompileMemory = Integer.valueOf(props.getProperty("java_compile_memory", "1536"));
 		this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "1"));
-		this.feedback = props.getProperty("feedback", "FULL").trim();
-		this.sample = props.getProperty("sample", "").trim();
-		this.groups = props.getProperty("groups", "").trim();
+		this.feedback = props.getProperty("feedback", "FULL").equals("FULL") ? "FULL" : fixSequence(props.getProperty("feedback", "FULL"));
+		this.sample = fixSequence(props.getProperty("sample", ""));
+		this.groups = fixSequence(props.getProperty("groups", ""));
 		this.weights = props.getProperty("weights", "").trim();
 		this.scoring = props.getProperty("scoring", this.groups.isEmpty()&&!props.containsKey("patterns")?"sum":"min_fast").trim();
 		this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
 		this.extensions = props.getProperty("extensions", "cpp").trim();
 		this.info = props.getProperty("info", "").trim();
-		this.dependencies = String.join(",", Arrays.stream(props.getProperty("dependencies", "").trim().split(","))
-			.map(d -> String.join(";", Arrays.stream(d.trim().split(";"))
-				.map(g -> g.trim())
-				.map(g -> {
-					if (!g.contains("-")) return g;
-					String[] nums = g.split("-");
-					if (nums.length != 2) return g;
-					int st = Integer.valueOf(nums[0]), end = Integer.valueOf(nums[1]);
-					String[] groups = new String[end-st+1];
-					for (int i = st; i <= end; i++) {
-						groups[i-st] = String.valueOf(i);
-					}
-					return String.join(";", groups);
-				})
-				.toArray(CharSequence[]::new))
-			)
-			.toArray(CharSequence[]::new)
-		);
+		this.dependencies = fixSequence(props.getProperty("dependencies", ""));
 		this.texMode = props.getProperty("latex", "lualatex").trim();
 		this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
 		this.blacklist = props.getProperty("blacklist", "").trim();
@@ -165,7 +148,7 @@ public class TaskDetails {
 		try {
 			parseTask(taskName, taskPath);
 		} catch (Exception e) {
-			error = e.getMessage();
+			error.put("exception", e.getMessage());
 			setProps(new Properties());
 			try {
 				files = TaskFilesFinder.find(taskName, taskPath, Files.walk(taskPath).map(p -> taskPath.relativize(p)).collect(Collectors.toList()));
@@ -192,6 +175,7 @@ public class TaskDetails {
 			}
 		});
 		
+		findErrors(props);
 		setProps(props);
 
         this.checker = CheckerFinder.find(paths).map(Path::toString).orElse(null);
@@ -206,6 +190,7 @@ public class TaskDetails {
 		else if (!props.containsKey("user_tests")) this.userTests = !this.outputOnly.equals("no") || this.isInteractive || this.isCommunication ? "no" : this.checker != null ? "no_checker" : "unrestricted";
 		this.analysis = findAnalysis(paths);
 		this.description = findDescription(taskPath, true);
+		if (description == null) addError("statement", "backend.no_statement");
 		if (description != null && description.endsWith(".tex") && taskPath.resolve(description.replaceAll("\\.tex$", ".pdf")).toFile().exists()) { /// statement should be compiled at this time
 			description = description.replaceAll("\\.tex$", ".pdf");
 		}
@@ -227,17 +212,26 @@ public class TaskDetails {
 			});
 		}
 		
-		List<TestCase> testCases = findTestCases(taskPath, true);
+		List<TestCase> testCases = new ArrayList<>();
+		try {
+			testCases = findTestCases(taskPath, true);
+		} catch (IllegalStateException e) {
+			addError("tests_parse", e.getMessage());
+		}
 		if (props.containsKey("patterns") && groups.isEmpty() && groupsScoring()) {
 			String[] patternsSplit = props.getProperty("patterns").split(",");
-			int total = 0;
+			int total = 1;
 			for (String patternSplit: patternsSplit) {
-				int br = 0;
+				boolean first = true;
 				for (TestCase testCase: testCases) {
-					if (testCase.getInput().contains(patternSplit)) br++;
+					if (testCase.getInput().contains(patternSplit)) {
+						if (first == false) groups += ";";
+						first = false;
+						groups += total;
+						total++;
+					}
 				}
-				total+=br;
-				groups += (total-br+1)+"-"+total+ ",";
+				groups += ",";
 			}
 			groups = groups.substring(0, groups.length()-1);
 		}
@@ -246,6 +240,7 @@ public class TaskDetails {
 		TestGroup[] testGroups = null;
 		if (testCases.isEmpty()) {
 			testGroups = new TestGroup[testCases.size()];
+			addError("tests", "backend.no_tests");
 		} else if (groups.isEmpty()) {
 			Set<Integer> sampleTests = sampleTests();
 			testGroups = new TestGroup[testCases.size()];
@@ -257,30 +252,82 @@ public class TaskDetails {
 				testGroups[i] = new TestGroup(isSample?0:testWeight, hasFeedback, testCases.get(i));
 			}
 		} else {
+			boolean groupsFromZero = groupsFromZero();
+			Set<Integer> sampleGroups = sampleTests();
 			String[] groupsSplit = groups.split(",");
-			String[] weightsSplit = (weights.trim().isEmpty())?new String[]{}:weights.split(",");
+			String[] weightsSplit = (weights.isEmpty())?new String[]{}:weights.split(",");
+			if (weightsSplit.length != groupsSplit.length && !weights.isEmpty()) addError("weights", "backend.weights_not_match");
 			double totalWeight = 0;
-			if (!weights.trim().isEmpty()) {
+			if (!weights.isEmpty()) {
 				for (String weight: weightsSplit) totalWeight += Double.valueOf(weight.trim());
 			}
-			if (totalWeight == 0) totalWeight = groupsSplit.length;
+			else {
+				for (int i = 0; i < groupsSplit.length; i++) {
+					boolean isSample = sampleGroups.contains(i+(groupsFromZero?0:1));
+					totalWeight += (isSample?0:1);
+				}
+			}
 			
+			int cnt = 0;
 			testGroups = new TestGroup[groupsSplit.length];
 			for (int i = 0; i < testGroups.length; i++) {
-				String[] s = groupsSplit[i].trim().split("-");
-				int first = Integer.valueOf(s[0]);
-				int last = Integer.valueOf(s[1]);
-				TestCase[] cases = new TestCase[last-first+1];
-				for (int j = first; j <= last; j++) {
-					cases[j-first] = testCases.get(j-1);
+				String[] tests = groupsSplit[i].split(";");
+				cnt += tests.length;
+				TestCase[] cases = new TestCase[tests.length];
+				for (int j = 0; j < tests.length; j++) {
+					Integer t = Integer.valueOf(tests[j]);
+					if (t < 1 || t > testCases.size()) {
+						addError("groups", "backend.invalid_numbers");
+						continue;
+					}
+					cases[j] = testCases.get(t-1);
 				}
 				
-				double weight = (weightsSplit.length == groupsSplit.length) ? Double.valueOf(weightsSplit[i].trim()) : 1;
+				boolean isSample = sampleGroups.contains(i+(groupsFromZero?0:1));
+				double weight = (weightsSplit.length == groupsSplit.length) ? Double.valueOf(weightsSplit[i].trim()) : (isSample?0:1);
 				boolean hasFeedback = isFullFeedback() || feedbackGroups.contains(i+1);
 				testGroups[i] = new TestGroup(weight/totalWeight, hasFeedback, cases);
 			}
+			if (cnt != testCases.size()) addError("groups", "backend.groups_not_match");
 		}
 		this.testGroups = Arrays.asList(testGroups);
+		
+		if (testGroups.length != 0) {
+			boolean groupsFromZero = groupsScoring() && groupsFromZero();
+			for (Integer t : sampleTests()) {
+				if ((groupsFromZero && (t < 0 || t > testGroups.length-1)) || (!groupsFromZero && (t < 1 || t > testGroups.length))) addError("samples", "backend.invalid_numbers");
+			}
+			for (Integer t : feedbackGroups) {
+				if ((groupsFromZero && (t < 0 || t > testGroups.length-1)) || (!groupsFromZero && (t < 1 || t > testGroups.length))) addError("feedback", "backend.invalid_numbers");
+			}
+		}
+		if (dependencies.length() != 0) {
+			if (!groupsScoring()) addError("dependencies", "backend.dependencies_not_allowed");
+			else {
+				if (dependencies.chars().filter(c -> c == ',').count() + 1 != testGroups.length) addError("dependencies", "backend.dependencies_not_match");
+				else {
+					boolean groupsFromZero = groupsFromZero();
+					String[] deps = dependencies.split(",");
+					for (int i = 0; i < deps.length; i++) {
+						if (deps[i].isEmpty()) continue;
+						boolean flag = false;
+						for (String g : deps[i].split(";")) {
+							try {
+								Integer res = Integer.valueOf(g);
+								if (groupsFromZero) res++;
+								if (res < 1 || res >= (i+1)) {
+									addError("dependencies", "backend.invalid_numbers");
+									flag = true;
+									break;
+								}
+							} catch (Exception e) {
+							}
+						}
+						if (flag == true) break;
+					}
+				}
+			}
+		}
 
 		this.files = TaskFilesFinder.find(taskName, taskPath, Files.walk(taskPath).map(p -> taskPath.relativize(p)).collect(Collectors.toList()));
 		
@@ -334,6 +381,84 @@ public class TaskDetails {
         	testCase.setInput(taskPath.resolve(testCase.getInput()).toString());
         	if (testCase.getOutput() != null) testCase.setOutput(taskPath.resolve(testCase.getOutput()).toString());
         }
+	}
+
+	private String fixSequence (String sequence) {
+		return String.join(",", Arrays.stream(sequence.trim().split(","))
+			.map(seq -> String.join(";", Arrays.stream(seq.trim().split(";"))
+				.map(t -> t.trim())
+				.flatMap(t -> {
+					if (!t.contains("-")) return Arrays.asList(t).stream();
+					String[] split = t.split("-");
+					if (split.length != 2) return Arrays.asList(t).stream();
+					try {
+						int st = Integer.valueOf(split[0]), end = Integer.valueOf(split[1]);
+						String[] nums = new String[end-st+1];
+						for (int i = st; i <= end; i++) {
+							nums[i-st] = String.valueOf(i);
+						}
+						return Arrays.stream(nums);
+					} catch (Exception e) {
+						return Arrays.asList(t).stream();
+					}
+				})
+				.filter(t -> {
+					try {
+						Integer.valueOf(t);
+						return true;
+					} catch (Exception e) {
+						return false;
+					}
+				})
+				.sorted((l, r) -> Integer.valueOf(l).compareTo(Integer.valueOf(r)))
+				.toArray(CharSequence[]::new))
+			)
+			.toArray(CharSequence[]::new)
+		);
+	}
+
+	private void findErrors (Properties props) {
+		String naturalNumber = "^[1-9]\\d*$";
+		String decimalNumber = "^(?!0+(\\.0+)?$)\\d*\\.?\\d+$";
+		
+		if (!props.getProperty("points", "100.0").matches(decimalNumber)) addError("points_property", "backend.not_decimal");
+		if (!props.getProperty("precision", "-1").matches("^-1$|^0$|" + naturalNumber)) addError("precision_property", "");
+		if (!props.getProperty("processes", "1").matches(naturalNumber)) addError("processes_property", "backend.not_natural");
+		if (!props.getProperty("open_files", "64").matches(naturalNumber)) addError("open_files_property", "backend.not_natural");
+		if (!props.getProperty("time", "1").matches(decimalNumber)) addError("time_property", "backend.not_decimal");
+		if (!props.getProperty("io_time", "0").matches("^0$|" + decimalNumber)) addError("io_time_property", "");
+		if (!props.getProperty("compile_time", "10").matches(decimalNumber)) addError("compile_time_property", "backend.not_decimal");
+		if (!props.getProperty("java_compile_time", "300").matches(decimalNumber)) addError("java_compile_time_property", "backend.not_decimal");
+		if (!props.getProperty("memory", "256").matches(naturalNumber)) addError("memory_property", "backend.not_natural");
+		if (!props.getProperty("compile_memory", "512").matches(naturalNumber)) addError("compile_memory_property", "backend.not_natural");
+		if (!props.getProperty("java_compile_memory", "1536").matches(naturalNumber)) addError("java_compile_memory_property", "backend.not_natural");
+		if (!props.getProperty("rejudge", "1").matches(naturalNumber)) addError("rejudge_property", "backend.not_natural");
+		if (checkSequence(fixSequence(props.getProperty("feedback", "")), "feedback") != null) addError("feedback_property", checkSequence(fixSequence(props.getProperty("feedback", "")), "feedback"));
+		if (checkSequence(fixSequence(props.getProperty("sample", "")), "sample") != null) addError("sample_property", checkSequence(fixSequence(props.getProperty("sample", "")), "sample"));
+		if (checkSequence(fixSequence(props.getProperty("groups", "")), "groups") != null) addError("groups_property", checkSequence(fixSequence(props.getProperty("groups", "")), "groups"));
+		if (!props.getProperty("weights", "").trim().matches("^(\\d*)?(,(\\d*)?)*$")) addError("weights_property", "");
+		if (Arrays.stream(props.getProperty("scoring", "").trim().split(",")).anyMatch(p -> Arrays.asList("", "sum", "min", "min_fast").stream().noneMatch(s -> p.trim().equalsIgnoreCase(s)))) addError("scoring_property", "");
+		if (Arrays.asList("", "best", "aggregated").stream().noneMatch(s -> props.getProperty("scoring_type", "").trim().equalsIgnoreCase(s))) addError("scoring_type_property", "");
+		if (Arrays.stream(props.getProperty("extensions", "cpp").trim().split(",")).anyMatch(p -> Arrays.asList("cpp", "c", "h", "java", "py", "go", "cs", "zip", "txt", "pdf").stream().noneMatch(s -> p.trim().equalsIgnoreCase(s)))) addError("extensions_property", "");
+		if (checkSequence(fixSequence(props.getProperty("dependencies", "")), "dependencies") != null) addError("dependencies_property", checkSequence(fixSequence(props.getProperty("dependencies", "")), "dependencies"));
+		if (Arrays.asList("lualatex", "none", "pdflatex", "xelatex").stream().noneMatch(s -> props.getProperty("latex", "lualatex").trim().equalsIgnoreCase(s))) addError("latex_property", "");
+		if (Arrays.asList("no", "no_checker", "unrestricted").stream().noneMatch(s -> props.getProperty("user_tests", "no").trim().equalsIgnoreCase(s))) addError("user_tests_property", "");
+	}
+
+	private String checkSequence (String sequence, String type) {
+		String regex = "^(\\d*)?([,;](\\d*)?)*$";
+		if (!sequence.matches(regex)) return "";
+		String[] tokens = sequence.split(",");
+		if (type.equals("dependencies")) {
+			for (String token : tokens) {
+				String[] groups = token.split(";");
+				if (Arrays.stream(groups).filter(g -> !g.isEmpty()).collect(Collectors.toList()).size() != Arrays.stream(groups).filter(g -> !g.isEmpty()).collect(Collectors.toSet()).size()) return "backend.sequence_repeat";
+			}
+			return null;
+		}
+		if (Arrays.stream(tokens).flatMap(t -> Arrays.stream(t.split(";"))).filter(g -> !g.isEmpty()).collect(Collectors.toList()).size() != 
+			Arrays.stream(tokens).flatMap(t -> Arrays.stream(t.split(";"))).filter(g -> !g.isEmpty()).collect(Collectors.toSet()).size()) return "backend.sequence_repeat";
+		return null;
 	}
 
 	private static List<Path> findAllPaths (Path taskPath) throws IOException {
@@ -508,17 +633,23 @@ public class TaskDetails {
 		return dependencies;
 	}
 	
+	public boolean groupsFromZero () {
+		if (Arrays.stream(sample.split(",")).anyMatch(s -> Arrays.stream(s.split(";")).anyMatch(g -> g.equals("0")))) return true;
+		if (Arrays.stream(feedback.split(",")).anyMatch(f -> Arrays.stream(f.split(";")).anyMatch(g -> g.equals("0")))) return true;
+		if (Arrays.stream(dependencies.split(",")).anyMatch(d -> Arrays.stream(d.split(";")).anyMatch(g -> g.equals("0")))) return true;
+		String[] deps = dependencies.split(",");
+		for (int i = 0; i < deps.length; i++) {
+			int maxGroup = Arrays.stream(deps[i].split(";")).filter(g -> !g.isEmpty()).mapToInt(Integer::parseInt).max().orElse(-1);
+			if (maxGroup == i) return false; /// backward compatability
+		}
+		if (!sample.isEmpty()) return false;
+		return (getTestGroups().size() > 0 && getTestGroups().get(0).getWeight() == 0);
+	}
+
 	public List<Integer> dependsOn(int groupNumber) {
 		if (dependencies.split(",").length < groupNumber) return new LinkedList<>();
 
-		boolean sampleGroup = (groupsScoring() && getTestGroups().size() > 0 && getTestGroups().get(0).getWeight() == 0);
-		sampleGroup |= Arrays.stream(dependencies.split(",")).anyMatch(d -> Arrays.stream(d.split(";")).anyMatch(g -> g.equals(0)));
-		String[] deps = dependencies.split(",");
-		for (int i = 0; i < deps.length; i++) {
-			int maxGroup = Arrays.stream(deps[i].split(";")).filter(g -> g.length() != 0).mapToInt(Integer::parseInt).max().orElse(-1);
-			if (maxGroup == i) sampleGroup = false; /// backward compatability
-		}
-		final boolean number0 = sampleGroup;
+		boolean number0 = groupsFromZero();
 		
 		String group = dependencies.split(",",-1)[groupNumber-1];
 		if (group.isEmpty()) return new LinkedList<>();
@@ -569,13 +700,13 @@ public class TaskDetails {
 		return testGroups;
 	}
 
-	public static List<TestCase> findTestCases(Path taskPath, boolean relative) throws IOException {
+	public static List<TestCase> findTestCases(Path taskPath, boolean relative) throws IOException, IllegalStateException {
 		//if ("manual".equals(scoring) || "quiz".equals(scoring)) new ArrayList<>();
 		List<Path> paths = findAllPaths(taskPath);
 		Properties props = findProperties(taskPath, paths);
 		List<TestCase> testCases;
 		if (props.containsKey("patterns")) testCases = TaskTestsFinderv4.find(paths, taskPath, props.getProperty("patterns"));
-		else if (props.containsKey("input") && props.containsKey("output")) testCases = new TaskTestsFinderv3().find(paths, taskPath, props.getProperty("input"), props.getProperty("output"));
+		else if (props.containsKey("input") && props.containsKey("output")) testCases = TaskTestsFinderv3.find(paths, taskPath, props.getProperty("input"), props.getProperty("output"));
 		else testCases = TaskTestsFinderv2.find(paths, taskPath, CheckerFinder.find(paths).isPresent());
 		if (relative == false) {
 			for (TestCase testCase : testCases) {
@@ -587,7 +718,7 @@ public class TaskDetails {
 	}
 	
 	private boolean propertyContainsToken (String property, String token) {
-		return Arrays.stream(property.split(",")).anyMatch(t -> t.equalsIgnoreCase(token));
+		return Arrays.stream(property.trim().split(",")).anyMatch(t -> t.trim().equalsIgnoreCase(token));
 	}
 	public boolean testsScoring() {
 		return (propertyContainsToken(scoring, "sum") && groups.isEmpty()) || propertyContainsToken(scoring, "tests") || propertyContainsToken(scoring, "icpc"); // backward compatability
@@ -621,6 +752,7 @@ public class TaskDetails {
 		List<Path> paths = findAllPaths(taskPath);
 		String analysis = findAnalysis(paths);
 		String description = StatementFinder.find(analysis, paths, taskPath).map(Path::toString).orElse(null);
+		if (description == null) return null;
 		if (relative == false) return taskPath.resolve(description).toString();
 		return description;
 	}
@@ -651,7 +783,7 @@ public class TaskDetails {
 		this.analysis = analysis;
 	}
 
-	public static String findAnalysis (List<Path> paths) throws IOException {
+	public static String findAnalysis (List<Path> paths) {
 		return AnalysisFinder.find(paths).map(Path::toString).orElse(null);
 	}
 
@@ -737,21 +869,24 @@ public class TaskDetails {
 	}
 	
 	public TreeSet<Integer> feedback() {
-		TreeSet<Integer> set = new TreeSet<>();
-		if (isFullFeedback()) return set;
-		
-		String[] split = getFeedback().split(",");
-		for (String s: split) set.add(Integer.valueOf(s.trim()));
-		return set;
+		if (isFullFeedback()) return new TreeSet<>();
+		return new TreeSet<Integer> (
+			Arrays.stream(getFeedback().split(","))
+			.filter(f -> !f.isEmpty())
+			.flatMap(f -> Arrays.stream(f.split(";")))
+			.map(f -> Integer.valueOf(f))
+			.collect(Collectors.toSet())
+		);
 	}
 	
 	public TreeSet<Integer> sampleTests() {
-		TreeSet<Integer> set = new TreeSet<>();
-		if (getSample().trim().isEmpty()) return set;
-		
-		String[] split = getSample().split(",");
-		for (String s: split) set.add(Integer.valueOf(s.trim()));
-		return set;
+		return new TreeSet<Integer> (
+			Arrays.stream(getSample().split(","))
+			.filter(s -> !s.isEmpty())
+			.flatMap(s -> Arrays.stream(s.split(";")))
+			.map(s -> Integer.valueOf(s))
+			.collect(Collectors.toSet())
+		);
 	}
 	
 	public double getTotalWeight() {
@@ -774,14 +909,12 @@ public class TaskDetails {
 		return info;
 	}
 	
-	public String getError() {
+	public Map<String, String> getError() {
 		return error;
 	}
 
-	public void addError (String newError) {
-		if (newError == null || newError.isEmpty()) return ;
-		if (error != null) error += "\n" + newError;
-		else error = newError;
+	public void addError (String type, String newError) {
+		error.put(type, newError);
 	}
 	
 	public boolean isManualScoring() {

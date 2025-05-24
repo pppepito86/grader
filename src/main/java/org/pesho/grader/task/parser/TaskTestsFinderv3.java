@@ -1,6 +1,5 @@
 package org.pesho.grader.task.parser;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -12,7 +11,7 @@ import org.pesho.grader.task.TestCase;
 
 public class TaskTestsFinderv3 {
 	
-	public List<TestCase> find(List<Path> paths, Path basePath, String inputString, String outputString) throws IOException {
+	public static List<TestCase> find(List<Path> paths, Path basePath, String inputString, String outputString) {
 		Pattern inputPattern = Pattern.compile(inputString);
 		Pattern outputPattern = Pattern.compile(outputString);
 		List<String> inputs = new ArrayList<>();

@@ -1,6 +1,5 @@
 package org.pesho.grader.task.parser;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap;
@@ -30,7 +29,7 @@ public class TaskTestsFinderv2 {
 			new AbstractMap.SimpleImmutableEntry<>("ans", 1))
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	
-	public static List<TestCase> find(List<Path> paths, Path basePath, boolean hasChecker) throws IOException {
+	public static List<TestCase> find(List<Path> paths, Path basePath, boolean hasChecker) throws IllegalStateException {
 		Set<String> pathsSet = paths.stream()
 			.filter(p -> Files.isRegularFile(basePath.resolve(p)))
 			.map(Path::toString)
@@ -42,9 +41,9 @@ public class TaskTestsFinderv2 {
 				.map(p -> countMatches(p, pathsSet))
 				.orElse(0);
 		
-		if (patterns.size() == 0) throw new IllegalStateException("Cannot parse tests. No pattern candidates found!");
+		if (patterns.size() == 0) throw new IllegalStateException("backend.no_patterns");
 		if (!hasChecker && patterns.size() != 2) {
-			throw new IllegalStateException("Cannot parse tests. Candidates are: " + patterns);
+			throw new IllegalStateException("backend.patterns: " + patterns);
 		}
 		
 		return IntStream.rangeClosed(1, testsCount)
@@ -52,7 +51,7 @@ public class TaskTestsFinderv2 {
 				.collect(Collectors.toList());
 	}
 	
-	public static List<PathPattern> getTestPatterns(Set<String> pathsSet) throws IOException {
+	public static List<PathPattern> getTestPatterns(Set<String> pathsSet) {
 		List<PathPattern> patternCandidates = pathsSet.stream()
 				.flatMap(p -> getPatterns(p).stream())
 				.collect(Collectors.groupingBy(pattern -> countMatches(pattern, pathsSet), TreeMap::new, Collectors.toList()))
