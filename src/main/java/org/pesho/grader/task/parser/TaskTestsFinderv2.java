@@ -52,6 +52,11 @@ public class TaskTestsFinderv2 {
 	}
 	
 	public static List<PathPattern> getTestPatterns(Set<String> pathsSet) {
+		if (pathsSet.stream()
+				.flatMap(p -> getPatterns(p).stream())
+				.collect(Collectors.groupingBy(pattern -> countMatches(pattern, pathsSet), TreeMap::new, Collectors.toList()))
+				.size() == 0) return new ArrayList<>();
+		
 		List<PathPattern> patternCandidates = pathsSet.stream()
 				.flatMap(p -> getPatterns(p).stream())
 				.collect(Collectors.groupingBy(pattern -> countMatches(pattern, pathsSet), TreeMap::new, Collectors.toList()))

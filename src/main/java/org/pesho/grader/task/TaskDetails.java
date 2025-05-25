@@ -110,7 +110,7 @@ public class TaskDetails {
 		this.feedback = props.getProperty("feedback", "FULL").equals("FULL") ? "FULL" : fixSequence(props.getProperty("feedback", "FULL"));
 		this.sample = fixSequence(props.getProperty("sample", ""));
 		this.groups = fixSequence(props.getProperty("groups", ""));
-		this.weights = props.getProperty("weights", "").trim();
+		this.weights = fixSequence2(props.getProperty("weights", ""));
 		this.scoring = props.getProperty("scoring", this.groups.isEmpty()&&!props.containsKey("patterns")?"sum":"min_fast").trim();
 		this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
 		this.extensions = props.getProperty("extensions", "cpp").trim();
@@ -417,6 +417,21 @@ public class TaskDetails {
 		);
 	}
 
+	private String fixSequence2 (String sequence) {
+		return String.join(",", Arrays.stream(sequence.trim().split(","))
+			.map(t -> t.trim())
+			.filter(t -> {
+				try {
+					Double.valueOf(t);
+					return true;
+				} catch (Exception e) {
+					return false;
+				}
+			})
+			.toArray(CharSequence[]::new)
+		);
+	}
+
 	private void findErrors (Properties props) {
 		String naturalNumber = "^[1-9]\\d*$";
 		String decimalNumber = "^(?!0+(\\.0+)?$)\\d*\\.?\\d+$";
@@ -436,7 +451,7 @@ public class TaskDetails {
 		if (checkSequence(fixSequence(props.getProperty("feedback", "")), "feedback") != null) addError("feedback_property", checkSequence(fixSequence(props.getProperty("feedback", "")), "feedback"));
 		if (checkSequence(fixSequence(props.getProperty("sample", "")), "sample") != null) addError("sample_property", checkSequence(fixSequence(props.getProperty("sample", "")), "sample"));
 		if (checkSequence(fixSequence(props.getProperty("groups", "")), "groups") != null) addError("groups_property", checkSequence(fixSequence(props.getProperty("groups", "")), "groups"));
-		if (!props.getProperty("weights", "").trim().matches("^(\\d*)?(,(\\d*)?)*$")) addError("weights_property", "");
+		if (!fixSequence2(props.getProperty("weights", "1")).matches("^\\d+(\\.\\d+)?(,\\d+(\\.\\d+)?)*$")) addError("weights_property", "");
 		if (Arrays.stream(props.getProperty("scoring", "").trim().split(",")).anyMatch(p -> Arrays.asList("", "sum", "min", "min_fast").stream().noneMatch(s -> p.trim().equalsIgnoreCase(s)))) addError("scoring_property", "");
 		if (Arrays.asList("", "best", "aggregated").stream().noneMatch(s -> props.getProperty("scoring_type", "").trim().equalsIgnoreCase(s))) addError("scoring_type_property", "");
 		if (Arrays.stream(props.getProperty("extensions", "cpp").trim().split(",")).anyMatch(p -> Arrays.asList("cpp", "c", "h", "java", "py", "go", "cs", "zip", "txt", "pdf").stream().noneMatch(s -> p.trim().equalsIgnoreCase(s)))) addError("extensions_property", "");
