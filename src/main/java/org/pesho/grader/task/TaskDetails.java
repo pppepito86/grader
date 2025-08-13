@@ -106,7 +106,7 @@ public class TaskDetails {
 		this.compileMemory = Integer.valueOf(props.getProperty("compile_memory", "512"));
 		this.isDefaultCompileMemory = !props.containsKey("compile_memory");
 		this.javaCompileMemory = Integer.valueOf(props.getProperty("java_compile_memory", "1536"));
-		this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "1"));
+		this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "0"));
 		this.feedback = props.getProperty("feedback", "FULL").equals("FULL") ? "FULL" : fixSequence(props.getProperty("feedback", "FULL"));
 		this.sample = fixSequence(props.getProperty("sample", ""));
 		this.groups = fixSequence(props.getProperty("groups", ""));

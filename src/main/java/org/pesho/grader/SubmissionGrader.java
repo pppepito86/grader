@@ -254,13 +254,10 @@ public class SubmissionGrader {
 		Double tl = taskDetails.getTime();
 		TestStep testStep = TestStepFactory.getInstance(binaryFile, managerFile, piperFile, inputFile, solutionFile, isOfficial, tl, taskDetails.getMemory(), taskDetails.getProcesses(), taskDetails.getOpenFiles(), taskDetails.getIoTime());
 		testStep.execute();
-		if (testStep.getVerdict() == Verdict.TL && !Messages.WALL_CLOCK_TIMEOUT.equals(testStep.getResult().getReason()) && tl < 1) testStep.execute();
-		if (testStep.getVerdict() == Verdict.TL) {
-			int rejudgeTimes = taskDetails.getRejudgeTimes();
-			for (int i = 2; i <= rejudgeTimes; i++) {
-				if (testStep.getVerdict() != Verdict.TL || Messages.WALL_CLOCK_TIMEOUT.equals(testStep.getResult().getReason()) || Messages.EXTRA_TIME_LIMIT_EXCEEDED.equals(testStep.getResult().getReason())) break;
-				testStep.execute();
-			}
+		int rejudgeTimes = taskDetails.getRejudgeTimes();
+		for (int i = 1; i <= rejudgeTimes; i++) {
+			if (testStep.getVerdict() != Verdict.TL || Messages.WALL_CLOCK_TIMEOUT.equals(testStep.getResult().getReason()) || Messages.EXTRA_TIME_LIMIT_EXCEEDED.equals(testStep.getResult().getReason())) break;
+			testStep.execute();
 		}
 
 		if (testStep.getVerdict() != Verdict.OK) {

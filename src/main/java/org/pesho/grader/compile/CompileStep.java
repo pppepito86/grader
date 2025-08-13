@@ -97,9 +97,9 @@ public abstract class CompileStep implements BaseStep {
 	
 	protected StepResult getResult(CommandResult result) {
 		switch (result.getStatus()) {
-		case SUCCESS: return new StepResult(Verdict.OK, null, result.getExitCode(), result.getTime(), result.getMemory());
-		case TIMEOUT: return new StepResult(Verdict.CE, "Compilation TL", result.getExitCode(), result.getTime(), result.getMemory());
-		case OOM: return new StepResult(Verdict.CE, "Compilation ML", result.getExitCode(), result.getTime(), result.getMemory());
+		case SUCCESS: return new StepResult(Verdict.OK, result.getReason(), result.getExitCode(), result.getTime(), result.getMemory());
+		case TIMEOUT: return new StepResult(Verdict.CE, "Compilation TL.\n" + result.getReason(), result.getExitCode(), result.getTime(), result.getMemory());
+		case OOM: return new StepResult(Verdict.CE, "Compilation ML.\n" + result.getReason(), result.getExitCode(), result.getTime(), result.getMemory());
 		case SYSTEM_ERROR: return new StepResult(Verdict.SE, result.getReason(), result.getExitCode());
 		default: return new StepResult(Verdict.CE, result.getReason(), result.getExitCode(), result.getTime(), result.getMemory());
 		}

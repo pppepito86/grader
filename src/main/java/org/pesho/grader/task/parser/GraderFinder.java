@@ -14,8 +14,13 @@ public class GraderFinder {
 				.collect(Collectors.toList());
 		if (extensions.size() > 1) return paths.stream().findFirst().map(p -> p.getParent());
 
-		if (paths.size() != 1) return Optional.empty();
+		if (paths.size() != 1) {
+                        paths = paths.stream().filter(f -> f.toString().toLowerCase().contains("system")).collect(Collectors.toList());
+                        if (paths.size() == 0) return Optional.empty();
+                }
 
+
+                paths.sort((a, b) -> a.toString().length() - b.toString().length());
 		return paths.stream().findFirst();
 	}
 	

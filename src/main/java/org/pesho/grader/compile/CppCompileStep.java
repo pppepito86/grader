@@ -2,19 +2,20 @@ package org.pesho.grader.compile;
 import java.io.File;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
+/*import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 import org.pesho.sandbox.CommandResult;
-import org.pesho.sandbox.SandboxExecutor;
+import org.pesho.sandbox.SandboxExecutor;*/
 
 public class CppCompileStep extends CompileStep {
 
 	public static final String COMPILE_NO_CPP11_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -O2 -pipe -static -s -o %s ./%s";
-	public static final String COMPILE_CPP_11_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++11 -O2 -pipe -static -s -o %s ./%s";
-	public static final String COMPILE_CPP14_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++14 -O2 -pipe -static -s -o %s ./%s";
-	public static final String COMPILE_CPP17_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++17 -O2 -pipe -static -s -o %s ./%s";
-	public static final String COMPILE_CPP98_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=c++98 -O2 -pipe -static -s -o %s ./%s";
+	public static final String COMPILE_CPP11_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=gnu++11 -O2 -pipe -static -s -o %s ./%s";
+	public static final String COMPILE_CPP14_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=gnu++14 -O2 -pipe -static -s -o %s ./%s";
+	public static final String COMPILE_CPP17_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=gnu++17 -O2 -pipe -static -s -o %s ./%s";
+	public static final String COMPILE_CPP20_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=gnu++20 -O2 -pipe -static -s -o %s ./%s";
+	public static final String COMPILE_CPP98_COMMAND_PATTERN = "/usr/bin/g++ -DEVAL -std=gnu++98 -O2 -pipe -static -s -o %s ./%s";
 	public static final String SOURCE_FILE_ENDING = ".cpp";
 
 	public CppCompileStep(File sourceFile) {
@@ -28,9 +29,9 @@ public class CppCompileStep extends CompileStep {
 	@Override
 	public void execute() {
 		super.execute();
-		if (getVerdict() != Verdict.OK) {
+		/*if (getVerdict() != Verdict.OK) {
 			System.out.println("Compilation failed with c++17, will try with c++11.");
-			tryOther(COMPILE_CPP_11_COMMAND_PATTERN);
+			tryOther(COMPILE_CPP11_COMMAND_PATTERN);
 		}
 		if (getVerdict() != Verdict.OK) {
 			System.out.println("Compilation failed with c++11, will try without it.");
@@ -80,12 +81,12 @@ public class CppCompileStep extends CompileStep {
 				}
 			}
 		} catch (Exception e) {
-		}
+		}*/
 	}
 
 	@Override
 	public String[] getCommands() {
-		return getCommands(COMPILE_CPP17_COMMAND_PATTERN);
+		return getCommands(COMPILE_CPP20_COMMAND_PATTERN);
 	}
 	
 	public String[] getCommands(String pattern) {
