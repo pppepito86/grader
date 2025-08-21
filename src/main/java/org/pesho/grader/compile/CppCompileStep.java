@@ -86,7 +86,7 @@ public class CppCompileStep extends CompileStep {
 
 	@Override
 	public String[] getCommands() {
-		return getCommands(COMPILE_CPP20_COMMAND_PATTERN);
+		return getCommands(COMPILE_CPP17_COMMAND_PATTERN);
 	}
 	
 	public String[] getCommands(String pattern) {
