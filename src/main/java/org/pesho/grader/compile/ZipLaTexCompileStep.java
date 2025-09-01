@@ -64,12 +64,17 @@ public class ZipLaTexCompileStep extends CompileStep {
 			int cnt = 0;
 			for (Path tex : Files.newDirectoryStream(currentDir, "*.tex")) {
 				cnt++;
+				String mainTex = Files.lines(tex)
+					.filter(line -> line.contains("begin{document}"))
+					.findFirst()
+					.orElse(null);
+				if (mainTex == null) continue;
 				texFile = tex.toFile();
 				super.execute();
-				if (getVerdict() == Verdict.OK) {
+				//if (getVerdict() == Verdict.OK) {
 					FileUtils.deleteQuietly(sandboxDir);
 					return ;
-				}
+				//}
 			}
 			if (cnt == 0) {
 				noTex = true;
