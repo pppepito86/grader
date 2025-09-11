@@ -16,10 +16,10 @@ public class SolutionsFinder {
 				}))
 				.filter(x -> {
 					String fileName = x.getFileName().toString();
-					return !fileName.contains("checker") && !fileName.contains("system") && !fileName.contains("grader") && !fileName.contains("generator") && !fileName.contains("validator");
+					return !fileName.contains("checker") && !fileName.contains("system") && !fileName.contains("grader") && !fileName.contains("manager") && !fileName.contains("generator") && !fileName.contains("validator");
 				})
 				.filter(x -> x.getParent() == null
-					|| (!"checker".equalsIgnoreCase(x.getParent().toString()) && !"system".equalsIgnoreCase(x.getParent().toString())))
+					|| (!"checker".equalsIgnoreCase(x.getParent().toString()) && !"system".equalsIgnoreCase(x.getParent().toString()) && !"manager".equalsIgnoreCase(x.getParent().toString())))
 				.collect(Collectors.toList());
 		
 		paths = paths.stream()

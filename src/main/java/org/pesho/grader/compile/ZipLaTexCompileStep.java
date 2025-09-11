@@ -71,10 +71,8 @@ public class ZipLaTexCompileStep extends CompileStep {
 				if (mainTex == null) continue;
 				texFile = tex.toFile();
 				super.execute();
-				//if (getVerdict() == Verdict.OK) {
-					FileUtils.deleteQuietly(sandboxDir);
-					return ;
-				//}
+				FileUtils.deleteQuietly(sandboxDir);
+				return ;
 			}
 			if (cnt == 0) {
 				noTex = true;
