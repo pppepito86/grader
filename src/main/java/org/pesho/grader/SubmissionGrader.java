@@ -203,9 +203,9 @@ public class SubmissionGrader {
 				for (int j = 0; j < testGroup.getTestCases().size(); j++) {
 					TestCase testCase = testGroup.getTestCases().get(j);
 					StepResult result = executeTest(testCase, managerFile, checkerFile, allTestsOk, testPoints, "submission");
-					score.addTestResult(testCase.getNumber(), result);
+					score.addTestResult(testCase.getNumber() + (taskDetails.testsFromZero() ? 1 : 0), result);
 					if (listener != null) {
-						//listener.addTestResult(testCase.getNumber(), result);
+						//listener.addTestResult(testCase.getNumber() + (taskDetails.testsFromZero() ? 1 : 0), result);
 						listener.scoreUpdated(submissionId, score);
 					}
 					

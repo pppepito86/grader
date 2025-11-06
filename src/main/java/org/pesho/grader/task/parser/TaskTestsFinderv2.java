@@ -13,7 +13,6 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -36,30 +35,30 @@ public class TaskTestsFinderv2 {
 			.collect(Collectors.toSet());
 		
 		List<PathPattern> patterns = getTestPatterns(pathsSet);
-		int testsCount = patterns.stream()
+		List<Integer> testsNumbers = patterns.stream()
 				.findFirst()
-				.map(p -> countMatches(p, pathsSet))
-				.orElse(0);
+				.map(p -> findMatches(p, pathsSet))
+				.orElse(new ArrayList<>());
 		
 		if (patterns.size() == 0) throw new IllegalStateException("backend.no_patterns");
 		if (!hasChecker && patterns.size() != 2) {
 			throw new IllegalStateException("backend.patterns: " + patterns);
 		}
 		
-		return IntStream.rangeClosed(1, testsCount)
-				.mapToObj(i -> new TestCase(i, patterns.get(0).replace(i), (patterns.size()==2)?patterns.get(1).replace(i):null))
+		return testsNumbers.stream()
+				.map(i -> new TestCase(i, patterns.get(0).replace(i), (patterns.size()==2)?patterns.get(1).replace(i):null))
 				.collect(Collectors.toList());
 	}
 	
 	public static List<PathPattern> getTestPatterns(Set<String> pathsSet) {
 		if (pathsSet.stream()
 				.flatMap(p -> getPatterns(p).stream())
-				.collect(Collectors.groupingBy(pattern -> countMatches(pattern, pathsSet), TreeMap::new, Collectors.toList()))
+				.collect(Collectors.groupingBy(pattern -> findMatches(pattern, pathsSet).size(), TreeMap::new, Collectors.toList()))
 				.size() == 0) return new ArrayList<>();
 		
 		List<PathPattern> patternCandidates = pathsSet.stream()
 				.flatMap(p -> getPatterns(p).stream())
-				.collect(Collectors.groupingBy(pattern -> countMatches(pattern, pathsSet), TreeMap::new, Collectors.toList()))
+				.collect(Collectors.groupingBy(pattern -> findMatches(pattern, pathsSet).size(), TreeMap::new, Collectors.toList()))
 				.lastEntry()
 				.getValue();
 		
@@ -103,14 +102,16 @@ public class TaskTestsFinderv2 {
 		return new PathPattern(pattern.toString(), replacements);
 	}
 	
-	private static int countMatches(PathPattern pattern, Set<String> paths) {
-		int ans = 1;
+	private static List<Integer> findMatches(PathPattern pattern, Set<String> paths) {
+		List<Integer> numbers = new ArrayList<>();
+		int curr = 0;
 		while (true) {
-			String number = String.format(pattern.getReplacements().get(0), ans);
+			String number = String.format(pattern.getReplacements().get(0), curr);
 			String path = pattern.getPath().replace("{0}", number);
-			if (!paths.contains(path)) return ans-1;
+			if (!paths.contains(path) && curr != 0) return numbers;
+			if (paths.contains(path)) numbers.add(curr);
 			
-			ans++;
+			curr++;
 		}
 	}
 

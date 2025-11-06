@@ -111,11 +111,11 @@ public class SubmissionScore implements GradeListener {
 	}
 	
 	public LinkedHashMap<String, StepResult> getScoreSteps() {
-		if (scoreSteps != null) return scoreSteps;
+		/*if (scoreSteps != null) return scoreSteps;
 		
 		LinkedHashMap<String, StepResult> scoreSteps = new LinkedHashMap<>();
 		if (compileResult != null) scoreSteps.put("Compile", compileResult);
-		for (int i = 0; i < testResults.size(); i++) scoreSteps.put("Test"+(i+1), testResults.get(i));
+		for (int i = 0; i < testResults.size(); i++) scoreSteps.put("Test"+(i+1), testResults.get(i));*/
 		return scoreSteps;
 	}
 
@@ -139,8 +139,8 @@ public class SubmissionScore implements GradeListener {
 
         for (int i = 0; i < testGroup.getTestCases().size(); i++) {
             TestCase testCase = testGroup.getTestCases().get(i);
-            int testNumber = testCase.getNumber();
-            if (testNumber-1 >= testResults.size()) addTestResult(testNumber, scoreSteps.get("Test"+testCase.getNumber())); /// backward compatability
+            int testNumber = testCase.getNumber() + (task.testsFromZero() ? 1 : 0);
+            if (testNumber-1 >= testResults.size()) addTestResult(testNumber, scoreSteps.get("Test"+(testNumber + (task.testsFromZero() ? -1 : 0)))); /// backward compatability
             StepResult result = testResults.get(testNumber-1);
 
             checkerMin = Math.min(checkerMin, result.getCheckerOutput());
@@ -192,7 +192,7 @@ public class SubmissionScore implements GradeListener {
 
 	public double calculateScore (TaskDetails task) {
 		double testsScore = 0.0;
-		if (compileResult ==  null) setCompileResult(getScoreSteps().get("Compile"));
+		if (compileResult ==  null) setCompileResult(scoreSteps.get("Compile"));
 		if (compileResult.getVerdict() != Verdict.CE) {
 			groupResults = new ArrayList<>();
 			for (int i = 0; i < task.getTestGroups().size(); i++) {

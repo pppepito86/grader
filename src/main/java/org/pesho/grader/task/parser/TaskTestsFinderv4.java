@@ -55,7 +55,7 @@ public class TaskTestsFinderv4 {
 				.findFirst().orElse(null);
 	}
 	
-	public static List<TestCase> find(List<Path> paths, Path basePath, String patterns) throws IllegalStateException {
+	public static List<TestCase> find(List<Path> paths, Path basePath, String patterns, boolean testsFromZero) throws IllegalStateException {
 		Path testFolder = findTestsFolder(paths);
 		if (testFolder == null) throw new IllegalStateException("backend.no_tests_folder");
 		
@@ -113,7 +113,7 @@ public class TaskTestsFinderv4 {
 					.findFirst().orElse(null);
 			if (output == null) continue;
 			possibleOutputs.remove(output);
-			testCases.add(new TestCase(testCases.size()+1, input.toString(), output.toString()));
+			testCases.add(new TestCase(testCases.size() + (testsFromZero ? 0 : 1), input.toString(), output.toString()));
 		}
 		
 		return testCases;

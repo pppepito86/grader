@@ -11,7 +11,7 @@ import org.pesho.grader.task.TestCase;
 
 public class TaskTestsFinderv3 {
 	
-	public static List<TestCase> find(List<Path> paths, Path basePath, String inputString, String outputString) {
+	public static List<TestCase> find(List<Path> paths, Path basePath, String inputString, String outputString, boolean testsFromZero) {
 		Pattern inputPattern = Pattern.compile(inputString);
 		Pattern outputPattern = Pattern.compile(outputString);
 		List<String> inputs = new ArrayList<>();
@@ -31,7 +31,7 @@ public class TaskTestsFinderv3 {
 		if (inputs.size() != outputs.size()) return tests;
 		
 		for (int i = 0; i < inputs.size(); i++) {
-			tests.add(new TestCase(i+1, inputs.get(i), outputs.get(i)));
+			tests.add(new TestCase(i + (testsFromZero ? 0 : 1), inputs.get(i), outputs.get(i)));
 		}
 		return tests;
 	}

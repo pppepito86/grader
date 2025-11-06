@@ -218,9 +218,9 @@ public class TaskDetails {
 		} catch (IllegalStateException e) {
 			addError("tests_parse", e.getMessage());
 		}
-		if (props.containsKey("patterns") && groups.isEmpty() && groupsScoring()) {
+		if (props.containsKey("patterns") && groups.isEmpty()) {
 			String[] patternsSplit = props.getProperty("patterns").split(",");
-			int total = 1;
+			int total = (testsFromZero() ? 0 : 1);
 			for (String patternSplit: patternsSplit) {
 				boolean first = true;
 				for (TestCase testCase: testCases) {
@@ -242,14 +242,15 @@ public class TaskDetails {
 			testGroups = new TestGroup[testCases.size()];
 			addError("tests", "backend.no_tests");
 		} else if (groups.isEmpty()) {
+			if (sampleTests().size() == 0 && testCases.get(0).getNumber() == 0) sample = "0";
 			Set<Integer> sampleTests = sampleTests();
 			testGroups = new TestGroup[testCases.size()];
 			
 			double testWeight = 1.0/(testCases.size()-sampleTests.size());
 			for (int i = 0; i < testGroups.length; i++) {
-				boolean hasFeedback = isFullFeedback() || feedbackGroups.contains(i+1);
-				boolean isSample = sampleTests.contains(i+1);
-				testGroups[i] = new TestGroup(isSample?0:testWeight, hasFeedback, testCases.get(i));
+				boolean hasFeedback = isFullFeedback() || feedbackGroups.contains(testCases.get(i).getNumber());
+				boolean isSample = sampleTests.contains(testCases.get(i).getNumber());
+				testGroups[i] = new TestGroup(isSample ? 0 : testWeight, hasFeedback, testCases.get(i));
 			}
 		} else {
 			boolean groupsFromZero = groupsFromZero();
@@ -258,8 +259,11 @@ public class TaskDetails {
 			String[] weightsSplit = (weights.isEmpty())?new String[]{}:weights.split(",");
 			if (weightsSplit.length != groupsSplit.length && !weights.isEmpty()) addError("weights", "backend.weights_not_match");
 			double totalWeight = 0;
-			if (!weights.isEmpty()) {
+			if (weightsSplit.length == groupsSplit.length) {
 				for (String weight: weightsSplit) totalWeight += Double.valueOf(weight.trim());
+				this.testGroups = new ArrayList<TestGroup>(){{add(new TestGroup(Double.valueOf(weightsSplit[0]), false, new TestCase[]{}));}};
+				groupsFromZero = groupsFromZero();
+				this.testGroups = new ArrayList<>();
 			}
 			else {
 				for (int i = 0; i < groupsSplit.length; i++) {
@@ -268,6 +272,7 @@ public class TaskDetails {
 				}
 			}
 			
+			boolean testsFromZero = testsFromZero();
 			int cnt = 0;
 			testGroups = new TestGroup[groupsSplit.length];
 			for (int i = 0; i < testGroups.length; i++) {
@@ -276,6 +281,7 @@ public class TaskDetails {
 				TestCase[] cases = new TestCase[tests.length];
 				for (int j = 0; j < tests.length; j++) {
 					Integer t = Integer.valueOf(tests[j]);
+					if (testsFromZero) t++;
 					if (t < 1 || t > testCases.size()) {
 						addError("groups", "backend.invalid_numbers");
 						continue;
@@ -285,7 +291,7 @@ public class TaskDetails {
 				
 				boolean isSample = sampleGroups.contains(i+(groupsFromZero?0:1));
 				double weight = (weightsSplit.length == groupsSplit.length) ? Double.valueOf(weightsSplit[i].trim()) : (isSample?0:1);
-				boolean hasFeedback = isFullFeedback() || feedbackGroups.contains(i+1);
+				boolean hasFeedback = isFullFeedback() || feedbackGroups.contains(i + (groupsFromZero ? 0 : 1));
 				testGroups[i] = new TestGroup(weight/totalWeight, hasFeedback, cases);
 			}
 			if (cnt != testCases.size()) addError("groups", "backend.groups_not_match");
@@ -293,12 +299,14 @@ public class TaskDetails {
 		this.testGroups = Arrays.asList(testGroups);
 		
 		if (testGroups.length != 0) {
-			boolean groupsFromZero = groupsScoring() && groupsFromZero();
+			boolean fromZero = (testsScoring() && testsFromZero()) || (groupsScoring() && groupsFromZero());
 			for (Integer t : sampleTests()) {
-				if ((groupsFromZero && (t < 0 || t > testGroups.length-1)) || (!groupsFromZero && (t < 1 || t > testGroups.length))) addError("samples", "backend.invalid_numbers");
+				if (fromZero) t++;
+				if (t < 1 || t > testGroups.length) addError("samples", "backend.invalid_numbers");
 			}
 			for (Integer t : feedbackGroups) {
-				if ((groupsFromZero && (t < 0 || t > testGroups.length-1)) || (!groupsFromZero && (t < 1 || t > testGroups.length))) addError("feedback", "backend.invalid_numbers");
+				if (fromZero) t++;
+				if (t < 1 || t > testGroups.length) addError("feedback", "backend.invalid_numbers");
 			}
 		}
 		if (dependencies.length() != 0) {
@@ -648,9 +656,9 @@ public class TaskDetails {
 		return dependencies;
 	}
 	
-	public boolean groupsFromZero () {
-		if (Arrays.stream(sample.split(",")).anyMatch(s -> Arrays.stream(s.split(";")).anyMatch(g -> g.equals("0")))) return true;
-		if (Arrays.stream(feedback.split(",")).anyMatch(f -> Arrays.stream(f.split(";")).anyMatch(g -> g.equals("0")))) return true;
+	public boolean groupsFromZero() {
+		if (sampleTests().contains(0)) return true;
+		if (feedback().contains(0)) return true;
 		if (Arrays.stream(dependencies.split(",")).anyMatch(d -> Arrays.stream(d.split(";")).anyMatch(g -> g.equals("0")))) return true;
 		String[] deps = dependencies.split(",");
 		for (int i = 0; i < deps.length; i++) {
@@ -662,12 +670,12 @@ public class TaskDetails {
 	}
 
 	public List<Integer> dependsOn(int groupNumber) {
-		if (dependencies.split(",").length < groupNumber) return new LinkedList<>();
+		if (dependencies.split(",").length < groupNumber) return new ArrayList<>();
 
 		boolean number0 = groupsFromZero();
 		
 		String group = dependencies.split(",",-1)[groupNumber-1];
-		if (group.isEmpty()) return new LinkedList<>();
+		if (group.isEmpty()) return new ArrayList<>();
 		return Arrays.stream(group.split(";")).map(g -> {
 			int res = Integer.parseInt(g);
 			if (number0) res++;
@@ -715,13 +723,29 @@ public class TaskDetails {
 		return testGroups;
 	}
 
+	private static boolean testsFromZero(boolean testsScoring, boolean groupsScoring, TreeSet<Integer> samples, TreeSet<Integer> feedback, String groups, List<TestGroup> testGroups) {
+		if (testsScoring && samples.contains(0)) return true;
+		if (testsScoring && feedback.contains(0)) return true;
+		if (groupsScoring && Arrays.stream(groups.split(",")).anyMatch(g -> Arrays.stream(g.split(";")).anyMatch(t -> t.equals("0")))) return true;
+		return (testGroups.size() > 0 && testGroups.get(0).getTestCases().size() > 0 && testGroups.get(0).getTestCases().get(0).getNumber() == 0);
+	}
+
+	public boolean testsFromZero() {
+		return testsFromZero(testsScoring(), groupsScoring(), sampleTests(), feedback(), getGroups(), getTestGroups());
+	}
+
 	public static List<TestCase> findTestCases(Path taskPath, boolean relative) throws IOException, IllegalStateException {
 		//if ("manual".equals(scoring) || "quiz".equals(scoring)) new ArrayList<>();
 		List<Path> paths = findAllPaths(taskPath);
 		Properties props = findProperties(taskPath, paths);
 		List<TestCase> testCases;
-		if (props.containsKey("patterns")) testCases = TaskTestsFinderv4.find(paths, taskPath, props.getProperty("patterns"));
-		else if (props.containsKey("input") && props.containsKey("output")) testCases = TaskTestsFinderv3.find(paths, taskPath, props.getProperty("input"), props.getProperty("output"));
+		if (props.containsKey("patterns") || (props.containsKey("input") && props.containsKey("output"))) {
+			String scoring = props.getProperty("scoring", "");
+			String groups = props.getProperty("groups", "");
+			boolean testsFromZero = testsFromZero(findTestsScoring(scoring, groups), findGroupsScoring(scoring, groups), findSampleTests(props.getProperty("sample", "")), findFeedback(props.getProperty("feedback", "")), groups, new ArrayList<>());
+			if (props.containsKey("patterns")) testCases = TaskTestsFinderv4.find(paths, taskPath, props.getProperty("patterns"), testsFromZero);
+			else testCases = TaskTestsFinderv3.find(paths, taskPath, props.getProperty("input"), props.getProperty("output"), testsFromZero);
+		}
 		else testCases = TaskTestsFinderv2.find(paths, taskPath, CheckerFinder.find(paths).isPresent());
 		if (relative == false) {
 			for (TestCase testCase : testCases) {
@@ -732,15 +756,24 @@ public class TaskDetails {
 		return testCases;
 	}
 	
-	private boolean propertyContainsToken (String property, String token) {
+	private static boolean propertyContainsToken(String property, String token) {
 		return Arrays.stream(property.trim().split(",")).anyMatch(t -> t.trim().equalsIgnoreCase(token));
 	}
-	public boolean testsScoring() {
+
+	private static boolean findTestsScoring(String scoring, String groups) {
 		return (propertyContainsToken(scoring, "sum") && groups.isEmpty()) || propertyContainsToken(scoring, "tests") || propertyContainsToken(scoring, "icpc"); // backward compatability
 	}
 
+	public boolean testsScoring() {
+		return findTestsScoring(getScoring(), getGroups());
+	}
+
+	private static boolean findGroupsScoring(String scoring, String groups) {
+		return !findTestsScoring(scoring, groups);
+	}
+
 	public boolean groupsScoring() {
-		return !testsScoring();
+		return findGroupsScoring(getScoring(), getGroups());
 	}
 	
 	public boolean sumScoring() {
@@ -862,50 +895,55 @@ public class TaskDetails {
 		return blacklistedWords;
 	}
 	
-	public boolean isFullFeedback() {
+	private static boolean isFullFeedback(String feedback) {
 		return feedback.trim().equalsIgnoreCase("full");
 	}
-	
-	public boolean hasSampleTests() {
-		return !sample.isEmpty();
+
+	public boolean isFullFeedback() {
+		return isFullFeedback(getFeedback());
 	}
 	
 	public double getPublicScore() {
 		if (isFullFeedback()) return Precision.round(getPoints(), getPrecision());
 		
+		boolean fromZero = (testsScoring() && testsFromZero()) || (groupsScoring() && groupsFromZero());
 		TreeSet<Integer> feedback = feedback();
 		double publicWeight = 0.0;
 		for (int i = 0; i < getTestGroups().size(); i++) {
-			if (feedback.contains(i+1)) {
+			if (feedback.contains(i + (fromZero ? 0 : 1))) {
 				publicWeight += getTestGroups().get(i).getWeight();
 			}
 		}
 		return Precision.round(getPoints()*publicWeight, getPrecision());
 	}
 	
-	public TreeSet<Integer> feedback() {
-		if (isFullFeedback()) return new TreeSet<>();
+	private static TreeSet<Integer> findFeedback(String feedback) {
+		if (isFullFeedback(feedback)) return new TreeSet<>();
 		return new TreeSet<Integer> (
-			Arrays.stream(getFeedback().split(","))
+			Arrays.stream(feedback.split(","))
 			.filter(f -> !f.isEmpty())
 			.flatMap(f -> Arrays.stream(f.split(";")))
 			.map(f -> Integer.valueOf(f))
 			.collect(Collectors.toSet())
 		);
 	}
+
+	public TreeSet<Integer> feedback() {
+		return findFeedback(getFeedback());
+	}
 	
-	public TreeSet<Integer> sampleTests() {
+	private static TreeSet<Integer> findSampleTests(String sample) {
 		return new TreeSet<Integer> (
-			Arrays.stream(getSample().split(","))
+			Arrays.stream(sample.split(","))
 			.filter(s -> !s.isEmpty())
 			.flatMap(s -> Arrays.stream(s.split(";")))
 			.map(s -> Integer.valueOf(s))
 			.collect(Collectors.toSet())
 		);
 	}
-	
-	public double getTotalWeight() {
-		return getTestGroups().stream().mapToDouble(g -> g.getWeight()).sum();
+
+	public TreeSet<Integer> sampleTests() {
+		return findSampleTests(getSample());
 	}
 	
 	public void setFiles(Map<String, Object> files) {
