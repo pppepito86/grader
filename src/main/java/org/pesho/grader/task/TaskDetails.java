@@ -113,11 +113,11 @@ public class TaskDetails {
 		this.weights = fixSequence2(props.getProperty("weights", ""));
 		this.scoring = props.getProperty("scoring", this.groups.isEmpty()&&!props.containsKey("patterns")?"sum":"min_fast").trim();
 		this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
-		this.extensions = props.getProperty("extensions", "cpp").trim();
+		this.extensions = findExtensions(props);
 		this.info = props.getProperty("info", "").trim();
 		this.dependencies = fixSequence(props.getProperty("dependencies", ""));
 		this.texMode = props.getProperty("latex", "lualatex").trim();
-		this.allowedExtensions = Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
+		this.allowedExtensions = findAllowedExtensions(extensions);
 		this.blacklist = props.getProperty("blacklist", "").trim();
 		this.blacklistedWords = Arrays.stream(blacklist.split(",")).map(s -> s.trim()).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
 		this.arbiterDelta = Double.valueOf(props.getProperty("arbiter_delta", "1.0"));
@@ -178,7 +178,7 @@ public class TaskDetails {
 		findErrors(props);
 		setProps(props);
 
-        this.checker = CheckerFinder.find(paths).map(Path::toString).orElse(null);
+        this.checker = findChecker(taskPath, true).map(Path::toString).orElse(null);
         this.manager = ManagerFinder.find(paths).map(Path::toString).orElse(null);
 		this.graderDir = GraderFinder.find(paths, allowedExtensions).map(p -> p.getParent()).map(Path::toString).orElse(null);
 		this.imagesDir = ImagesFinder.find(paths).map(Path::toString).orElse(null);
@@ -694,6 +694,11 @@ public class TaskDetails {
 	public String getCppChecker() {
 		return cppChecker;
 	}
+
+	public static Optional<Path> findChecker(Path taskPath, boolean relative) throws IOException {
+		List<Path> paths = findAllPaths(taskPath);
+		return CheckerFinder.find(paths).map(c -> (relative == false ? taskPath.resolve(c) : c));
+	}
 	
 	public String getGraderDir() {
 		return graderDir;
@@ -746,7 +751,7 @@ public class TaskDetails {
 			if (props.containsKey("patterns")) testCases = TaskTestsFinderv4.find(paths, taskPath, props.getProperty("patterns"), testsFromZero);
 			else testCases = TaskTestsFinderv3.find(paths, taskPath, props.getProperty("input"), props.getProperty("output"), testsFromZero);
 		}
-		else testCases = TaskTestsFinderv2.find(paths, taskPath, CheckerFinder.find(paths).isPresent());
+		else testCases = TaskTestsFinderv2.find(paths, taskPath, findChecker(taskPath, relative).isPresent());
 		if (relative == false) {
 			for (TestCase testCase : testCases) {
 				testCase.setInput(taskPath.resolve(testCase.getInput()).toString());
@@ -889,6 +894,26 @@ public class TaskDetails {
 	
 	public Set<String> getAllowedExtensions() {
 		return allowedExtensions;
+	}
+
+	private static String findExtensions(Properties props) {
+		return props.getProperty("extensions", "cpp").trim();
+	}
+
+	private static Set<String> findAllowedExtensions(String extensions) {
+		return Arrays.stream(extensions.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
+	}
+
+	public static List<Path> findFilesAllowedExtensions(Path taskPath, boolean relative) throws IOException {
+		List<Path> paths = findAllPaths(taskPath);
+		Properties props = findProperties(taskPath, paths);
+		Set<String> allowedExtensions = findAllowedExtensions(findExtensions(props));
+		return paths.stream()
+			.filter(p -> allowedExtensions.stream().anyMatch(e -> {
+				return p.getFileName().toString().toLowerCase().endsWith("."+e.toLowerCase());
+			}))
+			.map(p -> (relative == false ? taskPath.resolve(p) : p))
+			.collect(Collectors.toList());
 	}
 	
 	public Set<String> getBlacklistedWords() {
