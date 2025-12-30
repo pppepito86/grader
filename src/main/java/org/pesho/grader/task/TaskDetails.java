@@ -38,6 +38,7 @@ public class TaskDetails {
 	private Map<String, Object> files;
 	
 	private double points;
+	private boolean isDefaultPoints;
 	private int precision;
 	private int processes;
 	private int openFiles;
@@ -93,17 +94,18 @@ public class TaskDetails {
 	}
 	
 	private void setProps(Properties props) {
-		this.points = Double.valueOf(props.getProperty("points", "100.0"));
+		this.points = findPointsProps(props);
+		this.isDefaultPoints = !props.containsKey("points");
 		this.precision = Integer.valueOf(props.getProperty("precision", "-1"));
 		this.processes = Integer.valueOf(props.getProperty("processes", "1"));
 		this.openFiles = Integer.valueOf(props.getProperty("open_files", "64"));
 		this.time = Double.valueOf(props.getProperty("time", "1"));
 		this.ioTime = Double.valueOf(props.getProperty("io_time", "0"));
-		this.compileTime = Double.valueOf(props.getProperty("compile_time", "10"));
+		this.compileTime = findCompileTimeProps(props);
 		this.javaCompileTime = Double.valueOf(props.getProperty("java_compile_time", "300"));
 		this.isDefaultCompileTime = !props.containsKey("compile_time");
 		this.memory = Integer.valueOf(props.getProperty("memory", "256"));
-		this.compileMemory = Integer.valueOf(props.getProperty("compile_memory", "512"));
+		this.compileMemory = findCompileMemoryProps(props);
 		this.isDefaultCompileMemory = !props.containsKey("compile_memory");
 		this.javaCompileMemory = Integer.valueOf(props.getProperty("java_compile_memory", "1536"));
 		this.rejudgeTimes = Integer.valueOf(props.getProperty("rejudge", "0"));
@@ -512,6 +514,20 @@ public class TaskDetails {
 	public double getPoints() {
 		return points;
 	}
+
+	public boolean isDefaultPoints() {
+		return isDefaultPoints;
+	}
+
+	public static Double findPointsProps(Properties props) {
+		return Double.valueOf(props.getProperty("points", "100.0"));
+	}
+
+	public static Double findPoints(Path taskPath) throws IOException {
+		List<Path> paths = findAllPaths(taskPath);
+		Properties props = findProperties(taskPath, paths);	
+		return findPointsProps(props);
+	}
 	
 	public void setPrecision(int precision) {
 		this.precision = precision;
@@ -571,6 +587,16 @@ public class TaskDetails {
 	public boolean isDefaultCompileTime() {
 		return isDefaultCompileTime;
 	}
+
+	public static Double findCompileTimeProps(Properties props) {
+		return Double.valueOf(props.getProperty("compile_time", "10"));
+	}
+
+	public static Double findCompileTime(Path taskPath) throws IOException {
+		List<Path> paths = findAllPaths(taskPath);
+		Properties props = findProperties(taskPath, paths);	
+		return findCompileTimeProps(props);
+	}
 	
 	public void setMemory(int memory) {
 		this.memory = memory;
@@ -598,6 +624,17 @@ public class TaskDetails {
 	public boolean isDefaultCompileMemory() {
 		return isDefaultCompileMemory;
 	}
+
+	public static Integer findCompileMemoryProps(Properties props) {
+		return Integer.valueOf(props.getProperty("compile_memory", "512"));
+	}
+
+	public static Integer findCompileMemory(Path taskPath) throws IOException {
+		List<Path> paths = findAllPaths(taskPath);
+		Properties props = findProperties(taskPath, paths);	
+		return findCompileMemoryProps(props);
+	}
+
 
 	public int getRejudgeTimes() {
 		return rejudgeTimes;

@@ -39,9 +39,10 @@ public class SubmissionGrader {
 	private GradeListener listener;
 	private Optional<Double> compileTime;
 	private Optional<Integer> compileMemory;
+	private Optional<Double> points;
 	private File piperFile;
 	
-	public SubmissionGrader(String submissionId, Optional<Boolean> isOfficial, TaskDetails taskDetails, String sourceFile, GradeListener listener, String piperFile, Optional<Double> compileTL, Optional<Integer> compileML) {
+	public SubmissionGrader(String submissionId, Optional<Boolean> isOfficial, TaskDetails taskDetails, String sourceFile, GradeListener listener, String piperFile, Optional<Double> compileTL, Optional<Integer> compileML, Optional<Double> points) {
 		this.submissionId = submissionId;
 		this.isOfficial = (isOfficial.isPresent() ? isOfficial.get() : true); // backward compatability
 		this.taskDetails = taskDetails;
@@ -52,6 +53,7 @@ public class SubmissionGrader {
 		this.listener = listener;
 		this.compileTime = compileTL;
 		this.compileMemory = compileML;
+		this.points = points;
 		this.piperFile = new File(piperFile);
 	}
 
@@ -175,6 +177,10 @@ public class SubmissionGrader {
 		}
 		return 0;
 	}
+
+	private double getTaskPoints () {
+		return points.isPresent() ? points.get() : taskDetails.getPoints();
+	}
 	
 	private double executeTests(File checkerFile, String type) {
 		int groupsCount = (type.equals("submission") ? taskDetails.getTestGroups().size() : inputFiles.size());
@@ -186,7 +192,7 @@ public class SubmissionGrader {
 		for (int i = 0; i < groupsCount; i++) {
 			TestGroup testGroup = (type.equals("submission") ? taskDetails.getTestGroups().get(i) : null);
 			double testWeight = (type.equals("submission") ? testGroup.getWeight()/testGroup.getTestCases().size()/totalWeight : 1/totalWeight);
-			double testPoints = testWeight*taskDetails.getPoints();
+			double testPoints = testWeight * getTaskPoints();
 			
 			File managerFile = taskDetails.getManager() != null?new File(taskDetails.getManager()) : null;
 			
@@ -213,7 +219,7 @@ public class SubmissionGrader {
 						allTestsOk = false;	
 					}
 				}
-				testsScore += score.calculateGroupScore(i, taskDetails);
+				testsScore += score.calculateGroupScore(i, getTaskPoints(), taskDetails);
 			}
 			else {
 				StepResult result = executeTest(new TestCase(i+1, inputFiles.get(i).getAbsolutePath(), (outputFiles.size() == 0 ? null : outputFiles.get(i).getAbsolutePath())), managerFile, checkerFile, true, testPoints, "user_tests");
@@ -222,13 +228,13 @@ public class SubmissionGrader {
 				testsScore += testPoints;
 			}
 
-			score.calculateFinalScore(taskDetails, testsScore, false);
+			score.calculateFinalScore(testsScore, getTaskPoints(), taskDetails.getPrecision(), false);
 			if (listener != null) {
 				//listener.addGroupResult(i+1, score.getGroupResults().get(i));
 				listener.scoreUpdated(submissionId, score);
 			}
 		}
-		return score.calculateFinalScore(taskDetails, testsScore, true);
+		return score.calculateFinalScore(testsScore, getTaskPoints(), taskDetails.getPrecision(), true);
 	}
 	
 	private StepResult executeTest(TestCase testCase, File managerFile, File checkerFile, boolean allTestsOk, double testPoints, String type) {

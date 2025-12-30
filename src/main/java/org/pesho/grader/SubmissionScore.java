@@ -119,7 +119,7 @@ public class SubmissionScore implements GradeListener {
 		return scoreSteps;
 	}
 
-	public double calculateGroupScore (int groupIndex, TaskDetails task) {
+	public double calculateGroupScore (int groupIndex, double taskPoints, TaskDetails task) {
         TestGroup testGroup = task.getTestGroups().get(groupIndex);
         double checkerSum = 0.0;
 
@@ -185,7 +185,7 @@ public class SubmissionScore implements GradeListener {
 			}
         }
 
-		addGroupResult(groupIndex+1, new StepResult(groupVerdict, ""+testInError, groupTime, groupMemory, groupScore*task.getPoints(), checkerMin));
+		addGroupResult(groupIndex+1, new StepResult(groupVerdict, ""+testInError, groupTime, groupMemory, groupScore*taskPoints, checkerMin));
 
 		return groupScore;
 	}
@@ -196,14 +196,14 @@ public class SubmissionScore implements GradeListener {
 		if (compileResult.getVerdict() != Verdict.CE) {
 			groupResults = new ArrayList<>();
 			for (int i = 0; i < task.getTestGroups().size(); i++) {
-				testsScore += calculateGroupScore(i, task);
+				testsScore += calculateGroupScore(i, task.getPoints(), task);
 			}
 		}
-		return calculateFinalScore(task, testsScore, true);
+		return calculateFinalScore(testsScore, task.getPoints(), task.getPrecision(), true);
 	}
 
-	public double calculateFinalScore (TaskDetails task, double testsScore, boolean finished) {
-		double finalScore = Precision.round(Precision.round(testsScore * task.getPoints(), 6), task.getPrecision());
+	public double calculateFinalScore (double testsScore, double taskPoints, int pointsPrecision,  boolean finished) {
+		double finalScore = Precision.round(Precision.round(testsScore * taskPoints, 6), pointsPrecision);
 		addFinalScore(finalScore, finished);
 
 		return finalScore;

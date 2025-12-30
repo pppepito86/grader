@@ -239,7 +239,7 @@ public class TaskParserv2 {
 //		}
 	}
 
-	private int countTests(List<String> files) {
+	/*private int countTests(List<String> files) {
 		List<String> fileNames = files.stream().map(x -> x.substring(prefix.length())).collect(Collectors.toList());
 
 		for (int i = 1;; i++) {
@@ -249,7 +249,7 @@ public class TaskParserv2 {
 				return i - 1;
 			}
 		}
-	}
+	}*/
 
 	private List<String> findTestCaseCandidates(int testCase, List<String> allCandidates) {
 		List<String> testCaseCandidates = allCandidates.stream()
@@ -267,7 +267,7 @@ public class TaskParserv2 {
 		return inputCandidates;
 	}
 
-	private String findBestInputCandidate(List<String> files, int testsCount) {
+	/*private String findBestInputCandidate(List<String> files, int testsCount) {
 		List<String> fileNames = files.stream().map(x -> x.replace(prefix, "")).collect(Collectors.toList());
 
 		for (int i = 1; i <= testsCount; i++) {
@@ -278,7 +278,7 @@ public class TaskParserv2 {
 			}
 		}
 		return null;
-	}
+	}*/
 
 	private List<File> listAllFiles() {
 		List<File> allFiles = new ArrayList<>();
@@ -288,7 +288,7 @@ public class TaskParserv2 {
 
 	private void listAllFiles(File dir, List<File> allFiles) {
 		if (!dir.getName().startsWith("sandbox_")) {
-			// TODO fix empty folder
+			// TO-DO fix empty folder
 			Arrays.stream(dir.listFiles()).filter(Objects::nonNull).filter(d -> !d.toString().contains("__MACOSX")).filter(File::isFile).forEach(allFiles::add);
 			Arrays.stream(dir.listFiles()).filter(Objects::nonNull).filter(d -> !d.toString().contains("__MACOSX")).filter(File::isDirectory).forEach(x -> listAllFiles(x, allFiles));
 		}
