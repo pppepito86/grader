@@ -155,6 +155,7 @@ public class TaskDetails {
 			try {
 				files = TaskFilesFinder.find(taskName, taskPath, Files.walk(taskPath).map(p -> taskPath.relativize(p)).collect(Collectors.toList()));
 			} catch (Exception e2) {
+				System.out.println(taskName);
 				e2.printStackTrace();
 			}
 		}
@@ -173,6 +174,7 @@ public class TaskDetails {
 				Criteria[] criterias = new ObjectMapper().readValue(file, Criteria[].class);
 				this.criteria = new ObjectMapper().writeValueAsString(criterias);
 			} catch (Exception e) {
+				System.out.println(this.taskName);
 				e.printStackTrace();
 			}
 		});
@@ -193,8 +195,11 @@ public class TaskDetails {
 		this.analysis = findAnalysis(paths);
 		this.description = findDescription(taskPath, true);
 		if (description == null) addError("statement", "backend.no_statement");
-		if (description != null && description.endsWith(".tex") && taskPath.resolve(description.replaceAll("\\.tex$", ".pdf")).toFile().exists()) { /// statement should be compiled at this time
-			description = description.replaceAll("\\.tex$", ".pdf");
+		if (description != null && description.endsWith(".tex")) {
+			checkLatexDescription(taskPath.resolve(description));
+			if (taskPath.resolve(description.replaceAll("\\.tex$", ".pdf")).toFile().exists()) { /// statement should be compiled at this time
+				description = description.replaceAll("\\.tex$", ".pdf");
+			}
 		}
 		this.translatedStatements = TranslationsFinder.find(description, paths).stream().map(Path::toString)
 			.collect(Collectors.toMap(x -> x.toString().substring(x.length()-6, x.length()-4), x-> x, (key1, key2) -> key1, TreeMap::new));
@@ -209,6 +214,7 @@ public class TaskDetails {
 					quiz = new ObjectMapper().readValue(file, Quiz.class);
 //					System.out.println("quiz: " + quiz + " " + quiz.getTasks().length);
 				} catch (Exception e) {
+					System.out.println(this.taskName);
 					e.printStackTrace();
 				}
 			});
@@ -486,6 +492,55 @@ public class TaskDetails {
 		return null;
 	}
 
+	private void checkLatexDescription (Path description) throws IOException {
+		String text = new String(Files.readAllBytes(description));
+	
+		String textTL = "newcommand{\\tl}{";
+		int startTL = text.indexOf(textTL);
+		if (startTL != -1) {
+			String valueTL = "";
+			int level = 1;
+			boolean decimal = false;
+			for (int i = startTL + textTL.length(); i < text.length(); i++) {
+				char current = text.charAt(i);
+				if (current == '{') level++;
+				else if (current == '}') {
+					level--;
+					if (level == 0) break;
+				}
+				else {
+					if (Character.isDigit(current)) valueTL += current;
+					else if (decimal == false && (current == '.' || current == ',')) {
+						valueTL += ".";
+						decimal = true;
+					}
+				}
+			}
+			double tl = Double.valueOf(valueTL);
+			if (this.time != tl) addError("time_property", "backend.different_in_tex_statement");
+		}
+		
+		String textML = "newcommand{\\ml}{";
+		int startML = text.indexOf(textML);
+		if (startML != -1) {
+			String valueML = "";
+			int level = 1;
+			for (int i = startML + textML.length(); i < text.length(); i++) {
+				char current = text.charAt(i);
+				if (current == '{') level++;
+				else if (current == '}') {
+					level--;
+					if (level == 0) break;
+				}
+				else {
+					if (Character.isDigit(current)) valueML += current;
+				}
+			}
+			int ml = Integer.valueOf(valueML);
+			if (this.memory != ml) addError("memory_property", "backend.different_in_tex_statement");
+		}
+	}
+
 	private static List<Path> findAllPaths (Path taskPath) throws IOException {
 		return Files.walk(taskPath)
 				.filter(p -> !p.toString().contains("__MACOSX"))
@@ -501,6 +556,7 @@ public class TaskDetails {
 			try (FileInputStream fileInputStream = new FileInputStream(taskPath.resolve(path).toString())) {
 				props.load(fileInputStream);
 			} catch (Exception e) {
+				System.out.println(taskPath);
 				e.printStackTrace();
 			}
 		});
