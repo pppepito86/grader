@@ -142,6 +142,7 @@ public class SubmissionScore implements GradeListener {
             int testNumber = testCase.getNumber() + (task.testsFromZero() ? 1 : 0);
             if (testNumber-1 >= testResults.size()) addTestResult(testNumber, scoreSteps.get("Test"+(testNumber + (task.testsFromZero() ? -1 : 0)))); /// backward compatability
             StepResult result = testResults.get(testNumber-1);
+            if (result == null) break;
 
             checkerMin = Math.min(checkerMin, result.getCheckerOutput());
             checkerSum += result.getCheckerOutput();

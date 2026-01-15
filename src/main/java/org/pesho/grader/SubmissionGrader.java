@@ -68,6 +68,7 @@ public class SubmissionGrader {
 		this.listener = listener;
 		this.compileTime = compileTL;
 		this.compileMemory = compileML;
+		this.points = Optional.empty();
 		this.piperFile = new File(piperFile);
 	}
 	

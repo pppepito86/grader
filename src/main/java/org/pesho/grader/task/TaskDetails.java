@@ -113,8 +113,8 @@ public class TaskDetails {
 		this.sample = fixSequence(props.getProperty("sample", ""));
 		this.groups = fixSequence(props.getProperty("groups", ""));
 		this.weights = fixSequence2(props.getProperty("weights", ""));
-		this.scoring = props.getProperty("scoring", this.groups.isEmpty()&&!props.containsKey("patterns")?"sum":"min_fast").trim();
-		this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty()?"best":(this.weights.isEmpty()?"best":"aggregated")).trim();
+		this.scoring = props.getProperty("scoring", this.groups.isEmpty() && !props.containsKey("patterns") ? "sum" : "min_fast").trim();
+		this.scoringType = props.getProperty("scoring_type", this.groups.isEmpty() && !props.containsKey("patterns") ? "best" : (this.weights.isEmpty() ? "best" : "aggregated")).trim();
 		this.extensions = findExtensions(props);
 		this.info = props.getProperty("info", "").trim();
 		this.dependencies = fixSequence(props.getProperty("dependencies", ""));
