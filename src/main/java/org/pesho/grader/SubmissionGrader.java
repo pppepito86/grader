@@ -71,6 +71,15 @@ public class SubmissionGrader {
 		this.points = Optional.empty();
 		this.piperFile = new File(piperFile);
 	}
+
+	private void failedScore (String message) {
+		score.getTestResults().add(0, new StepResult(Verdict.SKIPPED, message));
+		score.addFinalScore(0, true);
+		if (listener != null) {
+			//listener.addFinalScore("Compilation Failed", 0);
+			listener.scoreUpdatedWithBlocking(submissionId, score);
+		}
+	}
 	
 	public double grade() {
 		File sandboxDir = new File(originalSourceFile.getParentFile(), "sandbox_"+originalSourceFile.getName());
@@ -78,8 +87,33 @@ public class SubmissionGrader {
 			double score = gradeInternal(sandboxDir);
 //			if (score > 0) FileUtils.deleteQuietly(sandboxDir);
 			return score;
-		} finally {
+		} catch (Exception e) {
+			e.printStackTrace();
+			failedScore(e.getMessage());
+			return 0;
+		}
+		finally {
 			FileUtils.deleteQuietly(sandboxDir);
+		}
+	}
+
+	private void saveUserTestOut (File file) {
+		if (file == null) return ;
+		File saveFile = new File(originalSourceFile.getParentFile(), "test_user_out");
+		if (binaryFile.length() <= 10 * 1024 * 1024L) {
+			try {
+				FileUtils.copyFile(file, saveFile);
+			} catch (IOException e) {
+				e.printStackTrace();
+				failedScore(e.getMessage());
+			}
+		}
+		else {
+			try {
+				Files.write(Paths.get(saveFile.getAbsolutePath()), "File larger than 10 MB!\n".getBytes());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -101,40 +135,24 @@ public class SubmissionGrader {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+			failedScore(e.getMessage());
 			return 0;
 		}
 		
-		if (compile(sourceFile, type) == 0) {
-			score.addFinalScore(0, true);
+		double compileResult = compile(sourceFile, type);
+		if (compileResult != 1) {
+			score.addFinalScore(compileResult, true);
 			if (listener != null) {
 				//listener.addFinalScore("Compilation Failed", 0);
-				listener.scoreUpdated(submissionId, score);
+				listener.scoreUpdatedWithBlocking(submissionId, score);
 			}
-			return 0;
+			return compileResult;
 		}
 		
 		double finalScore = executeTests(checkerFile, type);
 		if (listener != null) {
 			//listener.addFinalScore("", finalScore);
-			listener.scoreUpdated(submissionId, score);
-		}
-
-		if (type.equals("user_tests") && inputFiles.size() == 0) {
-			File savePdfFile = new File(originalSourceFile.getParentFile(), "test_user_out");
-			if (binaryFile.length() <= 10 * 1024 * 1024L) {
-				try {
-					FileUtils.copyFile(binaryFile, savePdfFile);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			else {
-				try {
-					Files.write(Paths.get(savePdfFile.getAbsolutePath()), "Compiled pdf statement larger than 10 MB!\n".getBytes());
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
+			listener.scoreUpdatedWithBlocking(submissionId, score);
 		}
 		
 		return finalScore;
@@ -169,11 +187,13 @@ public class SubmissionGrader {
 		
 		score.setCompileResult(result);
 		if (listener != null) {
-			//listener.setCompileResult(result);
-			listener.scoreUpdated(submissionId, score);
+			boolean blocked = !listener.setCompileResultWithBlocking(submissionId, type, result);
+			blocked = !listener.scoreUpdatedWithBlocking(submissionId, score);
+			if (blocked == true) return -1;
 		}
 		if (result.getVerdict() == Verdict.OK) {
 			binaryFile = compileStep.getBinaryFile();
+			if (type.equals("user_tests") && inputFiles.size() == 0) saveUserTestOut(binaryFile);
 			return 1;
 		}
 		return 0;
@@ -200,6 +220,10 @@ public class SubmissionGrader {
 			if (type.equals("submission")) {
 				boolean allTestsOk = true;
 				for (int dependencyGroup: taskDetails.dependsOn(i+1)) {
+					if (dependencyGroup < 1 || dependencyGroup >= i+1) {
+						allTestsOk = false;
+						break;
+					}
 					StepResult dependencyResult = this.score.getGroupResults().get(dependencyGroup-1);
 					if (dependencyResult.getVerdict() != Verdict.OK && dependencyResult.getVerdict() != Verdict.PARTIAL) {
 						allTestsOk = false;
@@ -212,8 +236,9 @@ public class SubmissionGrader {
 					StepResult result = executeTest(testCase, managerFile, checkerFile, allTestsOk, testPoints, "submission");
 					score.addTestResult(testCase.getNumber() + (taskDetails.testsFromZero() ? 1 : 0), result);
 					if (listener != null) {
-						//listener.addTestResult(testCase.getNumber() + (taskDetails.testsFromZero() ? 1 : 0), result);
-						listener.scoreUpdated(submissionId, score);
+						boolean blocked = !listener.addTestResultWithBlocking(submissionId, type, testCase.getNumber() + (taskDetails.testsFromZero() ? 1 : 0), result);
+						blocked = !listener.scoreUpdatedWithBlocking(submissionId, score);
+						if (blocked == true) return -1;
 					}
 					
 					if (result.getVerdict() != Verdict.OK && result.getVerdict() != Verdict.PARTIAL && taskDetails.stopScoringOnFailure()) {
@@ -225,14 +250,20 @@ public class SubmissionGrader {
 			else {
 				StepResult result = executeTest(new TestCase(i+1, inputFiles.get(i).getAbsolutePath(), (outputFiles.size() == 0 ? null : outputFiles.get(i).getAbsolutePath())), managerFile, checkerFile, true, testPoints, "user_tests");
 				score.addTestResult(i+1, result);
+				if (listener != null) {
+					boolean blocked = !listener.addTestResultWithBlocking(submissionId, type, i+1, result);
+					blocked = !listener.scoreUpdatedWithBlocking(submissionId, score);
+					if (blocked == true) return -1;
+				}
 				score.addGroupResult(i+1, new StepResult(result.getVerdict(), "", result.getTime(), result.getMemory(), testPoints, result.getCheckerOutput()));
 				testsScore += testPoints;
 			}
 
 			score.calculateFinalScore(testsScore, getTaskPoints(), taskDetails.getPrecision(), false);
 			if (listener != null) {
-				//listener.addGroupResult(i+1, score.getGroupResults().get(i));
-				listener.scoreUpdated(submissionId, score);
+				//listener.addGroupResult(submissionId, type, i+1, score.getGroupResults().get(i));
+				boolean blocked = !listener.scoreUpdatedWithBlocking(submissionId, score);
+				if (blocked == true) return -1;
 			}
 		}
 		return score.calculateFinalScore(testsScore, getTaskPoints(), taskDetails.getPrecision(), true);
@@ -276,23 +307,7 @@ public class SubmissionGrader {
 		CheckStep checkerStep = CheckStepFactory.getInstance(checkerFile, inputFile, outputFile, solutionFile);
 		checkerStep.execute();
 		if (type.equals("submission") && testCase.getOutput() == null) FileUtils.deleteQuietly(outputFile);
-		if (type.equals("user_tests") && inputFiles.size() == 1) {
-			File saveSolutionFile = new File(originalSourceFile.getParentFile(), "test_user_out");
-			if (solutionFile.length() <= 10 * 1024 * 1024L) {
-				try {
-					FileUtils.copyFile(solutionFile, saveSolutionFile);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			else {
-				try {
-					Files.write(Paths.get(saveSolutionFile.getAbsolutePath()), "User output larger than 10 MB!\n".getBytes());
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		if (type.equals("user_tests") && inputFiles.size() == 1) saveUserTestOut(solutionFile);
 		StepResult result = checkerStep.getResult();
 
 		result.setTime(testStep.getResult().getTime());

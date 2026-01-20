@@ -48,7 +48,7 @@ public abstract class CheckStep implements BaseStep {
 			result = getResult(statusResult);
 		} catch (Exception e) {
 			e.printStackTrace();
-			result = new StepResult(Verdict.SE, result.getReason());
+			result = new StepResult(Verdict.SE, e.getMessage());
 		} finally {
 			FileUtils.deleteQuietly(sandboxDir);
 		}

@@ -130,6 +130,18 @@ public class SubmissionScore implements GradeListener {
 
         double dependencyScore = 1;
         for (int dependencyGroup: task.dependsOn(groupIndex+1)) {
+			if (dependencyGroup < 1 || dependencyGroup >= groupIndex+1) {
+				for (int i = 0; i < testGroup.getTestCases().size(); i++) {
+					TestCase testCase = testGroup.getTestCases().get(i);
+					int testNumber = testCase.getNumber() + (task.testsFromZero() ? 1 : 0);
+					if (testNumber-1 >= testResults.size()) {
+						if (scoreSteps != null) addTestResult(testNumber, scoreSteps.get("Test"+(testNumber + (task.testsFromZero() ? -1 : 0)))); /// backward compatability
+						else addTestResult(testNumber, new StepResult(Verdict.WAITING));
+					}
+				}
+				addGroupResult(groupIndex+1, new StepResult(Verdict.SE, "", groupTime, groupMemory, 0.0, 0.0));
+				return 0;
+			}
             StepResult dependencyResult = groupResults.get(dependencyGroup-1);
             if (dependencyResult.getVerdict() == Verdict.PARTIAL && dependencyResult.getCheckerOutput() !=  null) {
                 dependencyScore = Math.min(dependencyScore, dependencyResult.getCheckerOutput());
@@ -140,9 +152,11 @@ public class SubmissionScore implements GradeListener {
         for (int i = 0; i < testGroup.getTestCases().size(); i++) {
             TestCase testCase = testGroup.getTestCases().get(i);
             int testNumber = testCase.getNumber() + (task.testsFromZero() ? 1 : 0);
-            if (testNumber-1 >= testResults.size()) addTestResult(testNumber, scoreSteps.get("Test"+(testNumber + (task.testsFromZero() ? -1 : 0)))); /// backward compatability
+            if (testNumber-1 >= testResults.size()) {
+				if (scoreSteps != null) addTestResult(testNumber, scoreSteps.get("Test"+(testNumber + (task.testsFromZero() ? -1 : 0)))); /// backward compatability
+				else addTestResult(testNumber, new StepResult(Verdict.WAITING));
+			}
             StepResult result = testResults.get(testNumber-1);
-            if (result == null) break;
 
             checkerMin = Math.min(checkerMin, result.getCheckerOutput());
             checkerSum += result.getCheckerOutput();
@@ -193,14 +207,22 @@ public class SubmissionScore implements GradeListener {
 
 	public double calculateScore (TaskDetails task) {
 		double testsScore = 0.0;
-		if (compileResult ==  null) setCompileResult(scoreSteps.get("Compile"));
-		if (compileResult.getVerdict() != Verdict.CE) {
+		if (compileResult ==  null && scoreSteps != null) setCompileResult(scoreSteps.get("Compile"));
+		boolean finished = true;
+		if (compileResult != null && compileResult.getVerdict() != Verdict.CE) {
 			groupResults = new ArrayList<>();
+			for (int i = 0; i < task.getTestGroups().size(); i++) groupResults.add(new StepResult(Verdict.WAITING));
 			for (int i = 0; i < task.getTestGroups().size(); i++) {
 				testsScore += calculateGroupScore(i, task.getPoints(), task);
 			}
+			for (StepResult testResult : getTestResults()) {
+				if (testResult.getVerdict() == Verdict.WAITING) {
+					finished = false;
+					break;
+				}
+			}
 		}
-		return calculateFinalScore(testsScore, task.getPoints(), task.getPrecision(), true);
+		return calculateFinalScore(testsScore, task.getPoints(), task.getPrecision(), finished);
 	}
 
 	public double calculateFinalScore (double testsScore, double taskPoints, int pointsPrecision,  boolean finished) {

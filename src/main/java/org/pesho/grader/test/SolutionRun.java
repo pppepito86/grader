@@ -42,7 +42,7 @@ public class SolutionRun extends Thread {
 			result = getResult(commandResult);
 		} catch (Exception e) {
 			e.printStackTrace();
-			result = new StepResult(Verdict.SE, result.getReason(), result.getExitCode());
+			result = new StepResult(Verdict.SE, e.getMessage());
 		}
 	}
 

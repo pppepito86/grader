@@ -37,6 +37,7 @@ public class SourceStep implements BaseStep {
 				result = new StepResult(Verdict.CE, message);
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			result = new StepResult(Verdict.CE, "Source file check failed");
 		}
 	}

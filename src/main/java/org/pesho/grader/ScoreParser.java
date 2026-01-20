@@ -18,13 +18,17 @@ public class ScoreParser {
 	}
 
 	public String getVerdict() {
-		if (score.getCompileResult() == null) return "";
+		if (score.getCompileResult() == null) return "judging";
 		if (score.getCompileResult().getVerdict() == Verdict.CE || score.getCompileResult().getVerdict() == Verdict.SE) return score.getCompileResult().getVerdict().toString();
 		
 		if (score.getType().equals("user_tests") || details.testsScoring()) {
-			if (score.isFinished() && score.getTestResults().size() == 0) return "OK";
+			if (score.getTestResults().size() == 0) {
+				if (score.getType().equals("user_tests") && score.isFinished()) return "OK";
+				else return "judging";
+			}
 			return getTestsScore();
 		} else {
+			if (details.getTestGroups().size() == 0) return "judging";
 			return getGroupsScore();
 		}
 	}

@@ -63,7 +63,8 @@ public abstract class TestStep implements BaseStep {
 			copySandboxOutput();
 		} catch (Exception e) {
 			e.printStackTrace();
-			result = new StepResult(Verdict.SE, result.getReason(), result.getExitCode());
+			if (result != null) result = new StepResult(Verdict.SE, result.getReason(), result.getExitCode());
+			else result = new StepResult(Verdict.SE, e.getMessage());
 		} finally {
 			FileUtils.deleteQuietly(sandboxDir);
 		}
