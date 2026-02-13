@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.text.SimpleDateFormat;
 
 public class TaskFilesFinder {
 	
@@ -31,8 +30,6 @@ public class TaskFilesFinder {
 		parentMap.put("isFile", false);
 		map.put("..", parentMap);
 		
-		SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yy HH:mm");
-		
 		try {
 			for (Path path: paths) {
 				Path parentPath = Optional.ofNullable(path.getParent()).orElse(Paths.get(taskName+".zip"));
@@ -49,7 +46,7 @@ public class TaskFilesFinder {
 					pathMap.put("modified", "");
 				} else {
 					pathMap.put("path", path.toString());
-					pathMap.put("modified", sdf.format(taskDir.resolve(path).toFile().lastModified()));
+					pathMap.put("modified", taskDir.resolve(path).toFile().lastModified());
 				}
 				List<String> children = new ArrayList<>();
 				pathMap.put("children", children);

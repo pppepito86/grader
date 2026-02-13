@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class CheckerFinder {
 
@@ -13,7 +14,7 @@ public class CheckerFinder {
 		if (maybeCppChecker.isPresent()) return maybeCppChecker;
 		
 		List<Path> filtered = paths.stream()
-				.filter(x -> x.toString().contains("checker"))
+				.filter(x -> StreamSupport.stream(x.spliterator(), false).anyMatch(part -> part.toString().equals("checker")))
 				.filter(x -> x.getFileName().toString().endsWith(".jar")
 						|| x.getFileName().toString().endsWith(".py") 
 						|| x.getFileName().toString().endsWith(".sh") 
@@ -39,7 +40,7 @@ public class CheckerFinder {
 	
 	public static Optional<Path> findCppChecker(List<Path> paths) {
 		paths = paths.stream()
-				.filter(x -> x.toString().contains("checker"))
+				.filter(x -> StreamSupport.stream(x.spliterator(), false).anyMatch(part -> part.toString().equals("checker")))
 				.filter(x -> x.getFileName().toString().endsWith(".cpp"))
 				.collect(Collectors.toList());
 		if (paths.size() == 1) return paths.stream().findFirst();
