@@ -14,7 +14,7 @@ public class AnalysisFinder {
                                             if (((!name.endsWith("pdf"))&&(!name.endsWith("docx"))&&(!name.endsWith("doc"))&&(!name.endsWith("rtf"))&&(!name.endsWith("txt")))) return false;
                                             String path=removeExtension(x.toString().toLowerCase());
                                             name=removeExtension(name);
-                                            if ((!path.contains("analysis"))&&(!path.contains("solution"))&&(!path.contains("author"))&&
+                                            if ((!path.contains("analysis"))&&(!path.contains("editorial"))&&(!path.contains("solution"))&&(!path.contains("author"))&&
 						(!path.contains("analiz"))&&(!path.contains("reshenie"))&&
                                                 (!name.startsWith("sol"))&&(!name.startsWith("resh"))&&(!name.startsWith("author"))&&(!name.startsWith("autor"))&&
                                                 (!name.endsWith("sol"))&&(!name.endsWith("resh"))&&(!name.endsWith("author"))&&(!name.endsWith("autor"))) return false;
@@ -23,7 +23,7 @@ public class AnalysisFinder {
 
                 if (paths.size() == 0) return Optional.empty();
 		
-		for (String s: new String[]{"analysis", "solution", "author", "autor", "analiz", "reshenie"}) {
+		for (String s: new String[]{"analysis", "editorial", "solution", "author", "autor", "analiz", "reshenie"}) {
                         if (paths.stream().filter(f -> removeExtension(f.getFileName().toString().toLowerCase()).contains(s)).count() > 0) {
                                 paths = paths.stream().filter(f -> removeExtension(f.getFileName().toString().toLowerCase()).contains(s)).collect(Collectors.toList());
                                 break;
