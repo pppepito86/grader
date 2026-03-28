@@ -83,25 +83,29 @@ public class SubmissionScore implements GradeListener {
 	}
 	
 	public Double findTime() {
-		Double time=null;
+		Double time = null;
 		for (StepResult r : groupResults) {
-			Double rTime=r.getTime();
-			if (rTime==null) continue;
-			if ((time==null)||(rTime < 0)) time=rTime;
-			else time=Math.max(time, rTime);
-			if (time<0) break;
+			Double rTime = r.getTime();
+			if (rTime == null) continue;
+			if (r.getVerdict() == Verdict.OK || r.getVerdict() == Verdict.PARTIAL || r.getVerdict() == Verdict.WA) {
+				if (time == null || rTime < 0) time = rTime;
+				else time = Math.max(time, rTime);
+				if (time < 0) break;
+			}
 		}
 		return time;
 	}
-	
+
 	public Long findMemory() {
-		Long memory=null;
+		Long memory = null;
 		for (StepResult r : groupResults) {
-			Long rMemory=r.getMemory();
+			Long rMemory = r.getMemory();
 			if (rMemory==null) continue;
-			if ((memory==null)||(rMemory < 0)) memory=rMemory;
-			else memory=Math.max(memory, rMemory);
-			if (memory<0) break;
+			if (r.getVerdict() == Verdict.OK || r.getVerdict() == Verdict.PARTIAL || r.getVerdict() == Verdict.WA) {
+				if (memory==null || rMemory < 0) memory = rMemory;
+				else memory = Math.max(memory, rMemory);
+				if (memory < 0) break;
+			}
 		}
 		return memory;
 	}

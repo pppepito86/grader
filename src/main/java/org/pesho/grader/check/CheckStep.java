@@ -60,23 +60,23 @@ public abstract class CheckStep implements BaseStep {
 		}
 		File gradeFile = new File(sandboxDir, "grade_" + inputFile.getName());
 		String gradeString = FileUtils.readLines(gradeFile, StandardCharsets.UTF_8.toString()).get(0).trim();
-		double grade = Double.valueOf(gradeString);
 
 		File errorFile = new File(sandboxDir, "grade_err_" + inputFile.getName());
 		String errorString = "";
 		if (errorFile.exists()) errorString = FileUtils.readFileToString(errorFile, StandardCharsets.UTF_8.toString());
 		
-		return getPartialResult(grade, errorString);
+		return getPartialResult(gradeString, errorString);
 	}
 	
-	protected StepResult getPartialResult(double score, String reason) {
+	protected StepResult getPartialResult(String scoreString, String reason) {
+		double score = Double.valueOf(scoreString);
 		String output = readOutput(outputFile);
 		String solution = readOutput(solutionFile);
-		if (Double.compare(score, 1.0) == 0) {
-			return new StepResult(Verdict.OK, reason, solution, output, score);
+		if (scoreString.startsWith("1") && Double.compare(score, 1.0) == 0) {
+			return new StepResult(Verdict.OK, reason, solution, output, 1.);
 		}
-		if (Double.compare(score, 0.0) == 0) {
-			return new StepResult(Verdict.WA, reason, solution, output, score);
+		if (scoreString.equals("0")) {
+			return new StepResult(Verdict.WA, reason, solution, output, 0.);
 		}
 
 		return new StepResult(Verdict.PARTIAL, reason, solution, output, score);

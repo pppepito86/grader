@@ -11,7 +11,7 @@ public class UserTestCheckStep extends CheckStep {
 	}
 
 	public void execute() {
-		result = getPartialResult(1, null);
+		result = getPartialResult("1", null);
 	}
 
 	protected String getCommand() {
