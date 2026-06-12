@@ -6,6 +6,7 @@ import org.apache.commons.io.FileUtils;
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 import org.pesho.sandbox.CommandResult;
+import org.pesho.sandbox.MinimalEtc;
 import org.pesho.sandbox.SandboxExecutor;
 
 public class HCompileStep extends CompileStep {
@@ -25,6 +26,11 @@ public class HCompileStep extends CompileStep {
 		super(sourceFile, graderDir, time, memory);
 	}
 	
+	@Override
+	protected boolean useMinimalEtc() {
+		return true;
+	}
+
 	@Override
 	public void execute() {
 		super.execute();
@@ -64,6 +70,7 @@ public class HCompileStep extends CompileStep {
 					.showError()
 					.timeout(10)
 					.memory(256)
+					.etcDir(MinimalEtc.getDir())
 					.command(command[0])
 					.execute().getResult();
 			StepResult result = getResult(commandResult);

@@ -16,6 +16,11 @@ public class CCompileStep extends CompileStep {
 	}
 	
 	@Override
+	protected boolean useMinimalEtc() {
+		return true;
+	}
+
+	@Override
 	public String[] getCommands() {
 		String compiledFileName = getBinaryFileName();
 		String command = String.format(COMPILE_COMMAND_PATTERN, compiledFileName, getAllFiles());

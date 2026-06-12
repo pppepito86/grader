@@ -100,7 +100,7 @@ public class SubmissionGrader {
 	private void saveUserTestOut (File file) {
 		if (file == null) return ;
 		File saveFile = new File(originalSourceFile.getParentFile(), "test_user_out");
-		if (binaryFile.length() <= 10 * 1024 * 1024L) {
+		if (file.length() <= 10 * 1024 * 1024L) {
 			try {
 				FileUtils.copyFile(file, saveFile);
 			} catch (IOException e) {

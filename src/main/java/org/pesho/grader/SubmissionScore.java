@@ -199,7 +199,7 @@ public class SubmissionScore implements GradeListener {
         } else {
             if ((task.minScoring() && !task.sumScoring()) || (task.stopScoringOnFailure() && groupVerdict != Verdict.OK && groupVerdict != Verdict.PARTIAL)) groupScore = testGroup.getWeight() * checkerMin;
 			else {
-				checkerMin = checkerSum / testGroup.getTestCases().size();
+				checkerMin = (testGroup.getTestCases().size() != 0 ? checkerSum / testGroup.getTestCases().size() : 0.0);
 				groupScore = testGroup.getWeight() * checkerMin;
 			}
         }

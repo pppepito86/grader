@@ -85,6 +85,11 @@ public class CppCompileStep extends CompileStep {
 	}*/
 
 	@Override
+	protected boolean useMinimalEtc() {
+		return true;
+	}
+
+	@Override
 	public String[] getCommands() {
 		return getCommands(COMPILE_CPP20_COMMAND_PATTERN);
 	}

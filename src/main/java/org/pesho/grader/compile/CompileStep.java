@@ -13,6 +13,7 @@ import org.pesho.grader.step.BaseStep;
 import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 import org.pesho.sandbox.CommandResult;
+import org.pesho.sandbox.MinimalEtc;
 import org.pesho.sandbox.SandboxExecutor;
 
 public abstract class CompileStep implements BaseStep {
@@ -81,6 +82,7 @@ public abstract class CompileStep implements BaseStep {
 				.timeout(timeout)
 				.memory(maxMemory)
 				.command(command);
+		if (useMinimalEtc()) sandbox.etcDir(MinimalEtc.getDir());
 		if (this instanceof PythonCompileStep || (this instanceof ZipLaTexCompileStep && !command.equals(ZipLaTexCompileStep.NOTEX_COMMAND_PATTERN))) return sandbox.outputIsError();
 		return sandbox;
 	}
@@ -130,6 +132,16 @@ public abstract class CompileStep implements BaseStep {
 
 	protected List<String> getTrustedDirectories() {
 		return new ArrayList<>();
+	}
+
+	/**
+	 * Whether to bind a curated /etc (see {@link MinimalEtc}) into the compile box instead of the
+	 * host /etc. Enabled only for the C/C++ preprocessor languages, where a submission can leak host
+	 * files via  #include "/etc/...". Other toolchains (mono needs /etc/mono, LaTeX needs /etc/fonts,
+	 * the JVM/locale, ...) stay on the host /etc, so they are unaffected by this change.
+	 */
+	protected boolean useMinimalEtc() {
+		return false;
 	}
 
 	protected void createSandboxDirectory() {
