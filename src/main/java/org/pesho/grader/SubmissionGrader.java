@@ -73,7 +73,7 @@ public class SubmissionGrader {
 	}
 
 	private void failedScore (String message) {
-		score.getTestResults().add(0, new StepResult(Verdict.SKIPPED, message));
+		score.getTestResults().add(0, new StepResult(Verdict.WAITING, message));
 		score.addFinalScore(0, true);
 		if (listener != null) {
 			//listener.addFinalScore("Compilation Failed", 0);
