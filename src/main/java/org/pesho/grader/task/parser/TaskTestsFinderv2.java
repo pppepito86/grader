@@ -1,5 +1,6 @@
 package org.pesho.grader.task.parser;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap;
@@ -9,6 +10,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,8 +31,20 @@ public class TaskTestsFinderv2 {
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	
 	public static List<TestCase> find(List<Path> paths, Path basePath, boolean hasChecker) throws IllegalStateException {
+		Set<Path> testsFolders = new HashSet<>();
+		try (Stream<Path> stream = Files.walk(basePath)) {
+			testsFolders = stream
+				.filter(Files::isDirectory)
+				.filter(p -> p.getFileName() != null && p.getFileName().toString().equals("tests"))
+				.collect(Collectors.toSet());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		final Set<Path> finalTestsFolders = testsFolders;
+
 		Set<String> pathsSet = paths.stream()
 			.filter(p -> Files.isRegularFile(basePath.resolve(p)))
+			.filter(p -> finalTestsFolders.isEmpty() || finalTestsFolders.stream().anyMatch(tests -> basePath.resolve(p).normalize().startsWith(tests)))
 			.map(Path::toString)
 			.collect(Collectors.toSet());
 		
