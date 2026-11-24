@@ -29,22 +29,24 @@ public class TaskTestsFinderv2 {
 			new AbstractMap.SimpleImmutableEntry<>("sol", 1),
 			new AbstractMap.SimpleImmutableEntry<>("ans", 1))
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+	private static boolean isInTestsFolder(Path path) {
+		for (Path part : path) {
+			if ("tests".equalsIgnoreCase(part.toString())) {
+				return true;
+			}
+		}
+		return false;
+	}
 	
 	public static List<TestCase> find(List<Path> paths, Path basePath, boolean hasChecker) throws IllegalStateException {
-		Set<Path> testsFolders = new HashSet<>();
-		try (Stream<Path> stream = Files.walk(basePath)) {
-			testsFolders = stream
-				.filter(Files::isDirectory)
-				.filter(p -> p.getFileName() != null && p.getFileName().toString().equals("tests"))
-				.collect(Collectors.toSet());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		final Set<Path> finalTestsFolders = testsFolders;
+		boolean hasTestsFolder = paths.stream()
+			.filter(p -> Files.isRegularFile(basePath.resolve(p)))
+			.anyMatch(TaskTestsFinderv2::isInTestsFolder);
 
 		Set<String> pathsSet = paths.stream()
 			.filter(p -> Files.isRegularFile(basePath.resolve(p)))
-			.filter(p -> finalTestsFolders.isEmpty() || finalTestsFolders.stream().anyMatch(tests -> basePath.resolve(p).normalize().startsWith(tests)))
+			.filter(p -> !hasTestsFolder || isInTestsFolder(p))
 			.map(Path::toString)
 			.collect(Collectors.toSet());
 		
