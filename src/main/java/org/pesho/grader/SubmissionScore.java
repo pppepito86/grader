@@ -83,11 +83,16 @@ public class SubmissionScore implements GradeListener {
 	}
 	
 	public Double findTime() {
+		Double time = findTime(true);
+		return time != null ? time : findTime(false);
+	}
+
+	private Double findTime(boolean onlyPassed) {
 		Double time = null;
 		for (StepResult r : groupResults) {
 			Double rTime = r.getTime();
 			if (rTime == null) continue;
-			if (r.getVerdict() == Verdict.OK || r.getVerdict() == Verdict.PARTIAL || r.getVerdict() == Verdict.WA) {
+			if (!onlyPassed || r.getVerdict() == Verdict.OK || r.getVerdict() == Verdict.PARTIAL || r.getVerdict() == Verdict.WA) {
 				if (time == null || rTime < 0) time = rTime;
 				else time = Math.max(time, rTime);
 				if (time < 0) break;
@@ -97,11 +102,16 @@ public class SubmissionScore implements GradeListener {
 	}
 
 	public Long findMemory() {
+		Long memory = findMemory(true);
+		return memory != null ? memory : findMemory(false);
+	}
+
+	private Long findMemory(boolean onlyPassed) {
 		Long memory = null;
 		for (StepResult r : groupResults) {
 			Long rMemory = r.getMemory();
 			if (rMemory==null) continue;
-			if (r.getVerdict() == Verdict.OK || r.getVerdict() == Verdict.PARTIAL || r.getVerdict() == Verdict.WA) {
+			if (!onlyPassed || r.getVerdict() == Verdict.OK || r.getVerdict() == Verdict.PARTIAL || r.getVerdict() == Verdict.WA) {
 				if (memory==null || rMemory < 0) memory = rMemory;
 				else memory = Math.max(memory, rMemory);
 				if (memory < 0) break;

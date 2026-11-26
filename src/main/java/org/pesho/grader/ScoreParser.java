@@ -1,9 +1,12 @@
 package org.pesho.grader;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.math3.util.Precision;
+import org.pesho.grader.step.StepResult;
 import org.pesho.grader.step.Verdict;
 import org.pesho.grader.task.TaskDetails;
 
@@ -41,7 +44,7 @@ public class ScoreParser {
 					if (verdict == Verdict.PARTIAL) {
 						String points = "" + Precision.round(score.getTestResults().get(i).getPoints(), 6);
 						if (points.contains(".")) points = points.replaceAll("0*$","").replaceAll("\\.$","");
-						if (score.getType().equals("submission") && details.getTestGroups().get(i).getWeight() == 0) return "[|"+points+"|]";
+						if (score.getType().equals("submission") && details.getTestGroups().get(i).getWeight() == 0) return "[|"+zeroPoints(score.getTestResults().get(i).getCheckerOutput())+"|]";
 						return "|"+points+"|";
 					}
 					if (score.getType().equals("submission") && details.getTestGroups().get(i).getWeight() == 0) return "["+verdict.name()+"]";
@@ -51,19 +54,30 @@ public class ScoreParser {
 	}
 	
 	public String getGroupsScore() {
-		return score.getGroupResults().stream()
-				.map(result -> {
+		return IntStream.range(0, score.getGroupResults().size())
+				.mapToObj(i -> {
+					StepResult result = score.getGroupResults().get(i);
 					if (result.getVerdict() == Verdict.WAITING) return "wait";
-					
+
 					String points = "" + Precision.round(result.getPoints(), 6);
 					if (points.contains(".")) points = points.replaceAll("0*$","").replaceAll("\\.$","");
 					if (result.getVerdict() == Verdict.OK) return ""+points;
-					if (result.getVerdict() == Verdict.PARTIAL) return "("+points+")";
+					if (result.getVerdict() == Verdict.PARTIAL) {
+						if (i < details.getTestGroups().size() && details.getTestGroups().get(i).getWeight() == 0) return "("+zeroPoints(result.getCheckerOutput())+")";
+						return "("+points+")";
+					}
 					
 					String verdictName=result.getVerdict().name();
 					if (verdictName.equals("SKIPPED")) verdictName="SK";
 					return verdictName;
 				})
 				.collect(Collectors.joining(","));
+	}
+
+	public static final int ZERO_POINTS_CHECKER_OUTPUT_SHIFT = 7;
+
+	private static String zeroPoints (Double checkerOutput) {
+		if (checkerOutput == null) return "0";
+		return new BigDecimal(checkerOutput).setScale(6, RoundingMode.HALF_UP).movePointLeft(ZERO_POINTS_CHECKER_OUTPUT_SHIFT).stripTrailingZeros().toPlainString();
 	}
 }

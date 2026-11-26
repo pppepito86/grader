@@ -4,6 +4,7 @@ package org.pesho.grader.task;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -20,6 +21,7 @@ import org.pesho.grader.task.parser.PropertiesFinder;
 import org.pesho.grader.task.parser.QuizFinder;
 import org.pesho.grader.task.parser.SolutionsFinder;
 import org.pesho.grader.task.parser.StatementFinder;
+import org.pesho.grader.task.parser.StatementParser;
 import org.pesho.grader.task.parser.TranslationsFinder;
 import org.pesho.grader.task.parser.AnalysisFinder;
 import org.pesho.grader.task.parser.TaskFilesFinder;
@@ -195,8 +197,9 @@ public class TaskDetails {
 		this.analysis = findAnalysis(paths);
 		this.description = findDescription(taskPath, true);
 		if (description == null) addError("statement", "backend.no_statement");
+		String latexDescription = null;
 		if (description != null && description.endsWith(".tex")) {
-			checkLatexDescription(taskPath.resolve(description));
+			latexDescription = new String(Files.readAllBytes(taskPath.resolve(description)));
 			if (taskPath.resolve(description.replaceAll("\\.tex$", ".pdf")).toFile().exists()) { /// statement should be compiled at this time
 				description = description.replaceAll("\\.tex$", ".pdf");
 			}
@@ -344,6 +347,7 @@ public class TaskDetails {
 				}
 			}
 		}
+		if (latexDescription != null) checkLatexDescription(latexDescription, taskPath);
 
 		this.files = TaskFilesFinder.find(taskName, taskPath, Files.walk(taskPath).map(p -> taskPath.relativize(p)).collect(Collectors.toList()));
 		
@@ -453,11 +457,11 @@ public class TaskDetails {
 		String decimalNumber = "^(?!0+(\\.0+)?$)\\d*\\.?\\d+$";
 		
 		if (!props.getProperty("points", "100.0").matches(decimalNumber)) addError("points_property", "backend.not_decimal");
-		if (!props.getProperty("precision", "-1").matches("^-1$|^0$|" + naturalNumber)) addError("precision_property", "");
+		if (!props.getProperty("precision", "-1").matches("^-1$|^0$|" + naturalNumber)) addError("precision_property", "backend.invalid_precision");
 		if (!props.getProperty("processes", "1").matches(naturalNumber)) addError("processes_property", "backend.not_natural");
 		if (!props.getProperty("open_files", "64").matches(naturalNumber)) addError("open_files_property", "backend.not_natural");
 		if (!props.getProperty("time", "1").matches(decimalNumber)) addError("time_property", "backend.not_decimal");
-		if (!props.getProperty("io_time", "0").matches("^0$|" + decimalNumber)) addError("io_time_property", "");
+		if (!props.getProperty("io_time", "0").matches("^0$|" + decimalNumber)) addError("io_time_property", "backend.not_zero_or_decimal");
 		if (!props.getProperty("compile_time", "10").matches(decimalNumber)) addError("compile_time_property", "backend.not_decimal");
 		if (!props.getProperty("java_compile_time", "300").matches(decimalNumber)) addError("java_compile_time_property", "backend.not_decimal");
 		if (!props.getProperty("memory", "256").matches(naturalNumber)) addError("memory_property", "backend.not_natural");
@@ -467,18 +471,27 @@ public class TaskDetails {
 		if (checkSequence(fixSequence(props.getProperty("feedback", "")), "feedback") != null) addError("feedback_property", checkSequence(fixSequence(props.getProperty("feedback", "")), "feedback"));
 		if (checkSequence(fixSequence(props.getProperty("sample", "")), "sample") != null) addError("sample_property", checkSequence(fixSequence(props.getProperty("sample", "")), "sample"));
 		if (checkSequence(fixSequence(props.getProperty("groups", "")), "groups") != null) addError("groups_property", checkSequence(fixSequence(props.getProperty("groups", "")), "groups"));
-		if (!fixSequence2(props.getProperty("weights", "1")).matches("^\\d+(\\.\\d+)?(,\\d+(\\.\\d+)?)*$")) addError("weights_property", "");
-		if (Arrays.stream(props.getProperty("scoring", "").trim().split(",")).anyMatch(p -> Arrays.asList("", "sum", "min", "min_fast").stream().noneMatch(s -> p.trim().equalsIgnoreCase(s)))) addError("scoring_property", "");
-		if (Arrays.asList("", "best", "aggregated").stream().noneMatch(s -> props.getProperty("scoring_type", "").trim().equalsIgnoreCase(s))) addError("scoring_type_property", "");
-		if (Arrays.stream(props.getProperty("extensions", "cpp").trim().split(",")).anyMatch(p -> Arrays.asList("cpp", "c", "h", "java", "py", "go", "cs", "zip", "txt", "pdf").stream().noneMatch(s -> p.trim().equalsIgnoreCase(s)))) addError("extensions_property", "");
+		if (!fixSequence2(props.getProperty("weights", "1")).matches("^\\d+(\\.\\d+)?(,\\d+(\\.\\d+)?)*$")) addError("weights_property", "backend.invalid_weights");
+		List<String> scoringValues = Arrays.asList("", "sum", "min", "min_fast");
+		if (Arrays.stream(props.getProperty("scoring", "").trim().split(",")).anyMatch(p -> scoringValues.stream().noneMatch(s -> p.trim().equalsIgnoreCase(s)))) addError("scoring_property", allowedValues(scoringValues));
+		List<String> scoringTypeValues = Arrays.asList("", "best", "aggregated");
+		if (scoringTypeValues.stream().noneMatch(s -> props.getProperty("scoring_type", "").trim().equalsIgnoreCase(s))) addError("scoring_type_property", allowedValues(scoringTypeValues));
+		List<String> extensionValues = Arrays.asList("cpp", "c", "h", "java", "py", "go", "cs", "zip", "txt", "pdf");
+		if (Arrays.stream(props.getProperty("extensions", "cpp").trim().split(",")).anyMatch(p -> extensionValues.stream().noneMatch(s -> p.trim().equalsIgnoreCase(s)))) addError("extensions_property", allowedValues(extensionValues));
 		if (checkSequence(fixSequence(props.getProperty("dependencies", "")), "dependencies") != null) addError("dependencies_property", checkSequence(fixSequence(props.getProperty("dependencies", "")), "dependencies"));
-		if (Arrays.asList("lualatex", "none", "pdflatex", "xelatex").stream().noneMatch(s -> props.getProperty("latex", "lualatex").trim().equalsIgnoreCase(s))) addError("latex_property", "");
-		if (Arrays.asList("no", "no_checker", "unrestricted").stream().noneMatch(s -> props.getProperty("user_tests", "no").trim().equalsIgnoreCase(s))) addError("user_tests_property", "");
+		List<String> latexValues = Arrays.asList("lualatex", "none", "pdflatex", "xelatex");
+		if (latexValues.stream().noneMatch(s -> props.getProperty("latex", "lualatex").trim().equalsIgnoreCase(s))) addError("latex_property", allowedValues(latexValues));
+		List<String> userTestsValues = Arrays.asList("no", "no_checker", "unrestricted");
+		if (userTestsValues.stream().noneMatch(s -> props.getProperty("user_tests", "no").trim().equalsIgnoreCase(s))) addError("user_tests_property", allowedValues(userTestsValues));
+	}
+
+	private static String allowedValues (List<String> values) {
+		return "backend.allowed_values:" + values.stream().filter(v -> !v.isEmpty()).collect(Collectors.joining(", "));
 	}
 
 	private String checkSequence (String sequence, String type) {
 		String regex = "^(\\d*)?([,;](\\d*)?)*$";
-		if (!sequence.matches(regex)) return "";
+		if (!sequence.matches(regex)) return "backend.invalid_sequence";
 		String[] tokens = sequence.split(",");
 		if (type.equals("dependencies")) {
 			for (String token : tokens) {
@@ -492,53 +505,91 @@ public class TaskDetails {
 		return null;
 	}
 
-	private void checkLatexDescription (Path description) throws IOException {
-		String text = new String(Files.readAllBytes(description));
-	
-		String textTL = "newcommand{\\tl}{";
-		int startTL = text.indexOf(textTL);
-		if (startTL != -1) {
-			String valueTL = "";
-			int level = 1;
-			boolean decimal = false;
-			for (int i = startTL + textTL.length(); i < text.length(); i++) {
-				char current = text.charAt(i);
-				if (current == '{') level++;
-				else if (current == '}') {
-					level--;
-					if (level == 0) break;
-				}
-				else {
-					if (Character.isDigit(current)) valueTL += current;
-					else if (decimal == false && (current == '.' || current == ',')) {
-						valueTL += ".";
-						decimal = true;
-					}
+	private void checkLatexDescription (String text, Path taskPath) {
+		checkLatexLimit("time_property", StatementParser.findTimeLimit(text), this.time);
+		checkLatexLimit("memory_property", StatementParser.findMemoryLimit(text), this.memory);
+		checkLatexSubtasks(StatementParser.findSubtasks(text));
+		checkLatexExamples(StatementParser.findExamples(text), taskPath);
+	}
+
+	private void checkLatexExamples (List<StatementParser.Example> examples, Path taskPath) {
+		if (examples == null) return;
+		List<TestCase> samples = sampleTestCases();
+		if (samples.isEmpty()) return;
+		if (samples.size() != examples.size()) {
+			addLatexError("sample_property");
+			return;
+		}
+		try {
+			for (int i = 0; i < samples.size(); i++) {
+				TestCase sample = samples.get(i);
+				String input = new String(Files.readAllBytes(taskPath.resolve(sample.getInput())), StandardCharsets.UTF_8);
+				if (!StatementParser.normalize(input).equals(examples.get(i).input)) addLatexError("sample_property");
+				if (sample.getOutput() == null) continue;
+				String output = new String(Files.readAllBytes(taskPath.resolve(sample.getOutput())), StandardCharsets.UTF_8);
+				if (examples.get(i).output == null || !StatementParser.normalize(output).equals(examples.get(i).output)) addLatexError("sample_property");
+			}
+		} catch (IOException e) {
+			addLatexError("sample_property");
+		}
+	}
+
+	/**
+	 * The sample tests - the tests in sample or the tests of the sample groups (without sample, the first group
+	 * if it is for 0 points), in their order.
+	 */
+	private List<TestCase> sampleTestCases () {
+		List<TestCase> samples = new ArrayList<>();
+		TreeSet<Integer> sampleTests = sampleTests();
+		if (groupsScoring()) {
+			int first = groupsFromZero() ? 0 : 1;
+			for (int i = 0; i < testGroups.size(); i++) {
+				if (sampleTests.contains(i + first)) samples.addAll(testGroups.get(i).getTestCases());
+			}
+			if (sampleTests.isEmpty() && !testGroups.isEmpty() && testGroups.get(0).getWeight() == 0) samples.addAll(testGroups.get(0).getTestCases());
+		} else {
+			for (TestGroup group : testGroups) {
+				for (TestCase test : group.getTestCases()) {
+					if (test != null && sampleTests.contains(test.getNumber())) samples.add(test);
 				}
 			}
-			double tl = Double.valueOf(valueTL);
-			if (this.time != tl) addError("time_property", "backend.different_in_tex_statement");
 		}
-		
-		String textML = "newcommand{\\ml}{";
-		int startML = text.indexOf(textML);
-		if (startML != -1) {
-			String valueML = "";
-			int level = 1;
-			for (int i = startML + textML.length(); i < text.length(); i++) {
-				char current = text.charAt(i);
-				if (current == '{') level++;
-				else if (current == '}') {
-					level--;
-					if (level == 0) break;
-				}
-				else {
-					if (Character.isDigit(current)) valueML += current;
-				}
+		samples.removeIf(Objects::isNull);
+		return samples;
+	}
+
+	private void checkLatexLimit (String property, List<String> values, double expected) {
+		if (values.isEmpty()) return;
+		Double limit = values.stream().map(StatementParser::parseNumber).filter(Objects::nonNull).findFirst().orElse(null);
+		if (limit == null || limit.doubleValue() != expected) addLatexError(property);
+	}
+
+	private void checkLatexSubtasks (List<StatementParser.Subtask> subtasks) {
+		if (subtasks == null) return;
+		if (!groupsScoring() || subtasks.size() != testGroups.size()) {
+			addLatexError("groups_property");
+			return;
+		}
+		int first = groupsFromZero() ? 0 : 1;
+		for (int i = 0; i < subtasks.size(); i++) {
+			StatementParser.Subtask subtask = subtasks.get(i);
+			if (subtask.number == null || subtask.number.doubleValue() != i + first) addLatexError("groups_property");
+
+			double points = Precision.round(testGroups.get(i).getWeight() * this.points, 2);
+			if (subtask.points == null || Precision.round(subtask.points, 2) != points) addLatexError("weights_property");
+
+			try {
+				Set<Integer> expected = dependsOn(i + 1).stream().map(d -> d - 1 + first).collect(Collectors.toSet());
+				Set<Integer> actual = subtask.dependencies == null ? new HashSet<>() : new HashSet<>(subtask.dependencies);
+				if (!expected.equals(actual)) addLatexError("dependencies_property");
+			} catch (Exception e) {
+				addLatexError("dependencies_property");
 			}
-			int ml = Integer.valueOf(valueML);
-			if (this.memory != ml) addError("memory_property", "backend.different_in_tex_statement");
 		}
+	}
+
+	private void addLatexError (String property) {
+		if (!error.containsKey(property)) addError(property, "backend.different_in_tex_statement");
 	}
 
 	private static List<Path> findAllPaths (Path taskPath) throws IOException {
