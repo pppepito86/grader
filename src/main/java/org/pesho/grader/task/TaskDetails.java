@@ -192,8 +192,8 @@ public class TaskDetails {
         this.isCommunication = manager != null;
 		this.outputOnly = allowedExtensions.contains("txt") ? "single" : allowedExtensions.contains("zip") ? "multiple" : "no";
 		this.isTranslation = allowedExtensions.contains("pdf");
-		if (this.outputOnly.equals("multiple") || this.isTranslation) this.userTests = "no";
-		else if (!props.containsKey("user_tests")) this.userTests = !this.outputOnly.equals("no") || this.isInteractive || this.isCommunication ? "no" : this.checker != null ? "no_checker" : "unrestricted";
+		if (!this.outputOnly.equals("no") || this.isTranslation) this.userTests = "no";
+		else if (!props.containsKey("user_tests")) this.userTests = this.isInteractive || this.isCommunication ? "no" : this.checker != null ? "no_checker" : "unrestricted";
 		this.analysis = findAnalysis(paths);
 		this.description = findDescription(taskPath, true);
 		if (description == null) addError("statement", "backend.no_statement");
@@ -952,6 +952,13 @@ public class TaskDetails {
 		if (description == null) return null;
 		if (relative == false) return taskPath.resolve(description).toString();
 		return description;
+	}
+
+	public static String findContestantZip (Path taskPath, boolean relative) throws IOException {
+		String contestantZip = ContestantFinder.find(findAllPaths(taskPath)).map(Path::toString).orElse(null);
+		if (contestantZip == null) return null;
+		if (relative == false) return taskPath.resolve(contestantZip).toString();
+		return contestantZip;
 	}
 
 	public String getTexMode() {
