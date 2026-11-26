@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Map;
 import java.util.List;
@@ -159,7 +160,7 @@ public class SubmissionGrader {
 	}
 
 	private double compile(File sourceFile, String type) {
-		SourceStep sourceStep = new SourceStep(sourceFile, taskDetails.getBlacklistedWords());
+		SourceStep sourceStep = new SourceStep(sourceFile, isOfficial ? taskDetails.getBlacklistedWords() : Collections.emptySet());
 		File graderDir = taskDetails.getGraderDir() != null ? new File(taskDetails.getGraderDir()):null;
 		Map<String, Double> compileTL = taskDetails.getCompileTime();
 		if (compileTime.isPresent()) {
